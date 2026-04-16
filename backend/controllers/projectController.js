@@ -9,7 +9,10 @@ const moment = require('moment');
 // 项目阶段枚举
 const STAGES = ['意向', '签约', '建设', '运营', '交付', '验收', '完结'];
 
-// 拓展方式枚举
+// 项目类型枚举
+const TYPES = ['收入合同', '支出合同'];
+
+// 签约方式枚举
 const EXPANSION_METHODS = ['投标', '比选', '比价', '直接谈判', '单一来源采购', '其他'];
 
 // 项目内容枚举
@@ -51,6 +54,7 @@ const getProjects = async (req, res) => {
       keyword,
       stage,
       city,
+      type,
       expansionMethod,
       content,
       sortField,
@@ -94,7 +98,13 @@ const getProjects = async (req, res) => {
       params.push(city);
     }
 
-    // 拓展方式筛选
+    // 项目类型筛选
+    if (type) {
+      whereClause += ' AND p.type = ?';
+      params.push(type);
+    }
+
+    // 签约方式筛选
     if (expansionMethod) {
       whereClause += ' AND p.expansion_method = ?';
       params.push(expansionMethod);
@@ -131,7 +141,7 @@ const getProjects = async (req, res) => {
     // 查询数据（LIMIT和OFFSET直接嵌入SQL，避免参数绑定问题）
     const projects = await query(
       `SELECT 
-        p.id, p.name, p.city, p.stage, p.expansion_method, p.content,
+        p.id, p.name, p.city, p.stage, p.type, p.expansion_method, p.content,
         p.total_amount, p.receipt_amount, p.cost,
         (p.total_amount - p.receipt_amount) as pending_amount,
         (p.total_amount - p.cost) as profit,
@@ -252,6 +262,7 @@ const createProject = async (req, res) => {
       name,
       city,
       stage,
+      type,
       expansion_method,
       content,
       total_amount,
@@ -264,7 +275,7 @@ const createProject = async (req, res) => {
     } = req.body;
 
     // 参数验证
-    if (!name || !city || !stage || !expansion_method || !content || !partner_id) {
+    if (!name || !city || !stage || !type || !expansion_method || !content || !partner_id) {
       return res.status(400).json({
         code: 400,
         message: '请填写必填字段'
@@ -276,6 +287,14 @@ const createProject = async (req, res) => {
       return res.status(400).json({
         code: 400,
         message: '无效的项目阶段'
+      });
+    }
+
+    // 验证项目类型
+    if (!TYPES.includes(type)) {
+      return res.status(400).json({
+        code: 400,
+        message: '无效的项目类型'
       });
     }
 
@@ -304,10 +323,10 @@ const createProject = async (req, res) => {
       // 创建项目
       const [projectResult] = await connection.execute(
         `INSERT INTO projects 
-         (name, city, stage, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (name, city, stage, type, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          name, city, stage, expansion_method, content,
+          name, city, stage, type, expansion_method, content,
           parseFloat(total_amount) || 0,
           parseFloat(receipt_amount) || 0,
           parseFloat(cost) || 0,
@@ -368,6 +387,7 @@ const updateProject = async (req, res) => {
       name,
       city,
       stage,
+      type,
       expansion_method,
       content,
       total_amount,
@@ -427,11 +447,11 @@ const updateProject = async (req, res) => {
       // 更新项目
       await connection.execute(
         `UPDATE projects SET 
-          name = ?, city = ?, stage = ?, expansion_method = ?, content = ?,
+          name = ?, city = ?, stage = ?, type = ?, expansion_method = ?, content = ?,
           total_amount = ?, receipt_amount = ?, cost = ?, start_date = ?, end_date = ?, partner_id = ?
          WHERE id = ?`,
         [
-          name, city, stage, expansion_method, content,
+          name, city, stage, type, expansion_method, content,
           parseFloat(total_amount) || 0,
           parseFloat(receipt_amount) || 0,
           parseFloat(cost) || 0,
@@ -533,7 +553,7 @@ const deleteProject = async (req, res) => {
  */
 const exportProjects = async (req, res) => {
   try {
-    const { format = 'xlsx', keyword, stage } = req.query;
+    const { format = 'xlsx', keyword, stage, type } = req.query;
     const user = req.user;
 
     // 构建查询条件
@@ -556,13 +576,19 @@ const exportProjects = async (req, res) => {
       params.push(stage);
     }
 
+    if (type) {
+      whereClause += ' AND p.type = ?';
+      params.push(type);
+    }
+
     // 查询所有数据
     const projects = await query(
       `SELECT 
         p.name as '项目名称',
+        p.type as '项目类型',
         p.city as '履约地点',
         p.stage as '项目阶段',
-        p.expansion_method as '拓展方式',
+        p.expansion_method as '签约方式',
         p.content as '项目内容',
         p.total_amount as '合同总金额(万元)',
         p.receipt_amount as '已开票金额(万元)',
@@ -676,13 +702,14 @@ const importProjects = async (req, res) => {
         // 创建项目
         await query(
           `INSERT INTO projects 
-           (name, city, stage, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           (name, city, stage, type, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             item['项目名称'] || item.name,
             item['履约地点'] || item.city || '成都市',
             item['项目阶段'] || item.stage || '意向',
-            item['拓展方式'] || item.expansion_method || '其他',
+            item['项目类型'] || item.type || '收入合同',
+            item['签约方式'] || item.expansion_method || '其他',
             item['项目内容'] || item.content || '其他',
             parseFloat(item['合同总金额(万元)'] || item.total_amount) || 0,
             parseFloat(item['已开票金额(万元)'] || item.receipt_amount) || 0,
@@ -729,6 +756,7 @@ const importProjects = async (req, res) => {
 const getDashboard = async (req, res) => {
   try {
     const user = req.user;
+    const { type } = req.query;
 
     // 构建查询条件
     let whereClause = '';
@@ -737,6 +765,12 @@ const getDashboard = async (req, res) => {
     if (user.role === 'normal') {
       whereClause = 'WHERE created_by = ?';
       params.push(user.userId);
+    }
+
+    // 项目类型筛选
+    if (type) {
+      whereClause += whereClause ? ' AND type = ?' : 'WHERE type = ?';
+      params.push(type);
     }
     
     // 统计项目数量、合同总金额、已开票金额、待开票金额
@@ -784,13 +818,25 @@ const getDashboard = async (req, res) => {
       params
     );
 
+    // 项目类型分布
+    const typeDistribution = await query(
+      `SELECT 
+        type,
+        COUNT(*) as count,
+        COALESCE(SUM(total_amount), 0) as amount
+      FROM projects ${whereClause ? whereClause.replace('WHERE', 'WHERE').replace('AND', 'WHERE') : ''}
+      GROUP BY type`,
+      params
+    );
+
     res.json({
       code: 200,
       data: {
         stats: statsResult[0],
         stageDistribution,
         receiptTrend: receiptTrend.reverse(),
-        cityDistribution
+        cityDistribution,
+        typeDistribution
       }
     });
   } catch (error) {
@@ -809,6 +855,7 @@ const getDashboard = async (req, res) => {
 const getCityDistribution = async (req, res) => {
   try {
     const user = req.user;
+    const { type } = req.query;
 
     // 构建查询条件
     let whereClause = '';
@@ -817,6 +864,12 @@ const getCityDistribution = async (req, res) => {
     if (user.role === 'normal') {
       whereClause = 'WHERE created_by = ?';
       params.push(user.userId);
+    }
+
+    // 项目类型筛选
+    if (type) {
+      whereClause += whereClause ? ' AND type = ?' : 'WHERE type = ?';
+      params.push(type);
     }
 
     // 按城市统计项目数量和金额
@@ -892,8 +945,9 @@ const getFilterOptions = async (req, res) => {
       return items.map(item => item.item_name);
     };
 
-    const [stages, expansionMethods, contents, cities, paymentTypes, attachmentTypes] = await Promise.all([
+    const [stages, types, expansionMethods, contents, cities, paymentTypes, attachmentTypes] = await Promise.all([
       getDictItems('project_stage'),
+      getDictItems('project_type'),
       getDictItems('expansion_method'),
       getDictItems('project_content'),
       getDictItems('project_city'),
@@ -905,6 +959,7 @@ const getFilterOptions = async (req, res) => {
       code: 200,
       data: {
         stages,
+        types,
         expansionMethods,
         contents,
         cities,
@@ -972,6 +1027,7 @@ module.exports = {
   getFilterOptions,
   getCityDistribution,
   STAGES,
+  TYPES,
   EXPANSION_METHODS,
   CONTENTS,
   SICHUAN_CITIES

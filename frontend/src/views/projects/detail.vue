@@ -6,7 +6,10 @@
       <template #header>
         <div class="card-header">
           <span class="title">{{ project.name }}</span>
-          <el-tag :type="getStageType(project.stage)" size="large">{{ project.stage }}</el-tag>
+          <div class="header-tags">
+            <el-tag :type="getTypeType(project.type)" size="large">{{ project.type || '收入合同' }}</el-tag>
+            <el-tag :type="getStageType(project.stage)" size="large">{{ project.stage }}</el-tag>
+          </div>
         </div>
       </template>
       
@@ -14,13 +17,16 @@
       <div class="section">
         <div class="section-title">基本信息</div>
         <el-descriptions :column="3" border>
-          <el-descriptions-item label="项目名称">{{ project.name }}</el-descriptions-item>
+          <el-descriptions-item label="项目名称" :span="2">{{ project.name }}</el-descriptions-item>
           <el-descriptions-item label="履约地点">{{ project.city }}</el-descriptions-item>
-          <el-descriptions-item label="项目阶段">
-            <el-tag :type="getStageType(project.stage)" size="small">{{ project.stage }}</el-tag>
+          <el-descriptions-item label="项目类型">
+            <el-tag :type="getTypeType(project.type)" size="small">{{ project.type || '收入合同' }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="签约方式">{{ project.expansion_method }}</el-descriptions-item>
           <el-descriptions-item label="项目内容">{{ project.content }}</el-descriptions-item>
+          <el-descriptions-item label="项目阶段">
+            <el-tag :type="getStageType(project.stage)" size="small">{{ project.stage }}</el-tag>
+          </el-descriptions-item>
           <el-descriptions-item label="项目周期">
             {{ formatDate(project.start_date) }} 至 {{ formatDate(project.end_date) }}
           </el-descriptions-item>
@@ -119,7 +125,7 @@
           <el-table-column prop="file_name" label="文件名" min-width="250" show-overflow-tooltip />
           <el-table-column prop="attachment_type" label="类型" width="160">
             <template #default="{ row }">
-              <el-select v-model="row.attachment_type" size="small" disabled="true" @change="(val) => handleUpdateAttachmentType(row, val)">
+              <el-select v-model="row.attachment_type" size="small" disabled=true @change="(val) => handleUpdateAttachmentType(row, val)">
                 <el-option v-for="type in attachmentTypes" :key="type" :label="type" :value="type" />
               </el-select>
             </template>
@@ -191,15 +197,24 @@ const fetchAttachmentTypes = async () => {
 // 标签类型
 const getStageType = (stage) => {
   const typeMap = {
-    '意向': 'error',
+    '意向': 'danger',
     '签约': 'warning',
     '建设': 'primary',
     '运营': 'primary',
     '交付': 'primary',
     '验收': 'success',
-    '完结': 'dark'
+    '完结': 'info'
   }
   return typeMap[stage] || 'info'
+}
+
+// 项目类型标签类型
+const getTypeType = (Type) => {
+  const typeMap = {
+    '收入合同': 'success',
+    '支出合同': 'danger'
+  }
+  return typeMap[Type] || 'success'
 }
 
 // 获取数据
@@ -284,6 +299,11 @@ onMounted(() => {
       .title {
         font-size: 18px;
         font-weight: 600;
+      }
+
+      .header-tags {
+        display: flex;
+        gap: 8px;
       }
     }
     

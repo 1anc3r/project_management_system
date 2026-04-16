@@ -5,8 +5,8 @@
       <div class="operation-bar">
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
-          <el-button :icon="Edit" :disabled="!selectedRows.length" @click="handleBatchEdit">编辑</el-button>
-          <el-button type="danger" :icon="Delete" :disabled="!selectedRows.length" @click="handleBatchDelete">删除</el-button>
+          <el-button :icon="Edit" :disabled=!selectedRows.length @click="handleBatchEdit">编辑</el-button>
+          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length @click="handleBatchDelete">删除</el-button>
         </div>
         
         <div class="center-search">

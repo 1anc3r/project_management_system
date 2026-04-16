@@ -92,6 +92,20 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
+              <span>项目类型分布</span>
+              <el-tag type="info" size="small">点击饼图查看详情</el-tag>
+            </div>
+          </template>
+          <v-chart class="chart" :option="typeChartOption" autoresize @click="handleTypeClick" />
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="20" class="chart-row">
+      <el-col :span="24">
+        <el-card class="chart-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
               <span>合同金额趋势</span>
             </div>
           </template>
@@ -107,7 +121,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { PieChart, LineChart } from 'echarts/charts'
+import { PieChart, LineChart, BarChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -116,6 +130,7 @@ import {
   ToolboxComponent
 } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { Folder, Money, DocumentChecked, Document } from '@element-plus/icons-vue'
 import { getDashboard } from '@/api/projects'
 import { formatAmount } from '@/utils/format'
 import TiandituMap from './components/TiandituMap.vue'
@@ -125,6 +140,7 @@ use([
   CanvasRenderer,
   PieChart,
   LineChart,
+  BarChart,
   TitleComponent,
   TooltipComponent,
   LegendComponent,
@@ -138,6 +154,7 @@ const router = useRouter()
 const stats = ref({})
 const stageDistribution = ref([])
 const receiptTrend = ref([])
+const typeDistribution = ref([])
 
 // 阶段颜色映射
 const stageColors = {
@@ -148,6 +165,12 @@ const stageColors = {
     '交付': '#009688',
     '验收': '#8FC25C',
     '完结': '#909399'
+}
+
+// 项目类型颜色映射
+const typeColors = {
+  '收入合同': '#67C23A',
+  '支出合同': '#F56C6C'
 }
 
 // 项目阶段分布图表配置
@@ -259,13 +282,61 @@ const trendChartOption = computed(() => ({
   ]
 }))
 
+// 项目类型分布图表配置
+const typeChartOption = computed(() => ({
+  tooltip: {
+    trigger: 'item',
+    formatter: (params) => {
+      return `${params.name}<br/>项目数: ${params.value} 个<br/>金额: ${formatAmount(params.data.amount)} 万元`
+    }
+  },
+  legend: {
+    orient: 'horizontal',
+    bottom: 'bottom'
+  },
+  series: [
+    {
+      name: '项目类型',
+      type: 'pie',
+      radius: '60%',
+      avoidLabelOverlap: false,
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: '#fff',
+        borderWidth: 2
+      },
+      label: {
+        show: true,
+        formatter: (params) => {
+          return `${params.name}\n${params.value}个\n${formatAmount(params.data.amount)}万`
+        }
+      },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      data: typeDistribution.value.map(item => ({
+        name: item.type,
+        value: item.count,
+        amount: item.amount,
+        itemStyle: { color: typeColors[item.type] || '#909399' }
+      }))
+    }
+  ]
+}))
+
 // 获取数据
 const fetchData = async () => {
   try {
-    const res = await getDashboard()
+    const params = {}
+    const res = await getDashboard(params)
     stats.value = res.data.stats || {}
     stageDistribution.value = res.data.stageDistribution || []
     receiptTrend.value = res.data.receiptTrend || []
+    typeDistribution.value = res.data.typeDistribution || []
   } catch (error) {
     console.error('获取数据概览失败:', error)
   }
@@ -279,6 +350,14 @@ const handleStageClick = (params) => {
   })
 }
 
+// 点击项目类型图表
+const handleTypeClick = (params) => {
+  router.push({
+    path: '/projects',
+    query: { type: params.name }
+  })
+}
+
 onMounted(() => {
   fetchData()
 })
@@ -286,6 +365,22 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .dashboard-container {
+  .type-switch-card {
+    margin-bottom: 20px;
+    
+    .type-switch-bar {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      
+      .switch-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #606266;
+      }
+    }
+  }
+
   .stat-row {
     margin-bottom: 20px;
     
@@ -353,6 +448,8 @@ onMounted(() => {
   }
   
   .chart-row {
+    margin-bottom: 20px;
+    
     .chart-card {
       .card-header {
         display: flex;

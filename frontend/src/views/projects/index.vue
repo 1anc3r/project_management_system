@@ -5,8 +5,8 @@
       <div class="operation-bar">
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
-          <el-button :icon="Edit" :disabled="!selectedRows.length" @click="handleBatchEdit">编辑</el-button>
-          <el-button type="danger" :icon="Delete" :disabled="!selectedRows.length" @click="handleBatchDelete">删除</el-button>
+          <el-button :icon="Edit" :disabled=!selectedRows.length @click="handleBatchEdit">编辑</el-button>
+          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length @click="handleBatchDelete">删除</el-button>
         </div>
         
         <div class="center-search">
@@ -34,13 +34,16 @@
       
       <!-- 筛选条件 -->
       <div class="filter-bar">
+        <el-select v-model="searchForm.type" placeholder="项目类型" clearable style="width: 120px">
+          <el-option v-for="item in filterOptions.types" :key="item" :label="item" :value="item" />
+        </el-select>
         <el-select v-model="searchForm.stage" placeholder="项目阶段" clearable style="width: 120px">
           <el-option v-for="item in filterOptions.stages" :key="item" :label="item" :value="item" />
         </el-select>
         <el-select v-model="searchForm.city" placeholder="履约地点" clearable style="width: 140px">
           <el-option v-for="item in filterOptions.cities" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.expansionMethod" placeholder="拓展方式" clearable style="width: 130px">
+        <el-select v-model="searchForm.expansionMethod" placeholder="签约方式" clearable style="width: 130px">
           <el-option v-for="item in filterOptions.expansionMethods" :key="item" :label="item" :value="item" />
         </el-select>
         <el-select v-model="searchForm.content" placeholder="项目内容" clearable style="width: 120px">
@@ -77,12 +80,17 @@
       >
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="type" label="项目类型" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getTypeType(row.type)" size="small">{{ row.type }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="stage" label="项目阶段" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStageType(row.stage)" size="small">{{ row.stage }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="expansion_method" label="拓展方式" width="110" />
+        <el-table-column prop="expansion_method" label="签约方式" width="110" />
         <el-table-column prop="total_amount" label="合同总金额" width="120" align="right">
           <template #default="{ row }">
             {{ formatAmount(row.total_amount) }}
@@ -145,7 +153,10 @@
         <el-col v-for="item in projectList" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card class="project-card" shadow="hover" @dblclick="handleView(item)">
             <div class="card-header">
-              <el-tag :type="getStageType(item.stage) || 'info'" size="small">{{ item.stage }}</el-tag>
+              <div class="card-tags">
+                <el-tag :type="getTypeType(item.type)" size="small">{{ item.type }}</el-tag>
+                <el-tag :type="getStageType(item.stage)" size="small">{{ item.stage }}</el-tag>
+              </div>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
                 <el-icon class="more-icon"><More /></el-icon>
                 <template #dropdown>
@@ -255,6 +266,7 @@ const pagination = reactive({
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
+  type: '',
   stage: '',
   city: '',
   expansionMethod: '',
@@ -266,6 +278,7 @@ const searchForm = reactive({
 // 筛选选项
 const filterOptions = reactive({
   stages: [],
+  types: [],
   cities: [],
   expansionMethods: [],
   contents: []
@@ -295,6 +308,15 @@ const getStageType = (stage) => {
   return typeMap[stage] || 'info'
 }
 
+// 获取项目类型标签类型
+const getTypeType = (type) => {
+  const typeMap = {
+    '收入合同': 'success',
+    '支出合同': 'danger'
+  }
+  return typeMap[type] || 'info'
+}
+
 // 获取数据
 const fetchData = async () => {
   loading.value = true
@@ -319,6 +341,7 @@ const fetchFilterOptions = async () => {
   try {
     const res = await getFilterOptions()
     filterOptions.stages = res.data.stages
+    filterOptions.types = res.data.types
     filterOptions.cities = res.data.cities
     filterOptions.expansionMethods = res.data.expansionMethods
     filterOptions.contents = res.data.contents
@@ -429,7 +452,8 @@ const handleExport = async () => {
     const response = await exportProjects({
       format: 'xlsx',
       keyword: searchForm.keyword,
-      stage: searchForm.stage
+      stage: searchForm.stage,
+      type: searchForm.type
     })
     downloadBlob(response.data, `projects_${new Date().getTime()}.xlsx`)
     ElMessage.success('导出成功')
@@ -491,13 +515,15 @@ onMounted(async () => {
   if (route.query.stage) {
     searchForm.stage = route.query.stage
   }
+  if (route.query.type) {
+    searchForm.type = route.query.type
+  }
   if (route.query.keyword) {
     searchForm.keyword = route.query.keyword
   }
   
   // 再获取数据
   fetchData()
-  // ...
 })
 </script>
 
@@ -547,6 +573,11 @@ onMounted(async () => {
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
+        
+        .card-tags {
+          display: flex;
+          gap: 5px;
+        }
         
         .more-icon {
           cursor: pointer;

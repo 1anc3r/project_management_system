@@ -109,13 +109,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Loading, Warning, MapLocation, ArrowRight } from '@element-plus/icons-vue';
 import { getCityDistribution } from '@/api/projects';
 import { formatAmount } from '@/utils/format';
+
+// ===================== Props =====================
+const props = defineProps({
+  type: {
+    type: String,
+    default: ''
+  }
+});
 
 // ===================== 常量配置 =====================
 const TDT_KEY = import.meta.env.VITE_TDT_KEY || 'your_tianditu_api_token';
@@ -254,13 +262,26 @@ async function initMap() {
  */
 async function fetchCityDistribution() {
   try {
-    const res = await getCityDistribution();
+    const params = {};
+    if (props.type) {
+      params.type = props.type;
+    }
+    const res = await getCityDistribution(params);
     // 处理数据，添加阶段分布
     const cities = res.data || [];
     cityDistribution.value = cities.map(city => ({
       ...city,
       stageDistribution: city.stageDistribution || {}
     }));
+    
+    // 如果地图已初始化，重新渲染图层
+    if (geoJsonLayer.value) {
+      geoJsonLayer.value.eachLayer((layer) => {
+        const cityName = layer.feature.properties.name;
+        const cityData = getCityData(cityName);
+        layer.setStyle(getCityStyle(cityData));
+      });
+    }
   } catch (error) {
     console.error('获取城市分布数据失败:', error);
     // 使用空数据，不影响地图显示
@@ -528,6 +549,11 @@ function handleError(msg, error) {
   hasError.value = true;
   errorMsg.value = msg;
 }
+
+// 监听 type 变化，重新获取数据
+watch(() => props.type, () => {
+  fetchCityDistribution();
+});
 </script>
 
 <style scoped>

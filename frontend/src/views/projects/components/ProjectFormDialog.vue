@@ -39,6 +39,18 @@
         
         <el-row :gutter="20">
           <el-col :span="8">
+            <el-form-item label="项目类型" prop="type">
+              <el-select v-model="form.type" placeholder="请选择" style="width: 100%">
+                <el-option
+                  v-for="item in types"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="拓展方式" prop="expansion_method">
               <el-select v-model="form.expansion_method" placeholder="请选择" style="width: 100%">
                 <el-option
@@ -62,6 +74,9 @@
               </el-select>
             </el-form-item>
           </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="项目阶段" prop="stage">
               <el-select v-model="form.stage" placeholder="请选择" style="width: 100%">
@@ -74,10 +89,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="起始日期" prop="start_date">
               <el-date-picker
                 v-model="form.start_date"
@@ -88,7 +100,7 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="终止日期" prop="end_date">
               <el-date-picker
                 v-model="form.end_date"
@@ -118,7 +130,7 @@
               <el-input-number
                 v-model="form.receipt_amount"
                 :precision="2"
-                :disabled="true"
+                :disabled=true
                 style="width: 100%"
               />
             </el-form-item>
@@ -128,7 +140,7 @@
               <el-input-number
                 v-model="form.pending_amount"
                 :precision="2"
-                :disabled="true"
+                :disabled=true
                 style="width: 100%"
               />
             </el-form-item>
@@ -152,7 +164,7 @@
               <el-input-number
                 v-model="form.profit"
                 :precision="2"
-                :disabled="true"
+                :disabled=true
                 style="width: 100%"
               />
             </el-form-item>
@@ -223,7 +235,7 @@
                 :min="0"
                 size="small"
                 style="width: 100%"
-                :disabled="true"
+                :disabled=true
               />
             </template>
           </el-table-column>
@@ -378,22 +390,22 @@
 
   <!-- 编辑合作方对话框 -->
   <PartnerFormDialog
-    v-model:visible="formDialogVisible"
-    :type="formType"
-    :data="currentRow"
-    @success="fetchData"
+    v-model:visible="partnerDialogVisible"
+    :type="partnerDialogType"
+    :data="partnerDialogData"
+    @success="handlePartnerDialogSuccess"
   />
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Upload } from '@element-plus/icons-vue'
 import { createProject, updateProject, getProjectById } from '@/api/projects'
-import { searchPartners as searchPartnersApi, createPartner, getAllPartners } from '@/api/partners'
+import { searchPartners as searchPartnersApi } from '@/api/partners'
 import { downloadAttachment, uploadAttachment, deleteAttachment, updateAttachment, getAttachmentTypes } from '@/api/attachments'
 import { getDictionaryByCode } from '@/api/dictionaries'
-import { formatFileSize } from '@/utils/format'
+import { formatFileSize, downloadBlob } from '@/utils/format'
 import PartnerFormDialog from '../../partners/components/PartnerFormDialog.vue'
 
 const props = defineProps({
@@ -426,6 +438,7 @@ const partnerLoading = ref(false)
 const form = ref({
   name: '',
   city: '',
+  type: '收入合同',
   expansion_method: '',
   content: '',
   stage: '意向',
@@ -449,9 +462,9 @@ const partnerOptions = ref([])
 const partnerInfo = ref({})
 
 // 合作方表单对话框
-const formDialogVisible = ref(false)
-const formType = ref('add')
-const currentRow = ref(null)
+const partnerDialogVisible = ref(false)
+const partnerDialogType = ref('add')
+const partnerDialogData = ref(null)
 
 // 附件
 const fileList = ref([])
@@ -461,6 +474,7 @@ const attachmentTypeOptions = ref([])
 
 // 选项（从字典获取）
 const stages = ref([])
+const types = ref([])
 const expansionMethods = ref([])
 const contents = ref([])
 const cities = ref([])
@@ -468,8 +482,9 @@ const cities = ref([])
 // 获取字典选项
 const fetchDictOptions = async () => {
   try {
-    const [stageRes, expansionRes, contentRes, cityRes, paymentRes, attachmentRes] = await Promise.all([
+    const [stageRes, typeRes, expansionRes, contentRes, cityRes, paymentRes, attachmentRes] = await Promise.all([
       getDictionaryByCode('project_stage'),
+      getDictionaryByCode('project_type'),
       getDictionaryByCode('expansion_method'),
       getDictionaryByCode('project_content'),
       getDictionaryByCode('project_city'),
@@ -477,6 +492,7 @@ const fetchDictOptions = async () => {
       getAttachmentTypes()
     ])
     stages.value = stageRes.data.items || []
+    types.value = typeRes.data.items || []
     expansionMethods.value = expansionRes.data.items || []
     contents.value = contentRes.data.items || []
     cities.value = cityRes.data.items || []
@@ -491,6 +507,7 @@ const fetchDictOptions = async () => {
 const rules = {
   name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
   city: [{ required: true, message: '请选择履约地点', trigger: 'change' }],
+  type: [{ required: true, message: '请选择项目类型', trigger: 'change' }],
   stage: [{ required: true, message: '请选择项目阶段', trigger: 'change' }],
   expansion_method: [{ required: true, message: '请选择拓展方式', trigger: 'change' }],
   content: [{ required: true, message: '请选择项目内容', trigger: 'change' }],
@@ -554,25 +571,6 @@ const searchPartners = async (query) => {
   }
 }
 
-// 获取数据
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const params = {
-      page: pagination.page,
-      pageSize: pagination.pageSize,
-      keyword: searchForm.keyword
-    }
-    const res = await getPartners(params)
-    partnerList.value = res.data.list
-    pagination.total = res.data.pagination.total
-  } catch (error) {
-    console.error('获取合作方列表失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
 // 合作方选择变化
 const handlePartnerChange = (partnerId) => {
   const partner = partnerOptions.value.find(p => p.id === partnerId)
@@ -583,9 +581,17 @@ const handlePartnerChange = (partnerId) => {
 
 // 新增合作方
 const handleAddPartner = () => {
-  formType.value = 'add'
-  currentRow.value = null
-  formDialogVisible.value = true
+  partnerDialogType.value = 'add'
+  partnerDialogData.value = null
+  partnerDialogVisible.value = true
+}
+
+// 合作方对话框成功回调
+const handlePartnerDialogSuccess = () => {
+  // 重新搜索合作方
+  if (partnerInfo.value.name) {
+    searchPartners(partnerInfo.value.name)
+  }
 }
 
 // 新增款项
@@ -621,10 +627,10 @@ const handleDownload = async (row) => {
 }
 
 // 删除附件
-const handleDeleteAttachment = async (index, attachmentId) => {
+const handleDeleteAttachment = async (row) => {
   try {
-    await deleteAttachment(attachmentId)
-    existingAttachments.value.splice(index, 1)
+    await deleteAttachment(row.id)
+    existingAttachments.value = existingAttachments.value.filter(item => item.id !== row.id)
     ElMessage.success('删除成功')
   } catch (error) {
     console.error('删除附件失败:', error)
@@ -693,6 +699,7 @@ const handleClose = () => {
   form.value = {
     name: '',
     city: '',
+    type: '收入合同',
     expansion_method: '',
     content: '',
     stage: '意向',
@@ -724,15 +731,16 @@ const loadEditData = async () => {
       form.value = {
         name: data.name,
         city: data.city,
+        type: data.type,
         expansion_method: data.expansion_method,
         content: data.content,
         stage: data.stage,
-        total_amount: data.total_amount,
-        receipt_amount: data.receipt_amount,
-        pending_amount: data.pending_amount,
-        cost: data.cost,
-        profit: data.profit,
-        profit_rate: data.profit_rate,
+        total_amount: parseFloat(data.total_amount) || 0,
+        receipt_amount: parseFloat(data.receipt_amount) || 0,
+        pending_amount: parseFloat(data.pending_amount) || 0,
+        cost: parseFloat(data.cost) || 0,
+        profit: parseFloat(data.profit) || 0,
+        profit_rate: parseFloat(data.profit_rate) || 0,
         start_date: data.start_date,
         end_date: data.end_date,
         partner_id: data.partner_id
