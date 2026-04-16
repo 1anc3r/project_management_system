@@ -1,0 +1,370 @@
+<template>
+  <div class="dashboard-container">
+    <!-- 统计卡片 -->
+    <el-row :gutter="20" class="stat-row">
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon project">
+              <el-icon><Folder /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ stats.project_count || 0 }}</div>
+              <div class="stat-label">项目数量</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon amount">
+              <el-icon><Money /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ formatAmount(stats.total_amount) }}</div>
+              <div class="stat-label">合同总金额（万元）</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon receipt">
+              <el-icon><DocumentChecked /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ formatAmount(stats.receipt_amount) }}</div>
+              <div class="stat-label">已开票金额（万元）</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon pending">
+              <el-icon><Document /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ formatAmount(stats.pending_amount) }}</div>
+              <div class="stat-label">待开票金额（万元）</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 地图区域 -->
+    <el-row :gutter="20" class="map-row">
+      <el-col :span="24">
+        <el-card class="map-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <span>项目地图分布</span>
+              <el-tag type="info" size="small">点击地点查看项目列表</el-tag>
+            </div>
+          </template>
+          <TiandituMap />
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 图表区域 -->
+    <el-row :gutter="20" class="chart-row">
+      <el-col :xs="24" :lg="12">
+        <el-card class="chart-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <span>项目阶段分布</span>
+              <el-tag type="info" size="small">点击饼图查看详情</el-tag>
+            </div>
+          </template>
+          <v-chart class="chart" :option="stageChartOption" autoresize @click="handleStageClick" />
+        </el-card>
+      </el-col>
+      
+      <el-col :xs="24" :lg="12">
+        <el-card class="chart-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <span>合同金额趋势</span>
+            </div>
+          </template>
+          <v-chart class="chart" :option="trendChartOption" autoresize />
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { PieChart, LineChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  ToolboxComponent
+} from 'echarts/components'
+import VChart from 'vue-echarts'
+import { getDashboard } from '@/api/projects'
+import { formatAmount } from '@/utils/format'
+import TiandituMap from './components/TiandituMap.vue'
+
+// 注册 ECharts 组件
+use([
+  CanvasRenderer,
+  PieChart,
+  LineChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  ToolboxComponent
+])
+
+const router = useRouter()
+
+// 统计数据
+const stats = ref({})
+const stageDistribution = ref([])
+const receiptTrend = ref([])
+
+// 阶段颜色映射
+const stageColors = {
+    '意向': '#F57FAC',
+    '签约': '#EBAA3C',
+    '建设': '#409EFF',
+    '运营': '#03A9F4',
+    '交付': '#009688',
+    '验收': '#8FC25C',
+    '完结': '#909399'
+}
+
+// 项目阶段分布图表配置
+const stageChartOption = computed(() => ({
+  tooltip: {
+    trigger: 'item',
+    formatter: (params) => {
+      return `${params.name}<br/>项目数: ${params.value} 个<br/>金额: ${formatAmount(params.data.amount)} 万元`
+    }
+  },
+  legend: {
+    orient: 'vertical',
+    left: 'left'
+  },
+  series: [
+    {
+      name: '项目阶段',
+      type: 'pie',
+      radius: ['40%', '70%'],
+      avoidLabelOverlap: false,
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: '#fff',
+        borderWidth: 2
+      },
+      label: {
+        show: true,
+        formatter: (params) => {
+          return `${params.name}\n${params.value}个\n${formatAmount(params.data.amount)}万`
+        }
+      },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      data: stageDistribution.value.map(item => ({
+        name: item.stage,
+        value: item.count,
+        amount: item.amount,
+        itemStyle: { color: stageColors[item.stage] || '#909399' }
+      }))
+    }
+  ]
+}))
+
+// 合同金额趋势图表配置
+const trendChartOption = computed(() => ({
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'cross'
+    },
+    formatter: (params) => {
+      const data = params[0]
+      return `${data.name}<br/>合同金额: ${formatAmount(data.value)} 万元`
+    }
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: receiptTrend.value.map(item => item.month),
+    axisLabel: {
+      rotate: 45
+    }
+  },
+  yAxis: {
+    type: 'value',
+    name: '金额（万元）',
+    axisLabel: {
+      formatter: (value) => value
+    }
+  },
+  series: [
+    {
+      name: '合同金额',
+      type: 'line',
+      smooth: true,
+      data: receiptTrend.value.map(item => item.amount),
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
+            { offset: 1, color: 'rgba(64, 158, 255, 0.05)' }
+          ]
+        }
+      },
+      lineStyle: {
+        color: '#409EFF',
+        width: 3
+      },
+      itemStyle: {
+        color: '#409EFF'
+      }
+    }
+  ]
+}))
+
+// 获取数据
+const fetchData = async () => {
+  try {
+    const res = await getDashboard()
+    stats.value = res.data.stats || {}
+    stageDistribution.value = res.data.stageDistribution || []
+    receiptTrend.value = res.data.receiptTrend || []
+  } catch (error) {
+    console.error('获取数据概览失败:', error)
+  }
+}
+
+// 点击饼图
+const handleStageClick = (params) => {
+  router.push({
+    path: '/projects',
+    query: { stage: params.name }
+  })
+}
+
+onMounted(() => {
+  fetchData()
+})
+</script>
+
+<style scoped lang="scss">
+.dashboard-container {
+  .stat-row {
+    margin-bottom: 20px;
+    
+    .stat-card {
+      .stat-content {
+        display: flex;
+        align-items: center;
+        
+        .stat-icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 28px;
+          color: #fff;
+          margin-right: 15px;
+          
+          &.project {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+          
+          &.amount {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          }
+          
+          &.receipt {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          }
+          
+          &.pending {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+          }
+        }
+        
+        .stat-info {
+          .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #303133;
+          }
+          
+          .stat-label {
+            font-size: 14px;
+            color: #909399;
+            margin-top: 5px;
+          }
+        }
+      }
+    }
+  }
+  
+  .map-row {
+    margin-bottom: 20px;
+    
+    .map-card {
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .chart-row {
+    .chart-card {
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 600;
+      }
+      
+      .chart {
+        height: 350px;
+      }
+    }
+  }
+}
+</style>
