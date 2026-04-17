@@ -10,14 +10,6 @@
         <span v-show="!isCollapse" class="logo-text">项目管理系统</span>
       </div>
 
-      <!-- 折叠按钮 -->
-      <div class="collapse-btn" @click="toggleCollapse">
-        <el-icon>
-          <Fold v-if="!isCollapse" />
-          <Expand v-else />
-        </el-icon>
-      </div>
-
       <!-- 菜单 -->
       <el-menu :default-active="activeMenu" :collapse="isCollapse" :collapse-transition="false" class="sidebar-menu"
         router background-color="#304156" text-color="#bfcbd9" active-text-color="#409EFF">
@@ -71,6 +63,17 @@
     <el-container class="main-container">
       <!-- 顶部栏 -->
       <el-header class="header">
+        <div class="header-left">
+          <el-icon 
+            class="collapse-btn"
+            @click="toggleCollapse"
+          >
+            <Fold v-if="!isCollapse" />
+            <Expand v-else />
+          </el-icon>
+          <breadcrumb />
+        </div>
+        
         <div class="header-left">
           <el-input v-model="searchKeyword" placeholder="搜索项目、合作方、地点、联系人..." class="search-input" clearable
             @keyup.enter="handleSearch">
