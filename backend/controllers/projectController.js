@@ -800,7 +800,8 @@ const getDashboard = async (req, res) => {
       `SELECT 
         DATE_FORMAT(start_date, '%Y-%m') as month,
         COALESCE(SUM(total_amount), 0) as amount
-      FROM projects ${whereClause}
+      FROM projects 
+      WHERE start_date IS NOT NULL  ${whereClause}
       GROUP BY DATE_FORMAT(start_date, '%Y-%m')
       ORDER BY month DESC
       LIMIT 12`,

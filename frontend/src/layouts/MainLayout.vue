@@ -1,43 +1,69 @@
 <template>
   <el-container class="main-layout">
     <!-- 左侧导航 -->
-    <el-aside width="220px" class="sidebar">
-      <div class="logo">
-        <el-icon size="28"><Management /></el-icon>
-        <span class="logo-text">项目管理系统</span>
+    <el-aside :width="isCollapse ? '64px' : '220px'" class="sidebar">
+      <!-- Logo -->
+      <div class="logo" :class="{ 'collapsed': isCollapse }">
+        <el-icon size="28">
+          <Management />
+        </el-icon>
+        <span v-show="!isCollapse" class="logo-text">项目管理系统</span>
       </div>
-      
-      <el-menu
-        :default-active="activeMenu"
-        class="sidebar-menu"
-        router
-        background-color="#304156"
-        text-color="#bfcbd9"
-        active-text-color="#409EFF"
-      >
+
+      <!-- 折叠按钮 -->
+      <div class="collapse-btn" @click="toggleCollapse">
+        <el-icon>
+          <Fold v-if="!isCollapse" />
+          <Expand v-else />
+        </el-icon>
+      </div>
+
+      <!-- 菜单 -->
+      <el-menu :default-active="activeMenu" :collapse="isCollapse" :collapse-transition="false" class="sidebar-menu"
+        router background-color="#304156" text-color="#bfcbd9" active-text-color="#409EFF">
         <el-menu-item index="/dashboard">
-          <el-icon><DataLine /></el-icon>
-          <span>数据仪表板</span>
+          <el-icon>
+            <DataLine />
+          </el-icon>
+          <template #title>
+            <span>仪表盘</span>
+          </template>
         </el-menu-item>
-        
+
         <el-menu-item index="/projects">
-          <el-icon><Folder /></el-icon>
-          <span>项目管理</span>
+          <el-icon>
+            <Folder />
+          </el-icon>
+          <template #title>
+            <span>项目管理</span>
+          </template>
         </el-menu-item>
-        
+
         <el-menu-item index="/partners">
-          <el-icon><User /></el-icon>
-          <span>合作方管理</span>
+          <el-icon>
+            <User />
+          </el-icon>
+          <template #title>
+            <span>合作方管理</span>
+          </template>
         </el-menu-item>
-        
+
         <el-sub-menu v-if="userStore.isAdmin" index="/system">
           <template #title>
-            <el-icon><Setting /></el-icon>
+            <el-icon>
+              <Setting />
+            </el-icon>
             <span>系统管理</span>
           </template>
-          <el-menu-item index="/system/users">用户管理</el-menu-item>
-          <el-menu-item index="/system/logs">操作日志</el-menu-item>
-          <el-menu-item index="/system/dictionaries">字典管理</el-menu-item>
+          <el-menu-item index="/system/users">
+            <template #title>用户管理</template>
+          </el-menu-item>
+          <el-menu-item index="/system/logs">
+            <template #title>操作日志</template>
+          </el-menu-item>
+          <el-menu-item index="/system/dictionaries">
+            <template #title>字典管理</template>
+          </el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -46,25 +72,24 @@
       <!-- 顶部栏 -->
       <el-header class="header">
         <div class="header-left">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索项目、合作方、地点、联系人..."
-            class="search-input"
-            clearable
-            @keyup.enter="handleSearch"
-          >
+          <el-input v-model="searchKeyword" placeholder="搜索项目、合作方、地点、联系人..." class="search-input" clearable
+            @keyup.enter="handleSearch">
             <template #prefix>
-              <el-icon><Search /></el-icon>
+              <el-icon>
+                <Search />
+              </el-icon>
             </template>
           </el-input>
         </div>
-        
+
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-info">
               <el-avatar :size="32" :icon="UserFilled" />
               <span class="username">{{ userStore.userInfo.nickname || userStore.userInfo.username }}</span>
-              <el-icon><ArrowDown /></el-icon>
+              <el-icon>
+                <ArrowDown />
+              </el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -79,23 +104,20 @@
       <!-- 标签页 -->
       <div class="tabs-container">
         <div class="tabs-wrapper" ref="tabsWrapper">
-          <div
-            v-for="(tab, index) in tabStore.visitedViews"
-            :key="tab.path"
-            class="tab-item"
-            :class="{ active: tabStore.activeTab === tab.path }"
-            @click="handleTabClick(tab)"
-            @contextmenu.prevent="handleContextMenu($event, tab, index)"
-          >
+          <div v-for="(tab, index) in tabStore.visitedViews" :key="tab.path" class="tab-item"
+            :class="{ active: tabStore.activeTab === tab.path }" @click="handleTabClick(tab)"
+            @contextmenu.prevent="handleContextMenu($event, tab, index)">
             <span class="tab-title">{{ tab.title }}</span>
             <el-icon v-if="tab.name !== 'Dashboard'" class="tab-close" @click.stop="handleCloseTab(tab)">
               <Close />
             </el-icon>
           </div>
         </div>
-        
+
         <el-dropdown @command="handleTabsCommand">
-          <el-icon class="tabs-more"><ArrowDown /></el-icon>
+          <el-icon class="tabs-more">
+            <ArrowDown />
+          </el-icon>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="closeOthers">关闭其他</el-dropdown-item>
@@ -116,11 +138,8 @@
     </el-container>
 
     <!-- 右键菜单 -->
-    <div
-      v-show="contextMenuVisible"
-      class="context-menu"
-      :style="{ left: contextMenuLeft + 'px', top: contextMenuTop + 'px' }"
-    >
+    <div v-show="contextMenuVisible" class="context-menu"
+      :style="{ left: contextMenuLeft + 'px', top: contextMenuTop + 'px' }">
       <div class="menu-item" @click="handleRefresh">刷新</div>
       <div class="menu-item" @click="handleCloseCurrent">关闭</div>
       <div class="menu-item" @click="handleCloseOthers">关闭其他</div>
@@ -128,11 +147,7 @@
     </div>
 
     <!-- 修改密码对话框 -->
-    <el-dialog
-      v-model="passwordDialogVisible"
-      title="修改密码"
-      width="400px"
-    >
+    <el-dialog v-model="passwordDialogVisible" title="修改密码" width="400px">
       <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
         <el-form-item label="旧密码" prop="oldPassword">
           <el-input v-model="passwordForm.oldPassword" type="password" show-password />
@@ -166,6 +181,7 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const tabStore = useTabStore()
+const isCollapse = ref(false)
 
 // 搜索
 const searchKeyword = ref('')
@@ -180,6 +196,11 @@ const handleSearch = () => {
 
 // 当前激活的菜单
 const activeMenu = computed(() => route.path)
+
+// 折叠/展开侧边栏
+const toggleCollapse = () => {
+  isCollapse.value = !isCollapse.value
+}
 
 // 标签页拖拽
 const tabsWrapper = ref(null)
@@ -353,8 +374,9 @@ const handleChangePassword = async () => {
 }
 
 .sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: #304156;
-  
+
   .logo {
     height: 60px;
     display: flex;
@@ -362,16 +384,53 @@ const handleChangePassword = async () => {
     justify-content: center;
     color: #fff;
     border-bottom: 1px solid #1f2d3d;
-    
-    .logo-text {
-      margin-left: 10px;
-      font-size: 16px;
-      font-weight: 600;
-    }
+    padding: 0 15px;
+    transition: all 0.3s;
   }
-  
+
+  .logo.collapsed {
+    padding: 0;
+  }
+
+  .logo-text {
+    margin-left: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .collapse-btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bfcbd9;
+    cursor: pointer;
+    border-bottom: 1px solid #1f2d3d;
+    transition: background-color 0.3s;
+  }
+
+  .collapse-btn:hover {
+    background-color: #263445;
+    color: #409EFF;
+  }
+
   .sidebar-menu {
+    flex: 1;
     border-right: none;
+  }
+
+  /* 折叠时的菜单样式调整 */
+  :deep(.el-menu--collapse) {
+    width: 64px;
+  }
+
+  :deep(.el-menu--collapse .el-sub-menu__title span) {
+    display: none;
+  }
+
+  :deep(.el-menu--collapse .el-sub-menu__icon-arrow) {
+    display: none;
   }
 }
 
@@ -385,18 +444,18 @@ const handleChangePassword = async () => {
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-  
+
   .search-input {
     width: 350px;
   }
-  
+
   .header-right {
     .user-info {
       display: flex;
       align-items: center;
       cursor: pointer;
       padding: 0 10px;
-      
+
       .username {
         margin: 0 8px;
         font-size: 14px;
@@ -412,17 +471,17 @@ const handleChangePassword = async () => {
   display: flex;
   align-items: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  
+
   .tabs-wrapper {
     flex: 1;
     display: flex;
     overflow-x: auto;
-    
+
     &::-webkit-scrollbar {
       height: 0;
     }
   }
-  
+
   .tab-item {
     display: inline-flex;
     align-items: center;
@@ -436,21 +495,21 @@ const handleChangePassword = async () => {
     border-radius: 3px;
     transition: all 0.3s;
     user-select: none;
-    
+
     &:hover {
       background-color: #f0f0f0;
     }
-    
+
     &.active {
       background-color: #409EFF;
       color: #fff;
       border-color: #409EFF;
     }
-    
+
     .tab-title {
       margin-right: 6px;
     }
-    
+
     .tab-close {
       width: 14px;
       height: 14px;
@@ -458,18 +517,18 @@ const handleChangePassword = async () => {
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
       &:hover {
         background-color: rgba(0, 0, 0, 0.1);
       }
     }
   }
-  
+
   .tabs-more {
     margin-left: 10px;
     cursor: pointer;
     padding: 5px;
-    
+
     &:hover {
       color: #409EFF;
     }
@@ -489,12 +548,12 @@ const handleChangePassword = async () => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   z-index: 3000;
   padding: 5px 0;
-  
+
   .menu-item {
     padding: 8px 20px;
     font-size: 14px;
     cursor: pointer;
-    
+
     &:hover {
       background-color: #f5f7fa;
       color: #409EFF;
