@@ -17,13 +17,27 @@ export const formatPercent = (value, decimals = 2) => {
 // 格式化日期
 export const formatDate = (date, format = 'YYYY-MM-DD') => {
   if (!date) return '-'
+
+  // 优先以正则方式从字符串中提取日期部分，彻底避开 new Date() 的时区偏移问题
+  // 兼容格式："2024-03-20"、"2024-03-20 10:30:00"、"2024-03-20T00:00:00.000Z"
+  if (typeof date === 'string') {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (match) {
+      const [, year, month, day] = match
+      return format
+        .replace('YYYY', year)
+        .replace('MM', month)
+        .replace('DD', day)
+    }
+  }
+
   const d = new Date(date)
   if (isNaN(d.getTime())) return '-'
-  
+
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
-  
+
   return format
     .replace('YYYY', year)
     .replace('MM', month)
@@ -33,9 +47,20 @@ export const formatDate = (date, format = 'YYYY-MM-DD') => {
 // 格式化日期时间
 export const formatDateTime = (date) => {
   if (!date) return '-'
+
+  // 优先以正则方式从字符串中提取，避免时区偏移
+  // 兼容格式："2024-03-20 10:30:00"、"2024-03-20T10:30:00.000Z"
+  if (typeof date === 'string') {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/)
+    if (match) {
+      const [, year, month, day, hour = '00', minute = '00'] = match
+      return `${year}-${month}-${day} ${hour}:${minute}`
+    }
+  }
+
   const d = new Date(date)
   if (isNaN(d.getTime())) return '-'
-  
+
   return `${formatDate(date)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 

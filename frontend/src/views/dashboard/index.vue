@@ -101,7 +101,7 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="chart-row">
+    <!-- <el-row :gutter="20" class="chart-row">
       <el-col :span="24">
         <el-card class="chart-card" shadow="hover">
           <template #header>
@@ -112,7 +112,7 @@
           <v-chart class="chart" :option="trendChartOption" autoresize />
         </el-card>
       </el-col>
-    </el-row>
+    </el-row> -->
 
     <!-- 资讯列表（可折叠/展开） -->
     <el-row :gutter="20" class="info-row">
