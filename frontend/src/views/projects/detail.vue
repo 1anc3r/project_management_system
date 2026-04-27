@@ -1,7 +1,7 @@
 <template>
   <div class="project-detail">
     <el-page-header @back="handleBack" title="项目详情" />
-    
+
     <el-card v-loading="loading" class="detail-card">
       <template #header>
         <div class="card-header">
@@ -12,7 +12,7 @@
           </div>
         </div>
       </template>
-      
+
       <!-- 基本信息 -->
       <div class="section">
         <div class="section-title">基本信息</div>
@@ -32,7 +32,7 @@
           </el-descriptions-item>
         </el-descriptions>
       </div>
-      
+
       <!-- 金额信息 -->
       <div class="section">
         <div class="section-title">金额信息</div>
@@ -77,7 +77,7 @@
           </el-col>
         </el-row>
       </div>
-      
+
       <!-- 款项情况 -->
       <div class="section">
         <div class="section-title">款项情况</div>
@@ -103,7 +103,7 @@
           </el-table-column>
         </el-table>
       </div>
-      
+
       <!-- 合作方信息 -->
       <div class="section">
         <div class="section-title">合作方信息</div>
@@ -117,7 +117,7 @@
           <el-descriptions-item label="联系电话">{{ project.partner_contact_phone || '-' }}</el-descriptions-item>
         </el-descriptions>
       </div>
-      
+
       <!-- 附件列表 -->
       <div class="section">
         <div class="section-title">项目附件</div>
@@ -146,6 +146,44 @@
         <el-empty v-else description="暂无附件" />
       </div>
 
+      <!-- 相关资讯列表（可折叠/展开） -->
+      <div class="section">
+        <el-collapse v-model="activeCollapse">
+          <el-collapse-item name="information">
+            <template #title>
+              <div class="collapse-title">
+                <span class="section-title">相关资讯</span>
+                <el-tag type="info" size="small" class="count-tag">{{ informationList.length }} 条</el-tag>
+              </div>
+            </template>
+            <el-timeline v-if="informationList.length">
+              <el-timeline-item
+                v-for="item in informationList"
+                :key="item.id"
+                :type="getTimelineType(item.information_type)"
+                :timestamp="formatDate(item.information_date)"
+                placement="top"
+              >
+                <el-card shadow="never" class="info-card">
+                  <template #header>
+                    <div class="info-header">
+                      <span class="info-title">{{ item.information_title }}</span>
+                      <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type }}</el-tag>
+                    </div>
+                  </template>
+                  <p class="info-content">{{ item.information_content || '暂无内容' }}</p>
+                  <p v-if="item.partner_name" class="info-partner">
+                    <el-icon><Link /></el-icon>
+                    关联合作方：{{ item.partner_name }}
+                  </p>
+                </el-card>
+              </el-timeline-item>
+            </el-timeline>
+            <el-empty v-else description="暂无相关资讯" />
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+
       <!-- 编辑对话框 -->
       <ProjectFormDialog
         v-model:visible="formDialogVisible"
@@ -153,7 +191,7 @@
         :data="project"
         @success="fetchData"
       />
-      
+
       <!-- 操作按钮 -->
       <div class="section actions">
         <el-button type="primary" @click="handleEdit">编辑项目</el-button>
@@ -168,7 +206,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjectById } from '@/api/projects'
-import { downloadAttachment, deleteAttachment, updateAttachment, getAttachmentTypes } from '@/api/attachments'
+import { getInformationByProject } from '@/api/information'
+import { downloadAttachment, deleteAttachment, getAttachmentTypes } from '@/api/attachments'
 import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob } from '@/utils/format'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
 
@@ -178,6 +217,11 @@ const router = useRouter()
 const loading = ref(false)
 const project = ref({})
 const attachmentTypes = ref([])
+
+// 折叠面板激活项
+const activeCollapse = ref(['information'])
+// 资讯列表
+const informationList = ref([])
 
 // 表单对话框
 const formDialogVisible = ref(false)
@@ -223,10 +267,23 @@ const fetchData = async () => {
   try {
     const res = await getProjectById(route.params.id)
     project.value = res.data
+    // 同时获取资讯列表
+    await fetchInformationList()
   } catch (error) {
     console.error('获取项目详情失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 获取资讯列表
+const fetchInformationList = async () => {
+  try {
+    const res = await getInformationByProject(route.params.id, { limit: 50 })
+    informationList.value = res.data || []
+  } catch (error) {
+    console.error('获取资讯列表失败:', error)
+    informationList.value = []
   }
 }
 
@@ -273,9 +330,26 @@ const handleUpdateAttachmentType = async (row, newType) => {
     ElMessage.success('附件类型更新成功')
   } catch (error) {
     console.error('更新附件类型失败:', error)
-    // 恢复原值
     fetchData()
   }
+}
+
+// 资讯类型标签样式
+const getInfoTypeTag = (type) => {
+  const typeMap = {
+    '项目推进': 'primary',
+    '会议活动': 'success'
+  }
+  return typeMap[type] || 'info'
+}
+
+// 时间线类型
+const getTimelineType = (type) => {
+  const typeMap = {
+    '项目推进': 'primary',
+    '会议活动': 'success'
+  }
+  return typeMap[type] || 'info'
 }
 
 onMounted(() => {
@@ -289,13 +363,13 @@ onMounted(() => {
   .el-page-header {
     margin-bottom: 20px;
   }
-  
+
   .detail-card {
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      
+
       .title {
         font-size: 18px;
         font-weight: 600;
@@ -306,10 +380,10 @@ onMounted(() => {
         gap: 8px;
       }
     }
-    
+
     .section {
       margin-bottom: 30px;
-      
+
       .section-title {
         font-size: 15px;
         font-weight: 600;
@@ -318,35 +392,77 @@ onMounted(() => {
         padding-left: 10px;
         border-left: 4px solid #409EFF;
       }
-      
+
       .amount-card {
         background-color: #f5f7fa;
         border-radius: 8px;
         padding: 20px;
         text-align: center;
-        
+
         .amount-label {
           font-size: 13px;
           color: #909399;
           margin-bottom: 8px;
         }
-        
+
         .amount-value {
           font-size: 20px;
           font-weight: 600;
           color: #303133;
         }
-        
+
         &.highlight {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          
+
           .amount-label, .amount-value {
             color: #fff;
           }
         }
       }
     }
-    
+
+    .collapse-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+
+      .count-tag {
+        font-size: 12px;
+      }
+    }
+
+    .info-card {
+      margin-bottom: 5px;
+
+      .info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .info-title {
+          font-weight: 600;
+          font-size: 14px;
+        }
+      }
+
+      .info-content {
+        font-size: 13px;
+        color: #606266;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
+      .info-partner {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #909399;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+
     .actions {
       display: flex;
       justify-content: center;

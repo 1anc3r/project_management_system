@@ -414,6 +414,49 @@ UNION ALL
 SELECT id, '其他', '其他', '其他', 9 FROM dictionaries WHERE dict_code = 'attachment_type';
 
 -- =====================================================
+-- 9. 资讯表 information
+-- =====================================================
+DROP TABLE IF EXISTS information;
+CREATE TABLE information (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    partner_id BIGINT UNSIGNED DEFAULT NULL COMMENT '合作方ID（外键）',
+    project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID（外键）',
+    information_date DATE NOT NULL COMMENT '资讯日期',
+    information_type VARCHAR(50) NOT NULL COMMENT '资讯类型(项目推进/会议活动)',
+    information_title VARCHAR(255) NOT NULL COMMENT '资讯标题',
+    information_content TEXT DEFAULT NULL COMMENT '资讯内容',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    KEY idx_partner_id (partner_id),
+    KEY idx_project_id (project_id),
+    KEY idx_information_date (information_date),
+    KEY idx_information_type (information_type),
+    CONSTRAINT fk_info_partner FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_info_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资讯信息表';
+
+-- 资讯类型字典
+INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
+('information_type', '资讯类型', 'string', '资讯类型字典', 8);
+
+INSERT INTO dictionary_items (dict_id, item_code, item_name, item_value, sort_order) 
+SELECT id, '项目推进', '项目推进', '项目推进', 1 FROM dictionaries WHERE dict_code = 'information_type'
+UNION ALL
+SELECT id, '会议活动', '会议活动', '会议活动', 2 FROM dictionaries WHERE dict_code = 'information_type';
+
+-- 插入示例资讯数据
+INSERT INTO information (partner_id, project_id, information_date, information_type, information_title, information_content) VALUES
+(1, 1, '2024-02-15', '项目推进', '智慧园区项目启动会', '项目正式启动，双方确认了项目范围和里程碑计划'),
+(1, 1, '2024-03-20', '项目推进', '智慧园区项目中期验收', '完成了系统核心模块开发，通过中期验收'),
+(1, NULL, '2024-04-10', '会议活动', '与四川科技季度沟通会', '就后续合作方向进行了深入交流，达成多项共识'),
+(2, 2, '2023-07-01', '项目推进', '数据治理平台需求评审', '完成了需求规格说明书的评审和确认'),
+(2, 2, '2024-01-15', '会议活动', '数据治理项目年终总结会', '总结项目运营情况，制定下一年度工作计划'),
+(1, 3, '2023-02-01', '项目推进', '政务云运维服务启动', '运维团队进场，开始提供7x24小时运维服务'),
+(3, 4, '2024-08-05', '项目推进', '智慧城市大数据平台立项', '项目正式立项，进入需求调研阶段'),
+(2, 5, '2024-04-20', '会议活动', '企业数字化转型咨询启动会', '咨询服务正式启动，确定了咨询范围和交付物');
+
+-- =====================================================
 -- 完成
 -- =====================================================
 SELECT '数据库初始化完成！' AS message;

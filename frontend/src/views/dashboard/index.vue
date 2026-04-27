@@ -15,7 +15,7 @@
           </div>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
@@ -29,7 +29,7 @@
           </div>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
@@ -43,7 +43,7 @@
           </div>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
@@ -87,7 +87,7 @@
           <v-chart class="chart" :option="stageChartOption" autoresize @click="handleStageClick" />
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :lg="12">
         <el-card class="chart-card" shadow="hover">
           <template #header>
@@ -113,6 +113,54 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 资讯列表（可折叠/展开） -->
+    <el-row :gutter="20" class="info-row">
+      <el-col :span="24">
+        <el-card class="info-card" shadow="hover">
+          <el-collapse v-model="activeCollapse">
+            <el-collapse-item name="information">
+              <template #title>
+                <div class="collapse-header">
+                  <span class="collapse-title">最新资讯</span>
+                  <el-tag type="info" size="small" class="count-tag">{{ informationList.length }} 条</el-tag>
+                </div>
+              </template>
+              <el-timeline v-if="informationList.length">
+                <el-timeline-item
+                  v-for="item in informationList"
+                  :key="item.id"
+                  :type="getTimelineType(item.information_type)"
+                  :timestamp="formatDate(item.information_date)"
+                  placement="top"
+                >
+                  <el-card shadow="never" class="info-item-card">
+                    <template #header>
+                      <div class="info-item-header">
+                        <span class="info-item-title">{{ item.information_title }}</span>
+                        <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type }}</el-tag>
+                      </div>
+                    </template>
+                    <p class="info-item-content">{{ item.information_content || '暂无内容' }}</p>
+                    <div class="info-item-meta">
+                      <span v-if="item.partner_name" class="meta-item">
+                        <el-icon><User /></el-icon>
+                        {{ item.partner_name }}
+                      </span>
+                      <span v-if="item.project_name" class="meta-item">
+                        <el-icon><Folder /></el-icon>
+                        {{ item.project_name }}
+                      </span>
+                    </div>
+                  </el-card>
+                </el-timeline-item>
+              </el-timeline>
+              <el-empty v-else description="暂无资讯" />
+            </el-collapse-item>
+          </el-collapse>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -130,9 +178,10 @@ import {
   ToolboxComponent
 } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { Folder, Money, DocumentChecked, Document } from '@element-plus/icons-vue'
+import { Folder, Money, DocumentChecked, Document, User } from '@element-plus/icons-vue'
 import { getDashboard } from '@/api/projects'
-import { formatAmount } from '@/utils/format'
+import { getAllInformation } from '@/api/information'
+import { formatAmount, formatDate } from '@/utils/format'
 import TiandituMap from './components/TiandituMap.vue'
 
 // 注册 ECharts 组件
@@ -155,6 +204,11 @@ const stats = ref({})
 const stageDistribution = ref([])
 const receiptTrend = ref([])
 const typeDistribution = ref([])
+
+// 折叠面板激活项
+const activeCollapse = ref(['information'])
+// 资讯列表
+const informationList = ref([])
 
 // 阶段颜色映射
 const stageColors = {
@@ -342,6 +396,17 @@ const fetchData = async () => {
   }
 }
 
+// 获取资讯列表
+const fetchInformationList = async () => {
+  try {
+    const res = await getAllInformation({ limit: 20 })
+    informationList.value = res.data || []
+  } catch (error) {
+    console.error('获取资讯列表失败:', error)
+    informationList.value = []
+  }
+}
+
 // 点击饼图
 const handleStageClick = (params) => {
   router.push({
@@ -358,8 +423,27 @@ const handleTypeClick = (params) => {
   })
 }
 
+// 资讯类型标签样式
+const getInfoTypeTag = (type) => {
+  const typeMap = {
+    '项目推进': 'primary',
+    '会议活动': 'success'
+  }
+  return typeMap[type] || 'info'
+}
+
+// 时间线类型
+const getTimelineType = (type) => {
+  const typeMap = {
+    '项目推进': 'primary',
+    '会议活动': 'success'
+  }
+  return typeMap[type] || 'info'
+}
+
 onMounted(() => {
   fetchData()
+  fetchInformationList()
 })
 </script>
 
@@ -367,12 +451,12 @@ onMounted(() => {
 .dashboard-container {
   .type-switch-card {
     margin-bottom: 20px;
-    
+
     .type-switch-bar {
       display: flex;
       align-items: center;
       gap: 15px;
-      
+
       .switch-label {
         font-size: 14px;
         font-weight: 500;
@@ -383,12 +467,12 @@ onMounted(() => {
 
   .stat-row {
     margin-bottom: 20px;
-    
+
     .stat-card {
       .stat-content {
         display: flex;
         align-items: center;
-        
+
         .stat-icon {
           width: 60px;
           height: 60px;
@@ -399,31 +483,31 @@ onMounted(() => {
           font-size: 28px;
           color: #fff;
           margin-right: 15px;
-          
+
           &.project {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           }
-          
+
           &.amount {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
           }
-          
+
           &.receipt {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
           }
-          
+
           &.pending {
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
           }
         }
-        
+
         .stat-info {
           .stat-value {
             font-size: 24px;
             font-weight: 600;
             color: #303133;
           }
-          
+
           .stat-label {
             font-size: 14px;
             color: #909399;
@@ -433,10 +517,10 @@ onMounted(() => {
       }
     }
   }
-  
+
   .map-row {
     margin-bottom: 20px;
-    
+
     .map-card {
       .card-header {
         display: flex;
@@ -446,10 +530,10 @@ onMounted(() => {
       }
     }
   }
-  
+
   .chart-row {
     margin-bottom: 20px;
-    
+
     .chart-card {
       .card-header {
         display: flex;
@@ -457,9 +541,68 @@ onMounted(() => {
         justify-content: space-between;
         font-weight: 600;
       }
-      
+
       .chart {
         height: 350px;
+      }
+    }
+  }
+
+  .info-row {
+    .info-card {
+      .collapse-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+
+        .collapse-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #303133;
+          padding-left: 10px;
+          border-left: 4px solid #409EFF;
+        }
+
+        .count-tag {
+          font-size: 12px;
+        }
+      }
+
+      .info-item-card {
+        margin-bottom: 5px;
+
+        .info-item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .info-item-title {
+            font-weight: 600;
+            font-size: 14px;
+          }
+        }
+
+        .info-item-content {
+          font-size: 13px;
+          color: #606266;
+          line-height: 1.6;
+          white-space: pre-wrap;
+        }
+
+        .info-item-meta {
+          margin-top: 8px;
+          display: flex;
+          gap: 15px;
+
+          .meta-item {
+            font-size: 12px;
+            color: #909399;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+        }
       }
     }
   }

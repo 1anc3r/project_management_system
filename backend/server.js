@@ -19,6 +19,7 @@ const userRoutes = require('./routes/users');
 const logRoutes = require('./routes/logs');
 const attachmentRoutes = require('./routes/attachments');
 const dictionaryRoutes = require('./routes/dictionaries');
+const informationRoutes = require('./routes/information');
 
 // 创建Express应用
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/dictionaries', dictionaryRoutes);
+app.use('/api/information', informationRoutes);
 
 // 404处理
 app.use((req, res) => {

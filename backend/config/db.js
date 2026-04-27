@@ -17,7 +17,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
-  charset:'utf8mb4'
+  charset: 'utf8mb4'
 });
 
 // 测试数据库连接
@@ -43,11 +43,14 @@ const query = async (sql, params = []) => {
       }
       if (typeof param === 'number') {
         // 确保数字是有效的整数
-        return Number.isFinite(param) ? Math.floor(param) : 0;
+        if (!Number.isFinite(param) || Number.isNaN(param)) {
+          return 0;
+        }
+        return Math.floor(param);
       }
       return param;
     });
-    
+
     const [results] = await pool.execute(sql, sanitizedParams);
     return results;
   } catch (error) {

@@ -14,7 +14,7 @@
             v-model="searchForm.keyword"
             placeholder="搜索项目、合作方、地点、联系人"
             clearable
-            style="width: 280px"
+            style="width: 300px"
             @keyup.enter="handleSearch"
           >
             <template #append>
@@ -24,7 +24,7 @@
         </div>
         
         <div class="right-btns">
-          <el-button :icon="Upload" @click="handleImport">导入</el-button>
+          <!-- <el-button :icon="Upload" @click="handleImport">导入</el-button> -->
           <el-button :icon="Download" @click="handleExport">导出</el-button>
           <el-button :icon="View" @click="viewMode = viewMode === 'list' ? 'grid' : 'list'">
             {{ viewMode === 'list' ? '网格' : '列表' }}
@@ -34,22 +34,22 @@
       
       <!-- 筛选条件 -->
       <div class="filter-bar">
-        <el-select v-model="searchForm.type" placeholder="项目类型" clearable style="width: 120px">
+        <el-select v-model="searchForm.type" placeholder="项目类型" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.types" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.stage" placeholder="项目阶段" clearable style="width: 120px">
+        <el-select v-model="searchForm.stage" placeholder="项目阶段" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.stages" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.city" placeholder="履约地点" clearable style="width: 140px">
+        <el-select v-model="searchForm.city" placeholder="履约地点" clearable style="width: 150px">
           <el-option v-for="item in filterOptions.cities" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.expansionMethod" placeholder="签约方式" clearable style="width: 130px">
+        <el-select v-model="searchForm.expansionMethod" placeholder="签约方式" clearable style="width: 150px">
           <el-option v-for="item in filterOptions.expansionMethods" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.content" placeholder="项目内容" clearable style="width: 120px">
+        <el-select v-model="searchForm.content" placeholder="项目内容" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.contents" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 130px">
+        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">
           <el-option label="项目阶段" value="stage" />
           <el-option label="合同金额" value="total_amount" />
           <el-option label="已开票金额" value="receipt_amount" />
@@ -208,7 +208,7 @@
     />
 
     <!-- 导入对话框 -->
-    <el-dialog v-model="importDialogVisible" title="导入项目" width="500px">
+    <!-- <el-dialog v-model="importDialogVisible" title="导入项目" width="500px">
       <el-upload
         ref="uploadRef"
         action=""
@@ -228,7 +228,7 @@
         <el-button @click="importDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleImportSubmit">导入</el-button>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -463,10 +463,10 @@ const handleExport = async () => {
 }
 
 // 导入
-const handleImport = () => {
-  importDialogVisible.value = true
-  importFile.value = null
-}
+// const handleImport = () => {
+//   importDialogVisible.value = true
+//   importFile.value = null
+// }
 
 // 附件更新
 const handleFileChange = (file) => {
@@ -474,24 +474,24 @@ const handleFileChange = (file) => {
 }
 
 // 附件导入
-const handleImportSubmit = async () => {
-  if (!importFile.value) {
-    ElMessage.warning('请选择要导入的文件')
-    return
-  }
+// const handleImportSubmit = async () => {
+//   if (!importFile.value) {
+//     ElMessage.warning('请选择要导入的文件')
+//     return
+//   }
   
-  const formData = new FormData()
-  formData.append('file', importFile.value)
+//   const formData = new FormData()
+//   formData.append('file', importFile.value)
   
-  try {
-    const res = await importProjects(formData)
-    ElMessage.success(res.message)
-    importDialogVisible.value = false
-    fetchData()
-  } catch (error) {
-    console.error('导入失败:', error)
-  }
-}
+//   try {
+//     const res = await importProjects(formData)
+//     ElMessage.success(res.message)
+//     importDialogVisible.value = false
+//     fetchData()
+//   } catch (error) {
+//     console.error('导入失败:', error)
+//   }
+// }
 
 // 卡片操作
 const handleCardCommand = (command, row) => {

@@ -40,6 +40,12 @@ const routes = [
         meta: { title: '合作方管理', icon: 'User' }
       },
       {
+        path: '/information',
+        name: 'Information',
+        component: () => import('@/views/information/index.vue'),
+        meta: { title: '资讯管理', icon: 'ChatDotRound' }
+      },
+      {
         path: '/system',
         name: 'System',
         component: () => import('@/views/system/index.vue'),

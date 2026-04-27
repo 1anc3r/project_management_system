@@ -40,6 +40,15 @@
           </template>
         </el-menu-item>
 
+        <el-menu-item index="/information">
+          <el-icon>
+            <ChatDotRound />
+          </el-icon>
+          <template #title>
+            <span>资讯管理</span>
+          </template>
+        </el-menu-item>
+
         <el-sub-menu v-if="userStore.isAdmin" index="/system">
           <template #title>
             <el-icon>
@@ -71,7 +80,6 @@
             <Fold v-if="!isCollapse" />
             <Expand v-else />
           </el-icon>
-          <breadcrumb />
         </div>
         
         <div class="header-left">
