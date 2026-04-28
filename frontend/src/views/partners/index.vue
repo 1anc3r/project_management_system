@@ -48,7 +48,7 @@
         <el-table-column prop="name" label="合作方名称" min-width="180" show-overflow-tooltip />
         <el-table-column prop="type" label="类型" width="80" align="center">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.type }}</el-tag>
+            <el-tag :type="getPartnerTypeTag(row.type)"  size="small">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="tax_id" label="纳税人识别号" width="160" />
@@ -323,6 +323,17 @@ const handleCardCommand = (command, row) => {
   } else if (command === 'delete') {
     handleDelete(row)
   }
+}
+
+// 合作方类型标签样式
+const getPartnerTypeTag = (type) => {
+  const typeMap = {
+    '甲方': 'success',
+    '乙方': 'danger',
+    '丙方': 'warning',
+    '其他': 'primary'
+  }
+  return typeMap[type] || 'info'
 }
 
 onMounted(() => {

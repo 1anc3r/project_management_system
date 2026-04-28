@@ -67,7 +67,7 @@ const getPartners = async (req, res) => {
 
     // 查询总数
     const countResult = await query(
-      `SELECT COUNT(*) as total FROM partners ${whereClause}`,
+      `SELECT COUNT(*) as total FROM partners p ${whereClause}`,
       params
     );
     const total = countResult[0].total;

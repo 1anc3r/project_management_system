@@ -178,7 +178,7 @@ const currentRow = ref(null)
 const getInfoTypeTag = (type) => {
   const typeMap = {
     '项目推进': 'primary',
-    '会议活动': 'success'
+    '会议活动': 'warning'
   }
   return typeMap[type] || 'info'
 }
