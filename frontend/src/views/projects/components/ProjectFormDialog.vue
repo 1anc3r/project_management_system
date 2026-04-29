@@ -223,7 +223,7 @@
                 :max="100"
                 size="small"
                 style="width: 100%"
-                @change="calculatePaymentAmount(row)"
+                @change="calculateAmounts()"
               />
             </template>
           </el-table-column>
@@ -242,9 +242,9 @@
           <el-table-column label="是否支付" width="80" align="center">
             <template #default="{ row, $index }">
               <el-checkbox v-model="row.is_paid"
-                :true-label="1"
+                :true-value="1"
                 :false-label="0"
-                @change="calculateAmounts"/>
+                @change="calculateAmounts()"/>
             </template>
           </el-table-column>
           <el-table-column label="支付日期" width="140">
@@ -410,10 +410,7 @@ import PartnerFormDialog from '../../partners/components/PartnerFormDialog.vue'
 
 const props = defineProps({
   visible: Boolean,
-  type: {
-    type: String,
-    default: 'add'
-  },
+  type: { type: String, default: 'add' },
   data: Object
 })
 
@@ -434,8 +431,15 @@ const uploadRef = ref(null)
 const submitLoading = ref(false)
 const partnerLoading = ref(false)
 
-// 表单数据
-const form = ref({
+// 数字转换辅助函数 - 确保所有金额字段为 number 类型，避免 ElInputNumber 类型警告
+const toNum = (val) => {
+  if (val === null || val === undefined) return 0
+  const n = parseFloat(val)
+  return Number.isFinite(n) ? n : 0
+}
+
+// 表单默认值（常量，避免重复定义）
+const DEFAULT_FORM = {
   name: '',
   city: '',
   type: '收入合同',
@@ -451,7 +455,10 @@ const form = ref({
   start_date: '',
   end_date: '',
   partner_id: null
-})
+}
+
+// 表单数据
+const form = ref({ ...DEFAULT_FORM })
 
 // 款项列表
 const payments = ref([])
@@ -514,10 +521,10 @@ const rules = {
   partner_id: [{ required: true, message: '请选择合作方', trigger: 'change' }]
 }
 
-// 款项比例总和
-const paymentTotalRatio = computed(() => {
-  return payments.value.reduce((sum, p) => sum + (parseFloat(p.payment_ratio) || 0), 0).toFixed(2)
-})
+// 款项比例总和（返回数字，避免隐式类型转换）
+const paymentTotalRatio = computed(() =>
+  payments.value.reduce((sum, p) => sum + toNum(p.payment_ratio), 0)
+)
 
 // 款项比例校验提醒
 const paymentRatioWarning = computed(() => {
@@ -525,41 +532,28 @@ const paymentRatioWarning = computed(() => {
   return Math.abs(paymentTotalRatio.value - 100) > 0.01
 })
 
-// 计算金额
+// 计算金额（统一入口，避免重复计算）
 const calculateAmounts = () => {
-
   form.value.receipt_amount = 0
-  
-  // 重新计算款项金额
+
   payments.value.forEach(payment => {
-    calculatePaymentAmount(payment)
+    payment.payment_amount = parseFloat(((form.value.total_amount * toNum(payment.payment_ratio)) / 100).toFixed(2))
+    if (payment.is_paid) {
+      form.value.receipt_amount += payment.payment_amount
+    }
   })
-  
-  // 待开票金额 = 合同总金额 - 已开票金额
+  form.value.receipt_amount = parseFloat(form.value.receipt_amount.toFixed(2))
+
   form.value.pending_amount = parseFloat((form.value.total_amount - form.value.receipt_amount).toFixed(2))
-  
-  // 毛利 = 合同总金额 - 成本
   form.value.profit = parseFloat((form.value.total_amount - form.value.cost).toFixed(2))
-  
-  // 毛利率 = 毛利 / 合同总金额
-  if (form.value.total_amount > 0) {
-    form.value.profit_rate = parseFloat(((form.value.profit / form.value.total_amount) * 100).toFixed(2))
-  } else {
-    form.value.profit_rate = 0
-  }
+  form.value.profit_rate = form.value.total_amount > 0
+    ? parseFloat(((form.value.profit / form.value.total_amount) * 100).toFixed(2))
+    : 0
 }
 
-// 计算款项金额
-const calculatePaymentAmount = (payment) => {
-  payment.payment_amount = parseFloat(((form.value.total_amount * (payment.payment_ratio || 0)) / 100).toFixed(2))
-  if (payment.is_paid) {
-    form.value.receipt_amount += payment.payment_amount
-  }
-}
-
-// 搜索合作方
+// 搜索合作方（增加空值保护）
 const searchPartners = async (query) => {
-  if (query.length < 1) return
+  if (!query || String(query).trim().length < 1) return
   partnerLoading.value = true
   try {
     const res = await searchPartnersApi(query)
@@ -574,9 +568,7 @@ const searchPartners = async (query) => {
 // 合作方选择变化
 const handlePartnerChange = (partnerId) => {
   const partner = partnerOptions.value.find(p => p.id === partnerId)
-  if (partner) {
-    partnerInfo.value = { ...partner }
-  }
+  partnerInfo.value = partner ? { ...partner } : {}
 }
 
 // 新增合作方
@@ -588,7 +580,6 @@ const handleAddPartner = () => {
 
 // 合作方对话框成功回调
 const handlePartnerDialogSuccess = () => {
-  // 重新搜索合作方
   if (partnerInfo.value.name) {
     searchPartners(partnerInfo.value.name)
   }
@@ -609,9 +600,10 @@ const handleAddPayment = () => {
 // 删除款项
 const handleDeletePayment = (index) => {
   payments.value.splice(index, 1)
+  calculateAmounts()
 }
 
-// 文件上传
+// 文件上传（同步维护 newFiles 列表）
 const handleFileChange = (file) => {
   newFiles.value.push(file.raw)
 }
@@ -647,24 +639,25 @@ const handleUpdateAttachmentType = async (row, newType) => {
   }
 }
 
-// 提交表单
+// 提交表单（修复验证异常处理）
 const handleSubmit = async () => {
-  // 验证款项比例
   if (payments.value.length > 0 && paymentRatioWarning.value) {
     ElMessage.warning('款项比例总和必须等于100%')
     return
   }
-  
-  await formRef.value.validate()
-  
+
+  try {
+    await formRef.value.validate()
+  } catch (err) {
+    ElMessage.warning('请检查表单必填项')
+    return
+  }
+
   submitLoading.value = true
   try {
-    const submitData = {
-      ...form.value,
-      payments: payments.value
-    }
-    
+    const submitData = { ...form.value, payments: payments.value }
     let projectId
+
     if (props.type === 'add') {
       const res = await createProject(submitData)
       projectId = res.data.id
@@ -674,7 +667,7 @@ const handleSubmit = async () => {
       projectId = props.data.id
       ElMessage.success('项目更新成功')
     }
-    
+
     // 上传新附件
     for (const file of newFiles.value) {
       const formData = new FormData()
@@ -683,36 +676,20 @@ const handleSubmit = async () => {
       formData.append('attachment_type', '其他')
       await uploadAttachment(formData)
     }
-    
+
     emit('success')
     handleClose()
   } catch (error) {
+    ElMessage.error(error.message || '保存失败')
     console.error('保存失败:', error)
   } finally {
     submitLoading.value = false
   }
 }
 
-// 关闭对话框
+// 关闭对话框（简化重置逻辑，移除无意义的 resetFields）
 const handleClose = () => {
-  formRef.value?.resetFields()
-  form.value = {
-    name: '',
-    city: '',
-    type: '收入合同',
-    expansion_method: '',
-    content: '',
-    stage: '意向',
-    total_amount: 0,
-    receipt_amount: 0,
-    pending_amount: 0,
-    cost: 0,
-    profit: 0,
-    profit_rate: 0,
-    start_date: '',
-    end_date: '',
-    partner_id: null
-  }
+  form.value = { ...DEFAULT_FORM }
   payments.value = []
   partnerInfo.value = {}
   fileList.value = []
@@ -721,56 +698,59 @@ const handleClose = () => {
   visible.value = false
 }
 
-// 加载编辑数据
+// 加载编辑数据（简化映射逻辑）
 const loadEditData = async () => {
-  if (props.type === 'edit' && props.data) {
-    try {
-      const res = await getProjectById(props.data.id)
-      const data = res.data
-      
-      form.value = {
-        name: data.name,
-        city: data.city,
-        type: data.type,
-        expansion_method: data.expansion_method,
-        content: data.content,
-        stage: data.stage,
-        total_amount: parseFloat(data.total_amount) || 0,
-        receipt_amount: parseFloat(data.receipt_amount) || 0,
-        pending_amount: parseFloat(data.pending_amount) || 0,
-        cost: parseFloat(data.cost) || 0,
-        profit: parseFloat(data.profit) || 0,
-        profit_rate: parseFloat(data.profit_rate) || 0,
-        start_date: data.start_date,
-        end_date: data.end_date,
-        partner_id: data.partner_id
-      }
-      
-      // 加载款项
-      payments.value = data.payments || []
-      
-      // 加载合作方信息
-      partnerInfo.value = {
-        name: data.partner_name,
-        tax_id: data.partner_tax_id,
-        address: data.partner_address,
-        bank: data.partner_bank,
-        bank_account: data.partner_bank_account,
-        contact: data.partner_contact,
-        contact_phone: data.partner_contact_phone
-      }
-      
-      // 加载附件
-      existingAttachments.value = data.attachments || []
-      
-      // 设置合作方选项
-      partnerOptions.value = [{
-        id: data.partner_id,
-        name: data.partner_name
-      }]
-    } catch (error) {
-      console.error('加载项目数据失败:', error)
+  if (props.type !== 'edit' || !props.data) return
+  try {
+    const { data } = await getProjectById(props.data.id)
+
+    // 使用 toNum 确保所有金额字段为 number 类型
+    form.value = {
+      name: data.name || '',
+      city: data.city || '',
+      type: data.type || '收入合同',
+      expansion_method: data.expansion_method || '',
+      content: data.content || '',
+      stage: data.stage || '意向',
+      total_amount: toNum(data.total_amount),
+      receipt_amount: toNum(data.receipt_amount),
+      pending_amount: toNum(data.pending_amount),
+      cost: toNum(data.cost),
+      profit: toNum(data.profit),
+      profit_rate: toNum(data.profit_rate),
+      start_date: data.start_date || '',
+      end_date: data.end_date || '',
+      partner_id: data.partner_id
     }
+
+    // 加载款项（同时转换数字类型）
+    payments.value = (data.payments || []).map(p => ({
+      ...p,
+      payment_ratio: toNum(p.payment_ratio),
+      payment_amount: toNum(p.payment_amount)
+    }))
+
+    // 加载合作方信息
+    partnerInfo.value = {
+      name: data.partner_name,
+      tax_id: data.partner_tax_id,
+      address: data.partner_address,
+      bank: data.partner_bank,
+      bank_account: data.partner_bank_account,
+      contact: data.partner_contact,
+      contact_phone: data.partner_contact_phone
+    }
+
+    // 加载附件
+    existingAttachments.value = data.attachments || []
+
+    // 设置合作方选项
+    if (data.partner_id) {
+      partnerOptions.value = [{ id: data.partner_id, name: data.partner_name }]
+    }
+  } catch (error) {
+    console.error('加载项目数据失败:', error)
+    ElMessage.error('加载项目数据失败')
   }
 }
 

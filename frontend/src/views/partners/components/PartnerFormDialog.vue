@@ -102,10 +102,27 @@ const rules = {
   type: [{ required: true, message: '请选择合作方类型', trigger: 'change' }]
 }
 
+// 表单默认值
+const DEFAULT_FORM = {
+  name: '',
+  type: '其他',
+  tax_id: '',
+  address: '',
+  bank: '',
+  bank_account: '',
+  contact: '',
+  contact_phone: ''
+}
+
 // 提交表单
 const handleSubmit = async () => {
-  await formRef.value.validate()
-  
+  try {
+    await formRef.value.validate()
+  } catch (err) {
+    ElMessage.warning('请检查表单必填项')
+    return
+  }
+
   submitLoading.value = true
   try {
     if (props.type === 'add') {
@@ -115,10 +132,11 @@ const handleSubmit = async () => {
       await updatePartner(props.data.id, form.value)
       ElMessage.success('合作方更新成功')
     }
-    
+
     emit('success')
     handleClose()
   } catch (error) {
+    ElMessage.error(error.message || '保存失败')
     console.error('保存失败:', error)
   } finally {
     submitLoading.value = false
@@ -127,17 +145,7 @@ const handleSubmit = async () => {
 
 // 关闭对话框
 const handleClose = () => {
-  formRef.value?.resetFields()
-  form.value = {
-    name: '',
-    type: '其他',
-    tax_id: '',
-    address: '',
-    bank: '',
-    bank_account: '',
-    contact: '',
-    contact_phone: ''
-  }
+  form.value = { ...DEFAULT_FORM }
   visible.value = false
 }
 

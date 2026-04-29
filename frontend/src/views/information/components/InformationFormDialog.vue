@@ -147,9 +147,24 @@ const fetchOptions = async () => {
   }
 }
 
+// 表单默认值
+const DEFAULT_FORM = {
+  information_date: '',
+  information_type: '',
+  information_title: '',
+  information_content: '',
+  partner_id: null,
+  project_id: null
+}
+
 // 提交表单
 const handleSubmit = async () => {
-  await formRef.value.validate()
+  try {
+    await formRef.value.validate()
+  } catch (err) {
+    ElMessage.warning('请检查表单必填项')
+    return
+  }
 
   submitLoading.value = true
   try {
@@ -165,6 +180,7 @@ const handleSubmit = async () => {
     emit('success')
     handleClose()
   } catch (error) {
+    ElMessage.error(error.message || '保存失败')
     console.error('保存失败:', error)
   } finally {
     submitLoading.value = false
@@ -173,15 +189,7 @@ const handleSubmit = async () => {
 
 // 关闭对话框
 const handleClose = () => {
-  formRef.value?.resetFields()
-  form.value = {
-    information_date: '',
-    information_type: '',
-    information_title: '',
-    information_content: '',
-    partner_id: null,
-    project_id: null
-  }
+  form.value = { ...DEFAULT_FORM }
   visible.value = false
 }
 

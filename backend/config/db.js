@@ -38,14 +38,10 @@ const testConnection = async () => {
 // 执行SQL查询的通用方法
 const query = async (sql, params = []) => {
   try {
-    // 确保所有参数都是有效的值，将数字转换为整数
+    // 确保所有参数都是有效的值，将 undefined 转换为 null
     const sanitizedParams = params.map(param => {
-      if (param === null || param === undefined) {
+      if (param === undefined) {
         return null;
-      }
-      if (typeof param === 'number') {
-        // 确保数字是有效的整数
-        return Number.isFinite(param) ? Math.floor(param) : 0;
       }
       return param;
     });

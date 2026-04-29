@@ -5,6 +5,7 @@
 const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
+const fs = require('fs');
 
 // 项目阶段枚举
 const STAGES = ['意向', '签约', '建设', '运营', '交付', '验收', '完结'];
@@ -654,92 +655,93 @@ const importProjects = async (req, res) => {
       });
     }
 
-    const filePath = req.file.path;
     let data = [];
+    const filePath = req.file.path;
 
-    // 根据文件类型解析
-    const ext = req.file.originalname.split('.').pop().toLowerCase();
-    
-    if (ext === 'json') {
-      const fs = require('fs');
-      const content = fs.readFileSync(filePath, 'utf8');
-      data = JSON.parse(content);
-    } else if (ext === 'csv') {
-      const fs = require('fs');
-      const content = fs.readFileSync(filePath, 'utf8');
-      data = parseCSV(content);
-    } else {
-      // Excel
-      const workbook = xlsx.readFile(filePath);
-      const sheetName = workbook.SheetNames[0];
-      data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    }
+    try {
+      // 根据文件类型解析
+      const ext = req.file.originalname.split('.').pop().toLowerCase();
+      
+      if (ext === 'json') {
+        const content = fs.readFileSync(filePath, 'utf8');
+        data = JSON.parse(content);
+      } else if (ext === 'csv') {
+        const content = fs.readFileSync(filePath, 'utf8');
+        data = parseCSV(content);
+      } else {
+        // Excel
+        const workbook = xlsx.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+      }
 
-    // 处理导入数据
-    let successCount = 0;
-    let failCount = 0;
-    const errors = [];
+      // 处理导入数据
+      let successCount = 0;
+      let failCount = 0;
+      const errors = [];
 
-    for (const item of data) {
-      try {
-        // 查找或创建合作方
-        let partnerId = null;
-        const partnerName = item['合作方名称'] || item.partner_name;
-        
-        if (partnerName) {
-          const partners = await query('SELECT id FROM partners WHERE name = ?', [partnerName]);
-          if (partners.length > 0) {
-            partnerId = partners[0].id;
+      for (const item of data) {
+        try {
+          // 查找或创建合作方
+          let partnerId = null;
+          const partnerName = item['合作方名称'] || item.partner_name;
+          
+          if (partnerName) {
+            const partners = await query('SELECT id FROM partners WHERE name = ?', [partnerName]);
+            if (partners.length > 0) {
+              partnerId = partners[0].id;
+            }
           }
-        }
 
-        if (!partnerId) {
+          if (!partnerId) {
+            failCount++;
+            errors.push(`项目 "${item['项目名称'] || item.name}" 的合作方不存在`);
+            continue;
+          }
+
+          // 创建项目
+          await query(
+            `INSERT INTO projects 
+             (name, city, stage, type, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              item['项目名称'] || item.name,
+              item['履约地点'] || item.city || '成都市',
+              item['项目阶段'] || item.stage || '意向',
+              item['项目类型'] || item.type || '收入合同',
+              item['签约方式'] || item.expansion_method || '其他',
+              item['项目内容'] || item.content || '其他',
+              parseFloat(item['合同总金额(万元)'] || item.total_amount) || 0,
+              parseFloat(item['已开票金额(万元)'] || item.receipt_amount) || 0,
+              parseFloat(item['成本(万元)'] || item.cost) || 0,
+              formatDate(item['起始日期'] || item.start_date),
+              formatDate(item['终止日期'] || item.end_date),
+              partnerId,
+              req.user.userId
+            ]
+          );
+          successCount++;
+        } catch (err) {
           failCount++;
-          errors.push(`项目 "${item['项目名称'] || item.name}" 的合作方不存在`);
-          continue;
+          errors.push(`项目 "${item['项目名称'] || item.name}" 导入失败: ${err.message}`);
         }
+      }
 
-        // 创建项目
-        await query(
-          `INSERT INTO projects 
-           (name, city, stage, type, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            item['项目名称'] || item.name,
-            item['履约地点'] || item.city || '成都市',
-            item['项目阶段'] || item.stage || '意向',
-            item['项目类型'] || item.type || '收入合同',
-            item['签约方式'] || item.expansion_method || '其他',
-            item['项目内容'] || item.content || '其他',
-            parseFloat(item['合同总金额(万元)'] || item.total_amount) || 0,
-            parseFloat(item['已开票金额(万元)'] || item.receipt_amount) || 0,
-            parseFloat(item['成本(万元)'] || item.cost) || 0,
-            formatDate(item['起始日期'] || item.start_date),
-            formatDate(item['终止日期'] || item.end_date),
-            partnerId,
-            req.user.userId
-          ]
-        );
-        successCount++;
-      } catch (err) {
-        failCount++;
-        errors.push(`项目 "${item['项目名称'] || item.name}" 导入失败: ${err.message}`);
+      res.json({
+        code: 200,
+        message: `导入完成，成功 ${successCount} 条，失败 ${failCount} 条`,
+        data: {
+          successCount,
+          failCount,
+          errors: errors.slice(0, 10) // 只返回前10个错误
+        }
+      });
+    } finally {
+      // 删除临时文件
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
       }
     }
-
-    // 删除临时文件
-    const fs = require('fs');
-    fs.unlinkSync(filePath);
-
-    res.json({
-      code: 200,
-      message: `导入完成，成功 ${successCount} 条，失败 ${failCount} 条`,
-      data: {
-        successCount,
-        failCount,
-        errors: errors.slice(0, 10) // 只返回前10个错误
-      }
-    });
   } catch (error) {
     console.error('导入项目错误:', error);
     res.status(500).json({
@@ -801,7 +803,7 @@ const getDashboard = async (req, res) => {
         DATE_FORMAT(start_date, '%Y-%m') as month,
         COALESCE(SUM(total_amount), 0) as amount
       FROM projects 
-      WHERE start_date IS NOT NULL  ${whereClause}
+      WHERE start_date IS NOT NULL ${whereClause ? whereClause.replace('WHERE', 'AND') : ''}
       GROUP BY DATE_FORMAT(start_date, '%Y-%m')
       ORDER BY month DESC
       LIMIT 12`,
@@ -825,7 +827,7 @@ const getDashboard = async (req, res) => {
         type,
         COUNT(*) as count,
         COALESCE(SUM(total_amount), 0) as amount
-      FROM projects ${whereClause ? whereClause.replace('WHERE', 'WHERE').replace('AND', 'WHERE') : ''}
+      FROM projects ${whereClause || 'WHERE 1=1'}
       GROUP BY type`,
       params
     );
@@ -976,6 +978,41 @@ const getFilterOptions = async (req, res) => {
     });
   }
 };
+
+// 辅助函数：解析CSV
+function parseCSV(content) {
+  const lines = content.trim().split('\n');
+  if (lines.length === 0) return [];
+  
+  const headers = lines[0].split(',').map(h => h.trim());
+  const result = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (const char of lines[i]) {
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] || '';
+    });
+    result.push(row);
+  }
+  
+  return result;
+}
 
 // 辅助函数：转换为CSV
 function convertToCSV(data) {
