@@ -128,7 +128,10 @@ const getProjects = async (req, res) => {
     const allowedSortFields = ['stage', 'total_amount', 'receipt_amount', 'cost', 'profit', 'created_at'];
     if (sortField && allowedSortFields.includes(sortField)) {
       const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
-      orderClause = `ORDER BY p.${sortField} ${order} USING GBK`;
+      // stage 字段为中文，使用 CONVERT 指定 GBK 编码实现拼音排序；其他字段直接排序
+      orderClause = sortField === 'stage'
+        ? `ORDER BY CONVERT(p.${sortField} USING gbk) ${order}`
+        : `ORDER BY p.${sortField} ${order}`;
     }
 
     // 查询总数
