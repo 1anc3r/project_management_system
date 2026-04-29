@@ -50,12 +50,12 @@ const createLogMiddleware = (module, operation) => {
   return async (req, res, next) => {
     // 保存原始json方法
     const originalJson = res.json;
-    
+
     // 重写json方法以捕获响应
-    res.json = function(data) {
+    res.json = function (data) {
       // 恢复原始方法
       res.json = originalJson;
-      
+
       // 如果操作成功，记录日志
       if (data && (data.code === 200 || data.code === 201 || data.code === 0)) {
         const logData = {
@@ -64,7 +64,10 @@ const createLogMiddleware = (module, operation) => {
           module,
           operation,
           targetId: data.data?.id || req.params?.id || null,
-          targetName: data.data?.name || req.body?.name || null,
+          targetName: data.data?.name || req.body?.name || 
+                      data.data?.nickname || req.body?.nickname || 
+                      data.data?.information_title || req.body?.information_title || 
+                      data.data?.item_name || req.body?.item_name || null,
           content: {
             body: req.body,
             params: req.params,
@@ -73,14 +76,14 @@ const createLogMiddleware = (module, operation) => {
           },
           ip: req.ip || req.connection?.remoteAddress || null
         };
-        
+
         logOperation(logData);
       }
-      
+
       // 调用原始json方法
       return originalJson.call(this, data);
     };
-    
+
     next();
   };
 };
