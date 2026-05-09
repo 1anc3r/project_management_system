@@ -90,18 +90,18 @@
             <el-tag :type="getStageType(row.stage)" size="small">{{ row.stage }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="expansion_method" label="签约方式" width="110" />
-        <el-table-column prop="total_amount" label="合同总金额" width="120" align="right">
+        <el-table-column prop="expansion_method" label="签约方式" width="120" />
+        <el-table-column prop="total_amount" label="合同总金额" width="100" align="right">
           <template #default="{ row }">
             {{ formatAmount(row.total_amount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="receipt_amount" label="已开票金额" width="120" align="right">
+        <el-table-column prop="receipt_amount" label="已开票金额" width="100" align="right">
           <template #default="{ row }">
             {{ formatAmount(row.receipt_amount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="pending_amount" label="待开票金额" width="120" align="right">
+        <el-table-column prop="pending_amount" label="待开票金额" width="100" align="right">
           <template #default="{ row }">
             {{ formatAmount(row.pending_amount) }}
           </template>
@@ -116,7 +116,7 @@
             {{ formatAmount(row.profit) }}
           </template>
         </el-table-column>
-        <el-table-column prop="profit_rate" label="毛利率" width="90" align="right">
+        <el-table-column prop="profit_rate" label="毛利率" width="100" align="right">
           <template #default="{ row }">
             {{ formatPercent(row.profit_rate) }}
           </template>
