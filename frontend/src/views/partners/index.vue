@@ -53,10 +53,10 @@
         </el-table-column>
         <el-table-column prop="tax_id" label="纳税人识别号" width="160" />
         <el-table-column prop="address" label="地址" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="contact" label="联系人" width="100" />
-        <el-table-column prop="contact_phone" label="联系电话" width="120" />
+        <el-table-column prop="primary_contact_name" label="联系人" width="100" />
+        <el-table-column prop="primary_contact_phone" label="联系电话" width="120" />
         <el-table-column prop="project_count" label="项目数" width="80" align="center" />
-        <el-table-column prop="total_contract_amount" label="合同总金额" width="120" align="right">
+        <el-table-column prop="total_contract_amount" label="合同总金额" width="100" align="right">
           <template #default="{ row }">{{ formatAmount(row.total_contract_amount) }} 万</template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
@@ -104,11 +104,11 @@
               <h4 class="partner-name" :title="item.name">{{ item.name }}</h4>
               <p class="contact-info">
                 <el-icon><User /></el-icon>
-                {{ item.contact || '暂无联系人' }}
+                {{ item.primary_contact_name || '暂无联系人' }}
               </p>
               <p class="phone-info">
                 <el-icon><Phone /></el-icon>
-                {{ item.contact_phone || '暂无电话' }}
+                {{ item.primary_contact_phone || '暂无电话' }}
               </p>
               <div class="stats">
                 <span class="stat-item">

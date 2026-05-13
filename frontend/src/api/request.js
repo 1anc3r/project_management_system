@@ -54,14 +54,14 @@ request.interceptors.response.use(
   (error) => {
     const message = error.response?.data?.message || error.message || '网络错误'
     ElMessage.error(message)
-    
-    // // 401 未授权
-    // if (error.response?.status === 401) {
-    //   const userStore = useUserStore()
-    //   userStore.logout()
-    //   window.location.href = '/login'
-    // }
-    
+
+    // 401 未授权（包括登录过期）
+    if (error.response?.status === 401) {
+      const userStore = useUserStore()
+      userStore.logout()
+      window.location.href = '/login'
+    }
+
     return Promise.reject(error)
   }
 )

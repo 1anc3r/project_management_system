@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     title="合作方详情"
-    width="750px"
+    width="850px"
     destroy-on-close
   >
     <el-descriptions :column="2" border v-if="partner">
@@ -14,9 +14,24 @@
       <el-descriptions-item label="地址" :span="2">{{ partner.address || '-' }}</el-descriptions-item>
       <el-descriptions-item label="开户银行">{{ partner.bank || '-' }}</el-descriptions-item>
       <el-descriptions-item label="银行账号">{{ partner.bank_account || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="联系人">{{ partner.contact || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="联系电话">{{ partner.contact_phone || '-' }}</el-descriptions-item>
     </el-descriptions>
+
+    <!-- 联系人列表 -->
+    <div class="contacts-section" v-if="partner">
+      <div class="section-title">
+        联系人列表
+        <el-tag type="info" size="small" class="count-tag">{{ contactsList.length }} 位</el-tag>
+      </div>
+      <el-table v-if="contactsList.length" :data="contactsList" border size="small">
+        <el-table-column type="index" label="序号" width="50" align="center" />
+        <el-table-column prop="name" label="姓名" width="120" />
+        <el-table-column prop="phone" label="联系电话" width="140" />
+        <el-table-column prop="position" label="职务" min-width="150">
+          <template #default="{ row }">{{ row.position || '-' }}</template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-else description="暂无联系人" />
+    </div>
 
     <div class="stats-section" v-if="partner">
       <div class="section-title">合作统计</div>
@@ -85,6 +100,7 @@
 import { ref, computed, watch } from 'vue'
 import { Link } from '@element-plus/icons-vue'
 import { formatDate, formatAmount } from '@/utils/format'
+import { getPartnerById } from '@/api/partners'
 import { getInformationByPartner } from '@/api/information'
 
 const props = defineProps({
@@ -109,6 +125,20 @@ const visible = computed({
 const activeCollapse = ref(['information'])
 // 资讯列表
 const informationList = ref([])
+// 联系人列表
+const contactsList = ref([])
+
+// 获取合作方详情（包括联系人）
+const fetchPartnerDetail = async () => {
+  if (!props.partner?.id) return
+  try {
+    const res = await getPartnerById(props.partner.id)
+    contactsList.value = res.data.contacts || []
+  } catch (error) {
+    console.error('获取合作方联系人失败:', error)
+    contactsList.value = []
+  }
+}
 
 // 获取资讯列表
 const fetchInformationList = async () => {
@@ -122,15 +152,17 @@ const fetchInformationList = async () => {
   }
 }
 
-// 监听合作方变化，加载资讯
+// 监听合作方变化，加载数据
 watch(() => props.partner?.id, (newId) => {
   if (newId && visible.value) {
+    fetchPartnerDetail()
     fetchInformationList()
   }
 })
 
 watch(() => visible.value, (val) => {
   if (val && props.partner?.id) {
+    fetchPartnerDetail()
     fetchInformationList()
   }
 })
@@ -161,6 +193,24 @@ const getTimelineType = (type) => {
 </script>
 
 <style scoped lang="scss">
+.contacts-section {
+  margin-top: 20px;
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #303133;
+    margin-bottom: 15px;
+    padding-left: 10px;
+    border-left: 4px solid #409EFF;
+  }
+
+  .count-tag {
+    font-size: 12px;
+    margin-left: 10px;
+  }
+}
+
 .stats-section {
   margin-top: 20px;
 

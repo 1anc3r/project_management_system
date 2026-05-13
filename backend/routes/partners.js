@@ -37,6 +37,34 @@ router.get('/search', authenticate, partnerController.searchPartners);
 router.get('/export', authenticate, partnerController.exportPartners);
 
 /**
+ * @route   GET /api/partners/:id/contacts
+ * @desc    获取合作方联系人列表
+ * @access  Private
+ */
+router.get('/:id/contacts', authenticate, partnerController.getPartnerContacts);
+
+/**
+ * @route   POST /api/partners/:id/contacts
+ * @desc    添加合作方联系人
+ * @access  Private
+ */
+router.post('/:id/contacts', authenticate, partnerController.addPartnerContact);
+
+/**
+ * @route   PUT /api/partners/:id/contacts/:contactId
+ * @desc    更新合作方联系人
+ * @access  Private
+ */
+router.put('/:id/contacts/:contactId', authenticate, partnerController.updatePartnerContact);
+
+/**
+ * @route   DELETE /api/partners/:id/contacts/:contactId
+ * @desc    删除合作方联系人
+ * @access  Private
+ */
+router.delete('/:id/contacts/:contactId', authenticate, partnerController.deletePartnerContact);
+
+/**
  * @route   GET /api/partners
  * @desc    获取合作方列表
  * @access  Private

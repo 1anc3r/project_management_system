@@ -52,16 +52,19 @@ const getPartners = async (req, res) => {
     let whereClause = 'WHERE 1=1';
     const params = [];
 
-    // 关键词搜索
+    // 关键词搜索（名称、纳税人识别号、联系人姓名、联系人电话）
     if (keyword) {
-      whereClause += ` AND (p.name LIKE ? OR p.tax_id LIKE ? OR p.contact LIKE ? OR p.contact_phone LIKE ?)`;
+      whereClause += ` AND (p.name LIKE ? OR p.tax_id LIKE ? OR EXISTS (
+        SELECT 1 FROM partner_contacts pc WHERE pc.partner_id = p.id 
+        AND (pc.name LIKE ? OR pc.phone LIKE ?)
+      ))`;
       const keywordPattern = `%${keyword}%`;
       params.push(keywordPattern, keywordPattern, keywordPattern, keywordPattern);
     }
 
     // 类型筛选
     if (type) {
-      whereClause += ' AND type = ?';
+      whereClause += ' AND p.type = ?';
       params.push(type);
     }
 
@@ -72,14 +75,16 @@ const getPartners = async (req, res) => {
     );
     const total = countResult[0].total;
 
-    // 查询数据（合并相同纳税人识别号的合作方）
+    // 查询数据
     const partners = await query(
       `SELECT 
         p.id, p.name, p.type, p.tax_id, p.address, 
-        p.bank, p.bank_account, p.contact, p.contact_phone,
+        p.bank, p.bank_account,
         p.created_at, p.updated_at,
         COUNT(DISTINCT proj.id) as project_count,
-        COALESCE(SUM(proj.total_amount), 0) as total_contract_amount
+        COALESCE(SUM(proj.total_amount), 0) as total_contract_amount,
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as primary_contact_name,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as primary_contact_phone
       FROM partners p
       LEFT JOIN projects proj ON p.id = proj.partner_id
       ${whereClause}
@@ -133,6 +138,16 @@ const getPartnerById = async (req, res) => {
 
     const partner = partners[0];
 
+    // 查询关联的联系人
+    const contacts = await query(
+      `SELECT id, name, phone, position, created_at 
+       FROM partner_contacts 
+       WHERE partner_id = ? 
+       ORDER BY id ASC`,
+      [id]
+    );
+    partner.contacts = contacts;
+
     // 查询关联的项目
     const projects = await query(
       `SELECT 
@@ -171,8 +186,7 @@ const createPartner = async (req, res) => {
       address,
       bank,
       bank_account,
-      contact,
-      contact_phone
+      contacts: partnerContacts
     } = req.body;
 
     // 参数验证
@@ -208,27 +222,49 @@ const createPartner = async (req, res) => {
       }
     }
 
-    // 创建合作方
-    const result = await query(
-      `INSERT INTO partners 
-       (name, type, tax_id, address, bank, bank_account, contact, contact_phone) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        name,
-        type || '其他',
-        tax_id || null,
-        address || null,
-        bank || null,
-        bank_account || null,
-        contact || null,
-        contact_phone || null
-      ]
-    );
+    const partnerId = await transaction(async (connection) => {
+      // 创建合作方
+      const [result] = await connection.execute(
+        `INSERT INTO partners 
+         (name, type, tax_id, address, bank, bank_account) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          name,
+          type || '其他',
+          tax_id || null,
+          address || null,
+          bank || null,
+          bank_account || null
+        ]
+      );
+
+      const newPartnerId = result.insertId;
+
+      // 创建联系人
+      if (partnerContacts && partnerContacts.length > 0) {
+        for (const contact of partnerContacts) {
+          if (!contact.name) continue;
+          await connection.execute(
+            `INSERT INTO partner_contacts 
+             (partner_id, name, phone, position) 
+             VALUES (?, ?, ?, ?)`,
+            [
+              newPartnerId,
+              contact.name,
+              contact.phone || null,
+              contact.position || null
+            ]
+          );
+        }
+      }
+
+      return newPartnerId;
+    });
 
     res.status(201).json({
       code: 201,
       message: '合作方创建成功',
-      data: { id: result.insertId }
+      data: { id: partnerId }
     });
   } catch (error) {
     console.error('创建合作方错误:', error);
@@ -253,8 +289,7 @@ const updatePartner = async (req, res) => {
       address,
       bank,
       bank_account,
-      contact,
-      contact_phone
+      contacts: partnerContacts
     } = req.body;
 
     // 查询原合作方
@@ -295,24 +330,45 @@ const updatePartner = async (req, res) => {
       }
     }
 
-    // 更新合作方
-    await query(
-      `UPDATE partners SET 
-        name = ?, type = ?, tax_id = ?, address = ?, 
-        bank = ?, bank_account = ?, contact = ?, contact_phone = ?
-       WHERE id = ?`,
-      [
-        name,
-        type || '其他',
-        tax_id || null,
-        address || null,
-        bank || null,
-        bank_account || null,
-        contact || null,
-        contact_phone || null,
-        id
-      ]
-    );
+    await transaction(async (connection) => {
+      // 更新合作方
+      await connection.execute(
+        `UPDATE partners SET 
+          name = ?, type = ?, tax_id = ?, address = ?, 
+          bank = ?, bank_account = ?
+         WHERE id = ?`,
+        [
+          name,
+          type || '其他',
+          tax_id || null,
+          address || null,
+          bank || null,
+          bank_account || null,
+          id
+        ]
+      );
+
+      // 删除旧联系人
+      await connection.execute('DELETE FROM partner_contacts WHERE partner_id = ?', [id]);
+
+      // 插入新联系人
+      if (partnerContacts && partnerContacts.length > 0) {
+        for (const contact of partnerContacts) {
+          if (!contact.name) continue;
+          await connection.execute(
+            `INSERT INTO partner_contacts 
+             (partner_id, name, phone, position) 
+             VALUES (?, ?, ?, ?)`,
+            [
+              id,
+              contact.name,
+              contact.phone || null,
+              contact.position || null
+            ]
+          );
+        }
+      }
+    });
 
     res.json({
       code: 200,
@@ -362,7 +418,7 @@ const deletePartner = async (req, res) => {
       });
     }
 
-    // 删除合作方
+    // 删除合作方（联系人会通过级联删除自动删除）
     await query('DELETE FROM partners WHERE id = ?', [id]);
 
     res.json({
@@ -392,9 +448,12 @@ const exportPartners = async (req, res) => {
     const params = [];
 
     if (keyword) {
-      whereClause = 'WHERE name LIKE ? OR tax_id LIKE ?';
+      whereClause = `WHERE p.name LIKE ? OR p.tax_id LIKE ? OR EXISTS (
+        SELECT 1 FROM partner_contacts pc WHERE pc.partner_id = p.id 
+        AND (pc.name LIKE ? OR pc.phone LIKE ?)
+      )`;
       const keywordPattern = `%${keyword}%`;
-      params.push(keywordPattern, keywordPattern);
+      params.push(keywordPattern, keywordPattern, keywordPattern, keywordPattern);
     }
 
     // 查询所有数据
@@ -406,10 +465,10 @@ const exportPartners = async (req, res) => {
         p.address as '地址',
         p.bank as '开户银行',
         p.bank_account as '银行账号',
-        p.contact as '联系人',
-        p.contact_phone as '联系电话',
         COUNT(DISTINCT proj.id) as '项目数量',
-        COALESCE(SUM(proj.total_amount), 0) as '合同总金额(万元)'
+        COALESCE(SUM(proj.total_amount), 0) as '合同总金额(万元)',
+        (SELECT GROUP_CONCAT(pc.name, '（', IFNULL(pc.position, ''), '）:', IFNULL(pc.phone, '') SEPARATOR '; ') 
+         FROM partner_contacts pc WHERE pc.partner_id = p.id) as '联系人'
       FROM partners p
       LEFT JOIN projects proj ON p.id = proj.partner_id
       ${whereClause}
@@ -467,12 +526,17 @@ const searchPartners = async (req, res) => {
 
     const partners = await query(
       `SELECT 
-        id, name, type, tax_id, address, bank, bank_account, contact, contact_phone
-      FROM partners 
-      WHERE name LIKE ? OR tax_id LIKE ?
-      ORDER BY name ASC
+        p.id, p.name, p.type, p.tax_id, p.address, p.bank, p.bank_account,
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact_phone
+      FROM partners p
+      WHERE p.name LIKE ? OR p.tax_id LIKE ? OR EXISTS (
+        SELECT 1 FROM partner_contacts pc WHERE pc.partner_id = p.id 
+        AND (pc.name LIKE ? OR pc.phone LIKE ?)
+      )
+      ORDER BY p.name ASC
       LIMIT 20`,
-      [`%${keyword}%`, `%${keyword}%`]
+      [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`]
     );
 
     res.json({
@@ -495,7 +559,12 @@ const searchPartners = async (req, res) => {
 const getAllPartners = async (req, res) => {
   try {
     const partners = await query(
-      `SELECT id, name, contact, contact_phone FROM partners ORDER BY name ASC`
+      `SELECT 
+        p.id, p.name,
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact_phone
+      FROM partners p
+      ORDER BY p.name ASC`
     );
 
     res.json({
@@ -554,6 +623,147 @@ const getPartnerTypes = async (req, res) => {
   }
 };
 
+/**
+ * 获取合作方联系人列表
+ * GET /api/partners/:id/contacts
+ */
+const getPartnerContacts = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const contacts = await query(
+      `SELECT id, name, phone, position, created_at, updated_at 
+       FROM partner_contacts 
+       WHERE partner_id = ? 
+       ORDER BY id ASC`,
+      [id]
+    );
+
+    res.json({
+      code: 200,
+      data: contacts
+    });
+  } catch (error) {
+    console.error('获取联系人列表错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取联系人列表失败'
+    });
+  }
+};
+
+/**
+ * 添加合作方联系人
+ * POST /api/partners/:id/contacts
+ */
+const addPartnerContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, position } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        code: 400,
+        message: '联系人姓名不能为空'
+      });
+    }
+
+    // 验证合作方是否存在
+    const existingPartners = await query(
+      'SELECT id FROM partners WHERE id = ?',
+      [id]
+    );
+
+    if (existingPartners.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: '合作方不存在'
+      });
+    }
+
+    const result = await query(
+      `INSERT INTO partner_contacts (partner_id, name, phone, position) 
+       VALUES (?, ?, ?, ?)`,
+      [id, name, phone || null, position || null]
+    );
+
+    res.status(201).json({
+      code: 201,
+      message: '联系人添加成功',
+      data: { id: result.insertId }
+    });
+  } catch (error) {
+    console.error('添加联系人错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '添加联系人失败'
+    });
+  }
+};
+
+/**
+ * 更新合作方联系人
+ * PUT /api/partners/:id/contacts/:contactId
+ */
+const updatePartnerContact = async (req, res) => {
+  try {
+    const { id, contactId } = req.params;
+    const { name, phone, position } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        code: 400,
+        message: '联系人姓名不能为空'
+      });
+    }
+
+    await query(
+      `UPDATE partner_contacts SET name = ?, phone = ?, position = ? 
+       WHERE id = ? AND partner_id = ?`,
+      [name, phone || null, position || null, contactId, id]
+    );
+
+    res.json({
+      code: 200,
+      message: '联系人更新成功',
+      data: { id: parseInt(contactId) }
+    });
+  } catch (error) {
+    console.error('更新联系人错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '更新联系人失败'
+    });
+  }
+};
+
+/**
+ * 删除合作方联系人
+ * DELETE /api/partners/:id/contacts/:contactId
+ */
+const deletePartnerContact = async (req, res) => {
+  try {
+    const { id, contactId } = req.params;
+
+    await query(
+      'DELETE FROM partner_contacts WHERE id = ? AND partner_id = ?',
+      [contactId, id]
+    );
+
+    res.json({
+      code: 200,
+      message: '联系人删除成功',
+      data: { id: parseInt(contactId) }
+    });
+  } catch (error) {
+    console.error('删除联系人错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '删除联系人失败'
+    });
+  }
+};
+
 module.exports = {
   getPartners,
   getPartnerById,
@@ -564,5 +774,9 @@ module.exports = {
   searchPartners,
   getAllPartners,
   getPartnerTypes,
+  getPartnerContacts,
+  addPartnerContact,
+  updatePartnerContact,
+  deletePartnerContact,
   getPartnerTypesFromDB
 };

@@ -47,3 +47,23 @@ export const exportPartners = (params) => {
 export const searchPartners = (keyword) => {
   return request.get('/api/partners/search', { params: { keyword } })
 }
+
+// 获取合作方联系人列表
+export const getPartnerContacts = (id) => {
+  return request.get(`/api/partners/${id}/contacts`)
+}
+
+// 添加合作方联系人
+export const addPartnerContact = (id, data) => {
+  return request.post(`/api/partners/${id}/contacts`, data)
+}
+
+// 更新合作方联系人
+export const updatePartnerContact = (id, contactId, data) => {
+  return request.put(`/api/partners/${id}/contacts/${contactId}`, data)
+}
+
+// 删除合作方联系人
+export const deletePartnerContact = (id, contactId) => {
+  return request.delete(`/api/partners/${id}/contacts/${contactId}`)
+}

@@ -20,14 +20,30 @@ CREATE TABLE partners (
     address VARCHAR(255) DEFAULT NULL COMMENT '地址',
     bank VARCHAR(255) DEFAULT NULL COMMENT '开户银行',
     bank_account VARCHAR(100) DEFAULT NULL COMMENT '银行账号',
-    contact VARCHAR(50) DEFAULT NULL COMMENT '联系人',
-    contact_phone VARCHAR(20) DEFAULT NULL COMMENT '联系电话',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_tax_id (tax_id),
     KEY idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合作方信息表';
+
+-- =====================================================
+-- 1.1 合作方联系人表 partner_contacts
+-- 一个合作方可有多个联系人
+-- =====================================================
+DROP TABLE IF EXISTS partner_contacts;
+CREATE TABLE partner_contacts (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    partner_id BIGINT UNSIGNED NOT NULL COMMENT '合作方ID',
+    name VARCHAR(50) NOT NULL COMMENT '姓名',
+    phone VARCHAR(20) DEFAULT NULL COMMENT '联系电话',
+    position VARCHAR(50) DEFAULT NULL COMMENT '职务',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    KEY idx_partner_id (partner_id),
+    CONSTRAINT fk_contact_partner FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合作方联系人表';
 
 -- =====================================================
 -- 2. 项目表 projects
@@ -147,10 +163,18 @@ INSERT INTO users (username, password, nickname, role, status) VALUES
 -- 如需修改默认密码，请使用后端提供的密码重置功能
 
 -- 插入示例合作方数据
-INSERT INTO partners (name, type, tax_id, address, bank, bank_account, contact, contact_phone) VALUES
-('四川科技有限公司', '甲方', '91510000MA61R00001', '成都市高新区天府大道1号', '中国工商银行成都分行', '4402012345678901234', '张三', '13800138001'),
-('成都信息服务公司', '乙方', '91510000MA61R00002', '成都市武侯区人民南路2号', '中国建设银行成都分行', '5102012345678901234', '李四', '13800138002'),
-('重庆数据技术公司', '丙方', '91500000MA61R00003', '重庆市渝北区新南路3号', '中国银行重庆分行', '6202012345678901234', '王五', '13800138003');
+INSERT INTO partners (name, type, tax_id, address, bank, bank_account) VALUES
+('四川科技有限公司', '甲方', '91510000MA61R00001', '成都市高新区天府大道1号', '中国工商银行成都分行', '4402012345678901234'),
+('成都信息服务公司', '乙方', '91510000MA61R00002', '成都市武侯区人民南路2号', '中国建设银行成都分行', '5102012345678901234'),
+('重庆数据技术公司', '丙方', '91500000MA61R00003', '重庆市渝北区新南路3号', '中国银行重庆分行', '6202012345678901234');
+
+-- 插入示例联系人数据
+INSERT INTO partner_contacts (partner_id, name, phone, position) VALUES
+(1, '张三', '13800138001', '项目经理'),
+(1, '赵六', '13900139001', '技术总监'),
+(2, '李四', '13800138002', '商务经理'),
+(3, '王五', '13800138003', '总经理'),
+(3, '孙七', '13700137001', '采购专员');
 
 -- 插入示例项目数据
 INSERT INTO projects (name, city, type, stage, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) VALUES
@@ -206,8 +230,6 @@ SELECT
     par.id AS partner_id,
     par.name AS partner_name,
     par.tax_id AS partner_tax_id,
-    par.contact AS partner_contact,
-    par.contact_phone AS partner_contact_phone,
     u.nickname AS creator_name
 FROM projects p
 LEFT JOIN partners par ON p.partner_id = par.id
@@ -221,14 +243,12 @@ SELECT
     par.type,
     par.tax_id,
     par.address,
-    par.contact,
-    par.contact_phone,
     COUNT(p.id) AS project_count,
     SUM(p.total_amount) AS total_contract_amount,
     SUM(p.receipt_amount) AS total_receipt_amount
 FROM partners par
 LEFT JOIN projects p ON par.id = p.partner_id
-GROUP BY par.id, par.name, par.type, par.tax_id, par.address, par.contact, par.contact_phone;
+GROUP BY par.id, par.name, par.type, par.tax_id, par.address;
 
 -- =====================================================
 -- 7. 字典表 dictionaries

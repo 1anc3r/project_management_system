@@ -82,7 +82,9 @@ const getProjects = async (req, res) => {
 
     // 关键词搜索（项目名称、合作方名称、履约地点、联系人）
     if (keyword) {
-      whereClause += ` AND (p.name LIKE ? OR par.name LIKE ? OR p.city LIKE ? OR par.contact LIKE ?)`;
+      whereClause += ` AND (p.name LIKE ? OR par.name LIKE ? OR p.city LIKE ? OR EXISTS (
+        SELECT 1 FROM partner_contacts pc WHERE pc.partner_id = par.id AND pc.name LIKE ?
+      ))`;
       const keywordPattern = `%${keyword}%`;
       params.push(keywordPattern, keywordPattern, keywordPattern, keywordPattern);
     }
@@ -151,7 +153,9 @@ const getProjects = async (req, res) => {
         (p.total_amount - p.cost) as profit,
         CASE WHEN p.total_amount > 0 THEN ROUND((p.total_amount - p.cost) / p.total_amount * 100, 2) ELSE 0 END as profit_rate,
         p.start_date, p.end_date, p.created_at, p.updated_at,
-        p.partner_id, par.name as partner_name, par.contact as partner_contact, par.contact_phone as partner_contact_phone,
+        p.partner_id, par.name as partner_name,
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact_phone,
         u.nickname as creator_name
       FROM projects p
       LEFT JOIN partners par ON p.partner_id = par.id
@@ -201,7 +205,8 @@ const getProjectById = async (req, res) => {
         CASE WHEN p.total_amount > 0 THEN ROUND((p.total_amount - p.cost) / p.total_amount * 100, 2) ELSE 0 END as profit_rate,
         par.name as partner_name, par.type as partner_type, par.tax_id as partner_tax_id,
         par.address as partner_address, par.bank as partner_bank, par.bank_account as partner_bank_account,
-        par.contact as partner_contact, par.contact_phone as partner_contact_phone,
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact_phone,
         u.nickname as creator_name
       FROM projects p
       LEFT JOIN partners par ON p.partner_id = par.id
@@ -601,8 +606,8 @@ const exportProjects = async (req, res) => {
         (p.total_amount - p.cost) as '毛利(万元)',
         CASE WHEN p.total_amount > 0 THEN ROUND((p.total_amount - p.cost) / p.total_amount * 100, 2) ELSE 0 END as '毛利率(%)',
         par.name as '合作方名称',
-        par.contact as '联系人',
-        par.contact_phone as '联系电话',
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as '联系人',
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as '联系电话',
         p.start_date as '起始日期',
         p.end_date as '终止日期'
       FROM projects p

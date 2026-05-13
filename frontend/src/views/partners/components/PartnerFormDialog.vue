@@ -2,7 +2,7 @@
   <el-dialog
     :title="dialogTitle"
     v-model="visible"
-    width="750px"
+    width="850px"
     :close-on-click-modal="false"
     @close="handleClose"
   >
@@ -37,14 +37,43 @@
       <el-form-item label="银行账号" prop="bank_account">
         <el-input v-model="form.bank_account" placeholder="请输入银行账号" />
       </el-form-item>
-      
-      <el-form-item label="联系人" prop="contact">
-        <el-input v-model="form.contact" placeholder="请输入联系人姓名" />
-      </el-form-item>
-      
-      <el-form-item label="联系电话" prop="contact_phone">
-        <el-input v-model="form.contact_phone" placeholder="请输入联系电话" />
-      </el-form-item>
+
+      <!-- 联系人列表 -->
+      <div class="contacts-section">
+        <div class="section-title">
+          联系人列表
+          <el-tag v-if="contacts.length > 0" type="info" size="small" style="margin-left: 10px">
+            {{ contacts.length }} 位
+          </el-tag>
+        </div>
+        <div class="contacts-toolbar">
+          <el-button type="primary" size="small" :icon="Plus" @click="handleAddContact">新增联系人</el-button>
+        </div>
+        
+        <el-table :data="contacts" border size="small">
+          <el-table-column type="index" label="序号" width="50" align="center" />
+          <el-table-column label="姓名" width="120">
+            <template #default="{ row, $index }">
+              <el-input v-model="row.name" size="small" placeholder="姓名" />
+            </template>
+          </el-table-column>
+          <el-table-column label="联系电话" width="140">
+            <template #default="{ row, $index }">
+              <el-input v-model="row.phone" size="small" placeholder="联系电话" />
+            </template>
+          </el-table-column>
+          <el-table-column label="职务" min-width="120">
+            <template #default="{ row, $index }">
+              <el-input v-model="row.position" size="small" placeholder="职务" />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80" align="center">
+            <template #default="{ $index }">
+              <el-button link type="danger" size="small" @click="handleDeleteContact($index)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-form>
     
     <template #footer>
@@ -57,6 +86,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { createPartner, updatePartner, getPartnerById } from '@/api/partners'
 
 const props = defineProps({
@@ -88,10 +118,11 @@ const form = ref({
   tax_id: '',
   address: '',
   bank: '',
-  bank_account: '',
-  contact: '',
-  contact_phone: ''
+  bank_account: ''
 })
+
+// 联系人列表
+const contacts = ref([])
 
 // 合作方类型
 const partnerTypes = ['甲方', '乙方', '丙方', '其他']
@@ -109,9 +140,21 @@ const DEFAULT_FORM = {
   tax_id: '',
   address: '',
   bank: '',
-  bank_account: '',
-  contact: '',
-  contact_phone: ''
+  bank_account: ''
+}
+
+// 新增联系人
+const handleAddContact = () => {
+  contacts.value.push({
+    name: '',
+    phone: '',
+    position: ''
+  })
+}
+
+// 删除联系人
+const handleDeleteContact = (index) => {
+  contacts.value.splice(index, 1)
 }
 
 // 提交表单
@@ -123,13 +166,28 @@ const handleSubmit = async () => {
     return
   }
 
+  // 验证联系人：如果有输入内容但未填姓名的行，给出提示
+  const invalidContacts = contacts.value.filter(c => !c.name.trim() && (c.phone || c.position))
+  if (invalidContacts.length > 0) {
+    ElMessage.warning('请填写所有联系人的姓名，或删除多余行')
+    return
+  }
+
   submitLoading.value = true
   try {
+    // 过滤掉空行（未填写姓名的）
+    const validContacts = contacts.value.filter(c => c.name.trim())
+
+    const submitData = {
+      ...form.value,
+      contacts: validContacts
+    }
+
     if (props.type === 'add') {
-      await createPartner(form.value)
+      await createPartner(submitData)
       ElMessage.success('合作方创建成功')
     } else {
-      await updatePartner(props.data.id, form.value)
+      await updatePartner(props.data.id, submitData)
       ElMessage.success('合作方更新成功')
     }
 
@@ -146,6 +204,7 @@ const handleSubmit = async () => {
 // 关闭对话框
 const handleClose = () => {
   form.value = { ...DEFAULT_FORM }
+  contacts.value = []
   visible.value = false
 }
 
@@ -161,10 +220,15 @@ const loadEditData = async () => {
         tax_id: data.tax_id || '',
         address: data.address || '',
         bank: data.bank || '',
-        bank_account: data.bank_account || '',
-        contact: data.contact || '',
-        contact_phone: data.contact_phone || ''
+        bank_account: data.bank_account || ''
       }
+      // 加载联系人列表
+      contacts.value = (data.contacts || []).map(c => ({
+        id: c.id,
+        name: c.name || '',
+        phone: c.phone || '',
+        position: c.position || ''
+      }))
     } catch (error) {
       console.error('加载合作方数据失败:', error)
     }
@@ -178,3 +242,22 @@ watch(() => props.visible, (val) => {
   }
 })
 </script>
+
+<style scoped lang="scss">
+.contacts-section {
+  margin-top: 5px;
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #303133;
+    margin-bottom: 15px;
+    padding-left: 10px;
+    border-left: 4px solid #409EFF;
+  }
+
+  .contacts-toolbar {
+    margin-bottom: 10px;
+  }
+}
+</style>
