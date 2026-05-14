@@ -3,7 +3,7 @@
  * 处理用户的CRUD操作
  */
 const bcrypt = require('bcryptjs');
-const { query } = require('../config/db');
+const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 
@@ -293,6 +293,7 @@ const updateUser = async (req, res) => {
 /**
  * 删除用户
  * DELETE /api/users/:id
+ * 删除前将被删用户创建的项目自动转给管理员
  */
 const deleteUser = async (req, res) => {
   try {
@@ -319,12 +320,35 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // 删除用户
-    await query('DELETE FROM users WHERE id = ?', [id]);
+    // 查询一个可用管理员作为项目接收人（优先取 ID 最小的）
+    const admins = await query(
+      'SELECT id FROM users WHERE role = ? AND status = 1 ORDER BY id ASC LIMIT 1',
+      ['admin']
+    );
+
+    if (admins.length === 0) {
+      return res.status(400).json({
+        code: 400,
+        message: '系统中没有可用的管理员，无法删除用户'
+      });
+    }
+
+    const adminId = admins[0].id;
+
+    await transaction(async (connection) => {
+      // 将被删除用户创建的项目转给管理员
+      await connection.execute(
+        'UPDATE projects SET created_by = ? WHERE created_by = ?',
+        [adminId, id]
+      );
+
+      // 删除用户
+      await connection.execute('DELETE FROM users WHERE id = ?', [id]);
+    });
 
     res.json({
       code: 200,
-      message: '用户删除成功',
+      message: '用户删除成功，其创建的项目已转给管理员',
       data: { id: parseInt(id), username: existingUsers[0].username }
     });
   } catch (error) {
