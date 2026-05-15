@@ -88,7 +88,7 @@
         <el-col v-for="item in partnerList" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card class="partner-card" shadow="hover">
             <div class="card-header">
-              <el-tag size="small">{{ item.type }}</el-tag>
+              <el-tag  :type="getPartnerTypeTag(item.type)" size="small">{{ item.type }}</el-tag>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
                 <el-icon class="more-icon"><More /></el-icon>
                 <template #dropdown>
@@ -199,6 +199,17 @@ const currentRow = ref(null)
 // 详情对话框
 const detailDialogVisible = ref(false)
 const detailRow = ref(null)
+
+// 合作方类型标签样式
+const getPartnerTypeTag = (type) => {
+  const typeMap = {
+    '甲方': 'success',
+    '乙方': 'danger',
+    '丙方': 'warning',
+    '其他': 'primary'
+  }
+  return typeMap[type] || 'info'
+}
 
 // 获取数据
 const fetchData = async () => {
@@ -323,17 +334,6 @@ const handleCardCommand = (command, row) => {
   } else if (command === 'delete') {
     handleDelete(row)
   }
-}
-
-// 合作方类型标签样式
-const getPartnerTypeTag = (type) => {
-  const typeMap = {
-    '甲方': 'success',
-    '乙方': 'danger',
-    '丙方': 'warning',
-    '其他': 'primary'
-  }
-  return typeMap[type] || 'info'
 }
 
 onMounted(() => {
