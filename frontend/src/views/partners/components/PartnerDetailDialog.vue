@@ -7,11 +7,11 @@
   >
     <el-descriptions :column="2" border v-if="partner">
       <el-descriptions-item label="合作方名称" :span="2">{{ partner.name }}</el-descriptions-item>
-      <el-descriptions-item label="纳税人识别号" :span="2">{{ partner.tax_id || '-' }}</el-descriptions-item>
       <el-descriptions-item label="类型" :span="2">
         <el-tag :type="getPartnerTypeTag(partner.type)"  size="small">{{ partner.type }}</el-tag>
       </el-descriptions-item>
-      <el-descriptions-item label="地址" :span="2">{{ partner.address || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="纳税人识别号" >{{ partner.tax_id || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="地址" >{{ partner.address || '-' }}</el-descriptions-item>
       <el-descriptions-item label="开户银行">{{ partner.bank || '-' }}</el-descriptions-item>
       <el-descriptions-item label="银行账号">{{ partner.bank_account || '-' }}</el-descriptions-item>
     </el-descriptions>

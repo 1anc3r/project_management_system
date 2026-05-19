@@ -1,42 +1,43 @@
 <template>
-  <el-dialog
-    :title="dialogTitle"
-    v-model="visible"
-    width="850px"
-    :close-on-click-modal="false"
-    @close="handleClose"
-  >
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-width="110px"
-    >
+  <el-dialog :title="dialogTitle" v-model="visible" width="850px" :close-on-click-modal="false" @close="handleClose">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
       <el-form-item label="合作方名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入合作方名称" />
       </el-form-item>
-      
+
       <el-form-item label="合作方类型" prop="type">
         <el-select v-model="form.type" placeholder="请选择合作方类型" style="width: 100%">
           <el-option v-for="item in partnerTypes" :key="item" :label="item" :value="item" />
         </el-select>
       </el-form-item>
-      
-      <el-form-item label="纳税人识别号" prop="tax_id">
-        <el-input v-model="form.tax_id" placeholder="请输入纳税人识别号" />
-      </el-form-item>
-      
-      <el-form-item label="地址" prop="address">
-        <el-input v-model="form.address" placeholder="请输入地址" />
-      </el-form-item>
-      
-      <el-form-item label="开户银行" prop="bank">
-        <el-input v-model="form.bank" placeholder="请输入开户银行" />
-      </el-form-item>
-      
-      <el-form-item label="银行账号" prop="bank_account">
-        <el-input v-model="form.bank_account" placeholder="请输入银行账号" />
-      </el-form-item>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="纳税人识别号" prop="tax_id">
+            <el-input v-model="form.tax_id" placeholder="请输入纳税人识别号" />
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="12">
+          <el-form-item label="地址" prop="address">
+            <el-input v-model="form.address" placeholder="请输入地址" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="开户银行" prop="bank">
+            <el-input v-model="form.bank" placeholder="请输入开户银行" />
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="12">
+          <el-form-item label="银行账号" prop="bank_account">
+            <el-input v-model="form.bank_account" placeholder="请输入银行账号" />
+          </el-form-item>
+        </el-col>
+      </el-row>
 
       <!-- 联系人列表 -->
       <div class="contacts-section">
@@ -49,7 +50,7 @@
         <div class="contacts-toolbar">
           <el-button type="primary" size="small" :icon="Plus" @click="handleAddContact">新增联系人</el-button>
         </div>
-        
+
         <el-table :data="contacts" border size="small">
           <el-table-column type="index" label="序号" width="50" align="center" />
           <el-table-column label="姓名" width="120">
@@ -75,7 +76,7 @@
         </el-table>
       </div>
     </el-form>
-    
+
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="handleSubmit" :loading="submitLoading">保存</el-button>
