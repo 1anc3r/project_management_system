@@ -1,28 +1,12 @@
 <template>
-  <el-dialog
-    :title="dialogTitle"
-    v-model="visible"
-    width="750px"
-    :close-on-click-modal="false"
-    @close="handleClose"
-    class="information-form-dialog"
-  >
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-width="100px"
-    >
+  <el-dialog :title="dialogTitle" v-model="visible" width="750px" :close-on-click-modal="false" @close="handleClose"
+    class="information-form-dialog">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="资讯日期" prop="information_date">
-            <el-date-picker
-              v-model="form.information_date"
-              type="date"
-              placeholder="选择日期"
-              style="width: 100%"
-              value-format="YYYY-MM-DD"
-            />
+            <el-date-picker v-model="form.information_date" type="date" placeholder="选择日期" style="width: 100%"
+              value-format="YYYY-MM-DD" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -39,36 +23,19 @@
       </el-form-item>
 
       <el-form-item label="关联合作方">
-        <el-select
-          v-model="form.partner_id"
-          filterable
-          clearable
-          placeholder="请选择关联合作方（可选）"
-          style="width: 100%"
-        >
+        <el-select v-model="form.partner_id" filterable clearable placeholder="请选择关联合作方（可选）" style="width: 100%">
           <el-option v-for="item in partnerOptions" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>
 
       <el-form-item label="关联项目">
-        <el-select
-          v-model="form.project_id"
-          filterable
-          clearable
-          placeholder="请选择关联项目（可选）"
-          style="width: 100%"
-        >
+        <el-select v-model="form.project_id" filterable clearable placeholder="请选择关联项目（可选）" style="width: 100%">
           <el-option v-for="item in projectOptions" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>
 
       <el-form-item label="资讯内容">
-        <el-input
-          v-model="form.information_content"
-          type="textarea"
-          :rows="6"
-          placeholder="请输入资讯内容"
-        />
+        <el-input v-model="form.information_content" type="textarea" :rows="6" placeholder="请输入资讯内容" />
       </el-form-item>
     </el-form>
 

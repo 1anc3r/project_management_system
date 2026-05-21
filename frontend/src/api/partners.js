@@ -67,3 +67,8 @@ export const updatePartnerContact = (id, contactId, data) => {
 export const deletePartnerContact = (id, contactId) => {
   return request.delete(`/api/partners/${id}/contacts/${contactId}`)
 }
+
+// 批量更新联系人排序
+export const sortPartnerContacts = (id, contacts) => {
+  return request.put(`/api/partners/${id}/contacts-sort`, { contacts })
+}

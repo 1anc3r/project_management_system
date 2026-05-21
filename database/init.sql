@@ -29,7 +29,7 @@ CREATE TABLE partners (
 
 -- =====================================================
 -- 1.1 合作方联系人表 partner_contacts
--- 一个合作方可有多个联系人
+-- 一个合作方可有多个联系人，支持拖拽排序
 -- =====================================================
 DROP TABLE IF EXISTS partner_contacts;
 CREATE TABLE partner_contacts (
@@ -38,10 +38,12 @@ CREATE TABLE partner_contacts (
     name VARCHAR(50) NOT NULL COMMENT '姓名',
     phone VARCHAR(20) DEFAULT NULL COMMENT '联系电话',
     position VARCHAR(50) DEFAULT NULL COMMENT '职务',
+    sort_order INT NOT NULL DEFAULT 0 COMMENT '排序序号（用于拖拽排序）',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
     KEY idx_partner_id (partner_id),
+    KEY idx_sort_order (sort_order),
     CONSTRAINT fk_contact_partner FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合作方联系人表';
 
@@ -168,13 +170,13 @@ INSERT INTO partners (name, type, tax_id, address, bank, bank_account) VALUES
 ('成都信息服务公司', '乙方', '91510000MA61R00002', '成都市武侯区人民南路2号', '中国建设银行成都分行', '5102012345678901234'),
 ('重庆数据技术公司', '丙方', '91500000MA61R00003', '重庆市渝北区新南路3号', '中国银行重庆分行', '6202012345678901234');
 
--- 插入示例联系人数据
-INSERT INTO partner_contacts (partner_id, name, phone, position) VALUES
-(1, '张三', '13800138001', '项目经理'),
-(1, '赵六', '13900139001', '技术总监'),
-(2, '李四', '13800138002', '商务经理'),
-(3, '王五', '13800138003', '总经理'),
-(3, '孙七', '13700137001', '采购专员');
+-- 插入示例联系人数据（带排序序号）
+INSERT INTO partner_contacts (partner_id, name, phone, position, sort_order) VALUES
+(1, '张三', '13800138001', '项目经理', 0),
+(1, '赵六', '13900139001', '技术总监', 1),
+(2, '李四', '13800138002', '商务经理', 0),
+(3, '王五', '13800138003', '总经理', 0),
+(3, '孙七', '13700137001', '采购专员', 1);
 
 -- 插入示例项目数据
 INSERT INTO projects (name, city, type, stage, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) VALUES

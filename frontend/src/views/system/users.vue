@@ -6,21 +6,16 @@
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
         </div>
-        
+
         <div class="center-search">
-          <el-input
-            v-model="searchForm.keyword"
-            placeholder="搜索用户名、姓名"
-            clearable
-            style="width: 250px"
-            @keyup.enter="handleSearch"
-          >
+          <el-input v-model="searchForm.keyword" placeholder="搜索用户名、姓名" clearable style="width: 250px"
+            @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
             </template>
           </el-input>
         </div>
-        
+
         <div class="right-filters">
           <el-select v-model="searchForm.role" placeholder="角色" clearable style="width: 120px" @change="handleSearch">
             <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -35,13 +30,7 @@
 
     <!-- 用户列表 -->
     <el-card class="list-card" shadow="never">
-      <el-table
-        v-loading="loading"
-        :data="userList"
-        style="width: 100%"
-        border
-        stripe
-      >
+      <el-table v-loading="loading" :data="userList" style="width: 100%" border stripe>
         <el-table-column prop="username" label="账号" width="120" />
         <el-table-column prop="nickname" label="姓名" width="120">
           <template #default="{ row }">{{ row.nickname || '-' }}</template>
@@ -65,65 +54,45 @@
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button link type="primary" size="small" @click="handleResetPassword(row)">重置密码</el-button>
-            <el-button 
-              link 
-              :type="row.status === 1 ? 'danger' : 'success'" 
-              size="small" 
-              @click="handleToggleStatus(row)"
-            >
+            <el-button link :type="row.status === 1 ? 'danger' : 'success'" size="small"
+              @click="handleToggleStatus(row)">
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
             <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
-    <el-dialog
-      :title="formType === 'add' ? '新增用户' : '编辑用户'"
-      v-model="formDialogVisible"
-      width="500px"
-      :close-on-click-modal="false"
-      @close="handleClose"
-    >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="80px"
-      >
+    <el-dialog :title="formType === 'add' ? '新增用户' : '编辑用户'" v-model="formDialogVisible" width="500px"
+      :close-on-click-modal="false" @close="handleClose">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="账号" prop="username">
           <el-input v-model="form.username" placeholder="请输入账号" :disabled="formType === 'edit'" />
         </el-form-item>
-        
+
         <el-form-item v-if="formType === 'add'" label="密码" prop="password">
           <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password />
         </el-form-item>
-        
+
         <el-form-item label="姓名" prop="nickname">
           <el-input v-model="form.nickname" placeholder="请输入姓名" />
         </el-form-item>
-        
+
         <el-form-item label="角色" prop="role">
           <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%">
             <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio :value="1">正常</el-radio>
@@ -131,7 +100,7 @@
           </el-radio-group>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="handleClose">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">保存</el-button>
@@ -139,11 +108,7 @@
     </el-dialog>
 
     <!-- 重置密码对话框 -->
-    <el-dialog
-      title="重置密码"
-      v-model="passwordDialogVisible"
-      width="400px"
-    >
+    <el-dialog title="重置密码" v-model="passwordDialogVisible" width="400px">
       <el-form :model="passwordForm" label-width="100px">
         <el-form-item label="新密码" required>
           <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
@@ -314,7 +279,7 @@ const handleEdit = (row) => {
 // 提交表单
 const handleSubmit = async () => {
   await formRef.value.validate()
-  
+
   submitLoading.value = true
   try {
     if (formType.value === 'add') {
@@ -328,7 +293,7 @@ const handleSubmit = async () => {
         ElMessage.success('用户更新成功')
       }
     }
-    
+
     formDialogVisible.value = false
     fetchData()
   } catch (error) {
@@ -348,7 +313,7 @@ const handleClose = () => {
 const handleToggleStatus = async (row) => {
   const newStatus = row.status === 1 ? 0 : 1
   const statusText = newStatus === 1 ? '启用' : '禁用'
-  
+
   try {
     await updateUser(row.id, { status: newStatus })
     ElMessage.success(`${statusText}成功`)
@@ -385,7 +350,7 @@ const handleSubmitPassword = async () => {
     ElMessage.warning('密码长度不能少于6位')
     return
   }
-  
+
   passwordLoading.value = true
   try {
     await resetPassword(passwordForm.value.userId, passwordForm.value.newPassword)
@@ -408,7 +373,7 @@ onMounted(() => {
 .users-container {
   .operation-card {
     margin-bottom: 15px;
-    
+
     .operation-bar {
       display: flex;
       align-items: center;
@@ -417,7 +382,7 @@ onMounted(() => {
       gap: 10px;
     }
   }
-  
+
   .list-card {
     .pagination-wrapper {
       margin-top: 20px;

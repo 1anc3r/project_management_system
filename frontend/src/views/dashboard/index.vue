@@ -6,7 +6,9 @@
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
             <div class="stat-icon project">
-              <el-icon><Folder /></el-icon>
+              <el-icon>
+                <Folder />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">{{ stats.project_count || 0 }}</div>
@@ -20,7 +22,9 @@
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
             <div class="stat-icon amount">
-              <el-icon><Money /></el-icon>
+              <el-icon>
+                <Money />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">{{ formatAmount(stats.total_amount) }}</div>
@@ -34,7 +38,9 @@
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
             <div class="stat-icon receipt">
-              <el-icon><DocumentChecked /></el-icon>
+              <el-icon>
+                <DocumentChecked />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">{{ formatAmount(stats.receipt_amount) }}</div>
@@ -48,7 +54,9 @@
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
             <div class="stat-icon pending">
-              <el-icon><Document /></el-icon>
+              <el-icon>
+                <Document />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">{{ formatAmount(stats.pending_amount) }}</div>
@@ -127,28 +135,29 @@
                 </div>
               </template>
               <el-timeline v-if="informationList.length">
-                <el-timeline-item
-                  v-for="item in informationList"
-                  :key="item.id"
-                  :type="getTimelineType(item.information_type)"
-                  :timestamp="formatDate(item.information_date)"
-                  placement="top"
-                >
+                <el-timeline-item v-for="item in informationList" :key="item.id"
+                  :type="getInfoTypeTag(item.information_type)" :timestamp="formatDate(item.information_date)"
+                  placement="top">
                   <el-card shadow="never" class="info-item-card">
                     <template #header>
                       <div class="info-item-header">
                         <span class="info-item-title">{{ item.information_title }}</span>
-                        <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type }}</el-tag>
+                        <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
+                          }}</el-tag>
                       </div>
                     </template>
                     <p class="info-item-content">{{ item.information_content || '暂无内容' }}</p>
                     <div class="info-item-meta">
                       <span v-if="item.partner_name" class="meta-item">
-                        <el-icon><User /></el-icon>
+                        <el-icon>
+                          <User />
+                        </el-icon>
                         {{ item.partner_name }}
                       </span>
                       <span v-if="item.project_name" class="meta-item">
-                        <el-icon><Folder /></el-icon>
+                        <el-icon>
+                          <Folder />
+                        </el-icon>
                         {{ item.project_name }}
                       </span>
                     </div>
@@ -207,18 +216,19 @@ const typeDistribution = ref([])
 
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
+
 // 资讯列表
 const informationList = ref([])
 
 // 阶段颜色映射
 const stageColors = {
-    '意向': '#F57FAC',
-    '签约': '#EBAA3C',
-    '建设': '#409EFF',
-    '运营': '#03A9F4',
-    '交付': '#009688',
-    '验收': '#8FC25C',
-    '完结': '#909399'
+  '意向': '#F57FAC',
+  '签约': '#EBAA3C',
+  '建设': '#409EFF',
+  '运营': '#03A9F4',
+  '交付': '#009688',
+  '验收': '#8FC25C',
+  '完结': '#909399'
 }
 
 // 项目类型颜色映射
@@ -426,17 +436,9 @@ const handleTypeClick = (params) => {
 // 资讯类型标签样式
 const getInfoTypeTag = (type) => {
   const typeMap = {
-    '项目推进': 'primary',
-    '会议活动': 'warning'
-  }
-  return typeMap[type] || 'info'
-}
-
-// 时间线类型
-const getTimelineType = (type) => {
-  const typeMap = {
-    '项目推进': 'primary',
-    '会议活动': 'warning'
+    '项目实施': 'primary',
+    '拜访客户': 'warning',
+    '会议活动': 'danger'
   }
   return typeMap[type] || 'info'
 }

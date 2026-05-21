@@ -39,32 +39,46 @@
         </el-col>
       </el-row>
 
-      <!-- 联系人列表 -->
+      <!-- 联系人列表（支持拖拽排序） -->
       <div class="contacts-section">
         <div class="section-title">
           联系人列表
           <el-tag v-if="contacts.length > 0" type="info" size="small" style="margin-left: 10px">
             {{ contacts.length }} 位
           </el-tag>
+          <el-tag v-if="contacts.length > 1" type="warning" size="small" style="margin-left: 8px">
+            <el-icon>
+              <Rank />
+            </el-icon> 可拖拽排序
+          </el-tag>
         </div>
         <div class="contacts-toolbar">
           <el-button type="primary" size="small" :icon="Plus" @click="handleAddContact">新增联系人</el-button>
         </div>
 
-        <el-table :data="contacts" border size="small">
+        <!-- 联系人表格（支持拖拽排序） -->
+        <el-table ref="contactsTableRef" :data="contacts" border size="small" row-key="tempId"
+          class="contacts-sortable-table">
+          <el-table-column width="50" align="center">
+            <template #default>
+              <el-icon class="drag-handle" title="按住拖拽排序">
+                <Rank />
+              </el-icon>
+            </template>
+          </el-table-column>
           <el-table-column type="index" label="序号" width="50" align="center" />
           <el-table-column label="姓名" width="120">
-            <template #default="{ row, $index }">
+            <template #default="{ row }">
               <el-input v-model="row.name" size="small" placeholder="姓名" />
             </template>
           </el-table-column>
           <el-table-column label="联系电话" width="140">
-            <template #default="{ row, $index }">
+            <template #default="{ row }">
               <el-input v-model="row.phone" size="small" placeholder="联系电话" />
             </template>
           </el-table-column>
           <el-table-column label="职务" min-width="120">
-            <template #default="{ row, $index }">
+            <template #default="{ row }">
               <el-input v-model="row.position" size="small" placeholder="职务" />
             </template>
           </el-table-column>
@@ -85,9 +99,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Rank } from '@element-plus/icons-vue'
+import Sortable from 'sortablejs'
 import { createPartner, updatePartner, getPartnerById } from '@/api/partners'
 
 const props = defineProps({
@@ -111,6 +126,7 @@ const dialogTitle = computed(() => props.type === 'add' ? '新增合作方' : '�
 // 表单引用
 const formRef = ref(null)
 const submitLoading = ref(false)
+const contactsTableRef = ref(null)
 
 // 表单数据
 const form = ref({
@@ -128,6 +144,9 @@ const contacts = ref([])
 // 合作方类型
 const partnerTypes = ['甲方', '乙方', '丙方', '其他']
 
+// 临时ID计数器（用于拖拽的 row-key）
+let tempIdCounter = 0
+
 // 表单验证规则
 const rules = {
   name: [{ required: true, message: '请输入合作方名称', trigger: 'blur' }],
@@ -144,21 +163,101 @@ const DEFAULT_FORM = {
   bank_account: ''
 }
 
-// 新增联系人
+/**
+ * 生成唯一临时ID（用于拖拽排序的 row-key）
+ */
+const generateTempId = () => {
+  return `contact_${Date.now()}_${tempIdCounter++}`
+}
+
+/**
+ * 新增联系人
+ */
 const handleAddContact = () => {
   contacts.value.push({
+    tempId: generateTempId(),
     name: '',
     phone: '',
-    position: ''
+    position: '',
+    sort_order: contacts.value.length
+  })
+  // 新增后重新初始化拖拽
+  nextTick(() => {
+    initSortable()
   })
 }
 
-// 删除联系人
+/**
+ * 删除联系人
+ */
 const handleDeleteContact = (index) => {
   contacts.value.splice(index, 1)
+  // 删除后重新计算排序序号
+  recalcSortOrder()
 }
 
-// 提交表单
+/**
+ * 重新计算排序序号
+ */
+const recalcSortOrder = () => {
+  contacts.value.forEach((contact, index) => {
+    contact.sort_order = index
+  })
+}
+
+/**
+ * 初始化拖拽排序
+ * 使用 SortableJS 实现表格行拖拽
+ */
+let sortableInstance = null
+
+const initSortable = () => {
+  // 销毁旧的 Sortable 实例
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+
+  const tableEl = contactsTableRef.value?.$el
+  if (!tableEl) return
+
+  const tbodyEl = tableEl.querySelector('.el-table__body tbody')
+  if (!tbodyEl) return
+
+  // 至少需要2行才启用拖拽
+  if (contacts.value.length < 2) return
+
+  sortableInstance = Sortable.create(tbodyEl, {
+    animation: 200,
+    handle: '.drag-handle',
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    onStart: () => {
+      // 拖拽开始时添加视觉反馈
+      tableEl.classList.add('is-dragging')
+    },
+    onEnd: (evt) => {
+      tableEl.classList.remove('is-dragging')
+      const { oldIndex, newIndex } = evt
+
+      if (oldIndex === newIndex) return
+
+      // 重新排列数据数组
+      const movedItem = contacts.value.splice(oldIndex, 1)[0]
+      contacts.value.splice(newIndex, 0, movedItem)
+
+      // 重新计算排序序号
+      recalcSortOrder()
+
+      ElMessage.success('排序已更新，请点击保存按钮提交')
+    }
+  })
+}
+
+/**
+ * 提交表单
+ */
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
@@ -176,8 +275,16 @@ const handleSubmit = async () => {
 
   submitLoading.value = true
   try {
-    // 过滤掉空行（未填写姓名的）
-    const validContacts = contacts.value.filter(c => c.name.trim())
+    // 过滤掉空行（未填写姓名的），并保留排序序号
+    const validContacts = contacts.value
+      .filter(c => c.name.trim())
+      .map((c, index) => ({
+        id: c.id || undefined,  // 保留原有ID（编辑模式下）
+        name: c.name.trim(),
+        phone: c.phone || null,
+        position: c.position || null,
+        sort_order: index
+      }))
 
     const submitData = {
       ...form.value,
@@ -202,14 +309,22 @@ const handleSubmit = async () => {
   }
 }
 
-// 关闭对话框
+/**
+ * 关闭对话框
+ */
 const handleClose = () => {
   form.value = { ...DEFAULT_FORM }
   contacts.value = []
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
   visible.value = false
 }
 
-// 加载编辑数据
+/**
+ * 加载编辑数据
+ */
 const loadEditData = async () => {
   if (props.type === 'edit' && props.data) {
     try {
@@ -223,13 +338,20 @@ const loadEditData = async () => {
         bank: data.bank || '',
         bank_account: data.bank_account || ''
       }
-      // 加载联系人列表
+      // 加载联系人列表（保留排序序号）
       contacts.value = (data.contacts || []).map(c => ({
+        tempId: generateTempId(),
         id: c.id,
         name: c.name || '',
         phone: c.phone || '',
-        position: c.position || ''
+        position: c.position || '',
+        sort_order: c.sort_order !== undefined ? c.sort_order : 0
       }))
+
+      // 数据加载完成后初始化拖拽
+      nextTick(() => {
+        initSortable()
+      })
     } catch (error) {
       console.error('加载合作方数据失败:', error)
     }
@@ -241,6 +363,17 @@ watch(() => props.visible, (val) => {
   if (val && props.type === 'edit') {
     loadEditData()
   }
+  if (val && props.type === 'add') {
+    // 新增模式时清空联系人并初始化拖拽
+    contacts.value = []
+    nextTick(() => {
+      initSortable()
+    })
+  }
+})
+
+onMounted(() => {
+  // 组件挂载时不需要初始化，等对话框打开时再初始化
 })
 </script>
 
@@ -255,10 +388,65 @@ watch(() => props.visible, (val) => {
     margin-bottom: 15px;
     padding-left: 10px;
     border-left: 4px solid #409EFF;
+    display: flex;
+    align-items: center;
   }
 
   .contacts-toolbar {
     margin-bottom: 10px;
+  }
+}
+
+// 拖拽手柄样式
+.drag-handle {
+  cursor: grab;
+  color: #909399;
+  font-size: 16px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #409EFF;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// 拖拽时的行样式
+:deep(.sortable-ghost) {
+  opacity: 0.5;
+  background-color: #ecf5ff !important;
+  border: 2px dashed #409EFF !important;
+}
+
+:deep(.sortable-chosen) {
+  background-color: #f5f7fa;
+}
+
+:deep(.sortable-drag) {
+  opacity: 0.9;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+// 拖拽过程中的表格样式
+:deep(.is-dragging) {
+  .el-table__row {
+    transition: none;
+  }
+}
+
+// 表格行hover时显示拖拽图标
+:deep(.contacts-sortable-table) {
+  .el-table__row {
+    .drag-handle {
+      opacity: 0.5;
+    }
+
+    &:hover .drag-handle {
+      opacity: 1;
+    }
   }
 }
 </style>

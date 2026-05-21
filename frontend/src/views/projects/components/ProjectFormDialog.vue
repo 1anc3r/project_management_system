@@ -1,19 +1,7 @@
 <template>
-  <el-dialog
-    :title="dialogTitle"
-    v-model="visible"
-    width="900px"
-    :close-on-click-modal="false"
-    @close="handleClose"
-    class="project-form-dialog"
-  >
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-width="110px"
-      class="project-form"
-    >
+  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose"
+    class="project-form-dialog">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="project-form">
       <!-- 项目基本信息 -->
       <div class="form-section">
         <div class="section-title">项目基本信息</div>
@@ -26,51 +14,31 @@
           <el-col :span="12">
             <el-form-item label="履约地点" prop="city">
               <el-select v-model="form.city" placeholder="请选择履约地点" style="width: 100%">
-                <el-option
-                  v-for="city in cities"
-                  :key="city"
-                  :label="city"
-                  :value="city"
-                />
+                <el-option v-for="city in cities" :key="city" :label="city" :value="city" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="项目类型" prop="type">
               <el-select v-model="form.type" placeholder="请选择" style="width: 100%">
-                <el-option
-                  v-for="item in types"
-                  :key="item"
-                  :label="item"
-                  :value="item"
-                />
+                <el-option v-for="item in types" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="拓展方式" prop="expansion_method">
               <el-select v-model="form.expansion_method" placeholder="请选择" style="width: 100%">
-                <el-option
-                  v-for="item in expansionMethods"
-                  :key="item"
-                  :label="item"
-                  :value="item"
-                />
+                <el-option v-for="item in expansionMethods" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="项目内容" prop="content">
               <el-select v-model="form.content" placeholder="请选择" style="width: 100%">
-                <el-option
-                  v-for="item in contents"
-                  :key="item"
-                  :label="item"
-                  :value="item"
-                />
+                <el-option v-for="item in contents" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -80,93 +48,53 @@
           <el-col :span="8">
             <el-form-item label="项目阶段" prop="stage">
               <el-select v-model="form.stage" placeholder="请选择" style="width: 100%">
-                <el-option
-                  v-for="item in stages"
-                  :key="item"
-                  :label="item"
-                  :value="item"
-                />
+                <el-option v-for="item in stages" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="起始日期" prop="start_date">
-              <el-date-picker
-                v-model="form.start_date"
-                type="date"
-                placeholder="选择日期"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-              />
+              <el-date-picker v-model="form.start_date" type="date" placeholder="选择日期" style="width: 100%"
+                value-format="YYYY-MM-DD" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="终止日期" prop="end_date">
-              <el-date-picker
-                v-model="form.end_date"
-                type="date"
-                placeholder="选择日期"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-              />
+              <el-date-picker v-model="form.end_date" type="date" placeholder="选择日期" style="width: 100%"
+                value-format="YYYY-MM-DD" />
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="合同总金额" prop="total_amount">
-              <el-input-number
-                v-model="form.total_amount"
-                :precision="2"
-                :min="0"
-                style="width: 100%"
-                @change="calculateAmounts"
-              />
+              <el-input-number v-model="form.total_amount" :precision="2" :min="0" style="width: 100%"
+                @change="calculateAmounts" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="已开票金额" prop="receipt_amount">
-              <el-input-number
-                v-model="form.receipt_amount"
-                :precision="2"
-                :disabled=true
-                style="width: 100%"
-              />
+              <el-input-number v-model="form.receipt_amount" :precision="2" :disabled=true style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="待开票金额">
-              <el-input-number
-                v-model="form.pending_amount"
-                :precision="2"
-                :disabled=true
-                style="width: 100%"
-              />
+              <el-input-number v-model="form.pending_amount" :precision="2" :disabled=true style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="成本" prop="cost">
-              <el-input-number
-                v-model="form.cost"
-                :precision="2"
-                :min="0"
-                style="width: 100%"
-                @change="calculateAmounts"
-              />
+              <el-input-number v-model="form.cost" :precision="2" :min="0" style="width: 100%"
+                @change="calculateAmounts" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="毛利">
-              <el-input-number
-                v-model="form.profit"
-                :precision="2"
-                :disabled=true
-                style="width: 100%"
-              />
+              <el-input-number v-model="form.profit" :precision="2" :disabled=true style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -190,22 +118,17 @@
             款项比例总和 100%
           </el-tag>
         </div>
-        
+
         <div class="payment-toolbar">
           <el-button type="primary" size="small" :icon="Plus" @click="handleAddPayment">新增款项</el-button>
         </div>
-        
+
         <el-table :data="payments" border size="small">
           <el-table-column type="index" label="序号" width="50" align="center" />
           <el-table-column label="款项" width="120">
             <template #default="{ row, $index }">
               <el-select v-model="row.payment_type" size="small">
-                <el-option
-                  v-for="type in paymentTypes"
-                  :key="type"
-                  :label="type"
-                  :value="type"
-                />
+                <el-option v-for="type in paymentTypes" :key="type" :label="type" :value="type" />
               </el-select>
             </template>
           </el-table-column>
@@ -216,47 +139,25 @@
           </el-table-column>
           <el-table-column label="支付比例(%)" width="110">
             <template #default="{ row, $index }">
-              <el-input-number
-                v-model="row.payment_ratio"
-                :precision="2"
-                :min="0"
-                :max="100"
-                size="small"
-                style="width: 100%"
-                @change="calculateAmounts()"
-              />
+              <el-input-number v-model="row.payment_ratio" :precision="2" :min="0" :max="100" size="small"
+                style="width: 100%" @change="calculateAmounts()" />
             </template>
           </el-table-column>
           <el-table-column label="款项金额(万元)" width="120">
             <template #default="{ row, $index }">
-              <el-input-number
-                v-model="row.payment_amount"
-                :precision="2"
-                :min="0"
-                size="small"
-                style="width: 100%"
-                :disabled=true
-              />
+              <el-input-number v-model="row.payment_amount" :precision="2" :min="0" size="small" style="width: 100%"
+                :disabled=true />
             </template>
           </el-table-column>
           <el-table-column label="是否支付" width="80" align="center">
             <template #default="{ row, $index }">
-              <el-checkbox v-model="row.is_paid"
-                :true-value="1"
-                :false-label="0"
-                @change="calculateAmounts()"/>
+              <el-checkbox v-model="row.is_paid" :true-value="1" :false-label="0" @change="calculateAmounts()" />
             </template>
           </el-table-column>
           <el-table-column label="支付日期" width="140">
             <template #default="{ row, $index }">
-              <el-date-picker
-                v-model="row.payment_date"
-                type="date"
-                size="small"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-                placeholder="选择日期"
-              />
+              <el-date-picker v-model="row.payment_date" type="date" size="small" style="width: 100%"
+                value-format="YYYY-MM-DD" placeholder="选择日期" />
             </template>
           </el-table-column>
           <el-table-column label="操作" width="80" align="center">
@@ -273,22 +174,10 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="合作方名称" prop="partner_id">
-              <el-select
-                v-model="form.partner_id"
-                filterable
-                remote
-                placeholder="请输入合作方名称搜索"
-                :remote-method="searchPartners"
-                :loading="partnerLoading"
-                style="width: 100%"
-                @change="handlePartnerChange"
-              >
-                <el-option
-                  v-for="item in partnerOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
+              <el-select v-model="form.partner_id" filterable remote placeholder="请输入合作方名称搜索"
+                :remote-method="searchPartners" :loading="partnerLoading" style="width: 100%"
+                @change="handlePartnerChange">
+                <el-option v-for="item in partnerOptions" :key="item.id" :label="item.name" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -296,7 +185,7 @@
             <el-button type="primary" size="small" :icon="Plus" @click="handleAddPartner">新增合作方</el-button>
           </div>
         </el-row>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="纳税人识别号">
@@ -309,7 +198,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="开户银行">
@@ -322,7 +211,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="联系人">
@@ -340,15 +229,8 @@
       <!-- 项目附件 -->
       <div class="form-section">
         <div class="section-title">项目附件</div>
-        <el-upload
-          ref="uploadRef"
-          action=""
-          :auto-upload="false"
-          :on-change="handleFileChange"
-          :file-list="fileList"
-          multiple
-          class="upload-area"
-        >
+        <el-upload ref="uploadRef" action="" :auto-upload="false" :on-change="handleFileChange" :file-list="fileList"
+          multiple class="upload-area">
           <el-button type="primary" :icon="Upload">选择文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
@@ -356,13 +238,15 @@
             </div>
           </template>
         </el-upload>
-        
+
         <!-- 已上传附件列表 -->
-        <el-table v-if="existingAttachments.length > 0" :data="existingAttachments" border size="small" class="attachment-table">
+        <el-table v-if="existingAttachments.length > 0" :data="existingAttachments" border size="small"
+          class="attachment-table">
           <el-table-column prop="file_name" label="文件名" min-width="200" />
           <el-table-column prop="attachment_type" label="类型" width="160">
             <template #default="{ row }">
-              <el-select v-model="row.attachment_type" size="small" @change="(val) => handleUpdateAttachmentType(row, val)">
+              <el-select v-model="row.attachment_type" size="small"
+                @change="(val) => handleUpdateAttachmentType(row, val)">
                 <el-option v-for="type in attachmentTypeOptions" :key="type" :label="type" :value="type" />
               </el-select>
             </template>
@@ -381,7 +265,7 @@
         </el-table>
       </div>
     </el-form>
-    
+
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="handleSubmit" :loading="submitLoading">保存</el-button>
@@ -389,12 +273,8 @@
   </el-dialog>
 
   <!-- 编辑合作方对话框 -->
-  <PartnerFormDialog
-    v-model:visible="partnerDialogVisible"
-    :type="partnerDialogType"
-    :data="partnerDialogData"
-    @success="handlePartnerDialogSuccess"
-  />
+  <PartnerFormDialog v-model:visible="partnerDialogVisible" :type="partnerDialogType" :data="partnerDialogData"
+    @success="handlePartnerDialogSuccess" />
 </template>
 
 <script setup>
@@ -769,7 +649,7 @@ watch(() => props.visible, (val) => {
 .project-form-dialog {
   .form-section {
     margin-bottom: 25px;
-    
+
     .section-title {
       font-size: 15px;
       font-weight: 600;
@@ -778,16 +658,16 @@ watch(() => props.visible, (val) => {
       padding-left: 10px;
       border-left: 4px solid #409EFF;
     }
-    
+
     .payment-toolbar {
       margin-bottom: 10px;
     }
   }
-  
+
   .upload-area {
     margin-bottom: 15px;
   }
-  
+
   .attachment-table {
     margin-top: 15px;
   }

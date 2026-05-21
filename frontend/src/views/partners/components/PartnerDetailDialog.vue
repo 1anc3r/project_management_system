@@ -1,17 +1,12 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    title="合作方详情"
-    width="850px"
-    destroy-on-close
-  >
+  <el-dialog v-model="visible" title="合作方详情" width="850px" destroy-on-close>
     <el-descriptions :column="2" border v-if="partner">
       <el-descriptions-item label="合作方名称" :span="2">{{ partner.name }}</el-descriptions-item>
       <el-descriptions-item label="类型" :span="2">
-        <el-tag :type="getPartnerTypeTag(partner.type)"  size="small">{{ partner.type }}</el-tag>
+        <el-tag :type="getPartnerTypeTag(partner.type)" size="small">{{ partner.type }}</el-tag>
       </el-descriptions-item>
-      <el-descriptions-item label="纳税人识别号" >{{ partner.tax_id || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="地址" >{{ partner.address || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="纳税人识别号">{{ partner.tax_id || '-' }}</el-descriptions-item>
+      <el-descriptions-item label="地址">{{ partner.address || '-' }}</el-descriptions-item>
       <el-descriptions-item label="开户银行">{{ partner.bank || '-' }}</el-descriptions-item>
       <el-descriptions-item label="银行账号">{{ partner.bank_account || '-' }}</el-descriptions-item>
     </el-descriptions>
@@ -62,23 +57,22 @@
             </div>
           </template>
           <el-timeline v-if="informationList.length">
-            <el-timeline-item
-              v-for="item in informationList"
-              :key="item.id"
-              :type="getTimelineType(item.information_type)"
-              :timestamp="formatDate(item.information_date)"
-              placement="top"
-            >
+            <el-timeline-item v-for="item in informationList" :key="item.id"
+              :type="getInfoTypeTag(item.information_type)" :timestamp="formatDate(item.information_date)"
+              placement="top">
               <el-card shadow="never" class="info-card">
                 <template #header>
                   <div class="info-header">
                     <span class="info-title">{{ item.information_title }}</span>
-                    <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type }}</el-tag>
+                    <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
+                    }}</el-tag>
                   </div>
                 </template>
                 <p class="info-content">{{ item.information_content || '暂无内容' }}</p>
                 <p v-if="item.project_name" class="info-project">
-                  <el-icon><Link /></el-icon>
+                  <el-icon>
+                    <Link />
+                  </el-icon>
                   关联项目：{{ item.project_name }}
                 </p>
               </el-card>
@@ -187,17 +181,9 @@ const handleEdit = () => {
 // 资讯类型标签样式
 const getInfoTypeTag = (type) => {
   const typeMap = {
-    '项目推进': 'primary',
-    '会议活动': 'warning'
-  }
-  return typeMap[type] || 'info'
-}
-
-// 时间线类型
-const getTimelineType = (type) => {
-  const typeMap = {
-    '项目推进': 'primary',
-    '会议活动': 'warning'
+    '项目实施': 'primary',
+    '拜访客户': 'warning',
+    '会议活动': 'danger'
   }
   return typeMap[type] || 'info'
 }

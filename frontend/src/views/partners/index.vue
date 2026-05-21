@@ -6,49 +6,47 @@
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
           <el-button :icon="Edit" :disabled=!selectedRows.length @click="handleBatchEdit">编辑</el-button>
-          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length @click="handleBatchDelete">删除</el-button>
+          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length
+            @click="handleBatchDelete">删除</el-button>
+          <el-button :icon="Download" @click="handleExport">导出</el-button>
         </div>
-        
+
         <div class="center-search">
-          <el-input
-            v-model="searchForm.keyword"
-            placeholder="搜索合作方名称、纳税人识别号、联系人"
-            clearable
-            style="width: 300px"
-            @keyup.enter="handleSearch"
-          >
+          <el-input v-model="searchForm.keyword" placeholder="搜索合作方名称、纳税人识别号、联系人" clearable style="width: 300px"
+            @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
             </template>
           </el-input>
         </div>
-        
+
         <div class="right-btns">
-          <el-button :icon="Download" @click="handleExport">导出</el-button>
-          <el-button :icon="View" @click="viewMode = viewMode === 'list' ? 'grid' : 'list'">
-            {{ viewMode === 'list' ? '网格' : '列表' }}
-          </el-button>
+          <!-- 视图切换 -->
+          <el-radio-group v-model="viewMode" size="middle">
+            <el-radio-button label="list">
+              <el-icon>
+                <List />
+              </el-icon> 列表
+            </el-radio-button>
+            <el-radio-button label="grid">
+              <el-icon>
+                <Timer />
+              </el-icon> 网格
+            </el-radio-button>
+          </el-radio-group>
         </div>
       </div>
     </el-card>
 
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never">
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="partnerList"
-        style="width: 100%"
-        @selection-change="handleSelectionChange"
-        border
-        stripe
-        highlight-current-row
-      >
+      <el-table ref="tableRef" v-loading="loading" :data="partnerList" style="width: 100%"
+        @selection-change="handleSelectionChange" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="合作方名称" min-width="180" show-overflow-tooltip />
         <el-table-column prop="type" label="类型" width="80" align="center">
           <template #default="{ row }">
-            <el-tag :type="getPartnerTypeTag(row.type)"  size="small">{{ row.type }}</el-tag>
+            <el-tag :type="getPartnerTypeTag(row.type)" size="small">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="tax_id" label="纳税人识别号" width="160" />
@@ -67,18 +65,12 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
@@ -88,9 +80,11 @@
         <el-col v-for="item in partnerList" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card class="partner-card" shadow="hover">
             <div class="card-header">
-              <el-tag  :type="getPartnerTypeTag(item.type)" size="small">{{ item.type }}</el-tag>
+              <el-tag :type="getPartnerTypeTag(item.type)" size="small">{{ item.type }}</el-tag>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
-                <el-icon class="more-icon"><More /></el-icon>
+                <el-icon class="more-icon">
+                  <More />
+                </el-icon>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="edit">编辑</el-dropdown-item>
@@ -103,11 +97,15 @@
             <div class="card-body">
               <h4 class="partner-name" :title="item.name">{{ item.name }}</h4>
               <p class="contact-info">
-                <el-icon><User /></el-icon>
+                <el-icon>
+                  <User />
+                </el-icon>
                 {{ item.primary_contact_name || '暂无联系人' }}
               </p>
               <p class="phone-info">
-                <el-icon><Phone /></el-icon>
+                <el-icon>
+                  <Phone />
+                </el-icon>
                 {{ item.primary_contact_phone || '暂无电话' }}
               </p>
               <div class="stats">
@@ -124,34 +122,19 @@
           </el-card>
         </el-col>
       </el-row>
-      
+
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
-    <PartnerFormDialog
-      v-model:visible="formDialogVisible"
-      :type="formType"
-      :data="currentRow"
-      @success="fetchData"
-    />
-    
+    <PartnerFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
+
     <!-- 详情对话框 -->
-    <PartnerDetailDialog
-      v-model="detailDialogVisible"
-      :partner="detailRow"
-      @edit="(row) => { handleEdit(row) }"
-    />
+    <PartnerDetailDialog v-model="detailDialogVisible" :partner="detailRow" @edit="(row) => { handleEdit(row) }" />
   </div>
 </template>
 
@@ -345,51 +328,61 @@ onMounted(() => {
 .partners-container {
   .operation-card {
     margin-bottom: 15px;
-    
+
     .operation-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 10px;
+
+      .view-toggle {
+        .el-radio-group {
+          .el-radio-button__inner {
+            display: flex;
+            align-items: center;
+          }
+        }
+      }
     }
   }
-  
-  .list-card, .grid-card {
+
+  .list-card,
+  .grid-card {
     .pagination-wrapper {
       margin-top: 20px;
       display: flex;
       justify-content: flex-end;
     }
   }
-  
+
   .grid-card {
     .partner-card {
       margin-bottom: 20px;
       cursor: pointer;
       transition: all 0.3s;
-      
+
       &:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
       }
-      
+
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
-        
+
         .more-icon {
           cursor: pointer;
           padding: 5px;
-          
+
           &:hover {
             color: #409EFF;
           }
         }
       }
-      
+
       .card-body {
         .partner-name {
           font-size: 16px;
@@ -400,8 +393,9 @@ onMounted(() => {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        
-        .contact-info, .phone-info {
+
+        .contact-info,
+        .phone-info {
           font-size: 13px;
           color: #606266;
           margin-bottom: 5px;
@@ -409,24 +403,24 @@ onMounted(() => {
           align-items: center;
           gap: 5px;
         }
-        
+
         .stats {
           display: flex;
           justify-content: space-between;
           margin-top: 12px;
           padding-top: 12px;
           border-top: 1px solid #ebeef5;
-          
+
           .stat-item {
             text-align: center;
-            
+
             .label {
               display: block;
               font-size: 12px;
               color: #909399;
               margin-bottom: 4px;
             }
-            
+
             .value {
               font-size: 14px;
               font-weight: 600;

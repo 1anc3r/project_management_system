@@ -125,7 +125,8 @@
           <el-table-column prop="file_name" label="文件名" min-width="250" show-overflow-tooltip />
           <el-table-column prop="attachment_type" label="类型" width="160">
             <template #default="{ row }">
-              <el-select v-model="row.attachment_type" size="small" disabled=true @change="(val) => handleUpdateAttachmentType(row, val)">
+              <el-select v-model="row.attachment_type" size="small" disabled=true
+                @change="(val) => handleUpdateAttachmentType(row, val)">
                 <el-option v-for="type in attachmentTypes" :key="type" :label="type" :value="type" />
               </el-select>
             </template>
@@ -157,23 +158,22 @@
               </div>
             </template>
             <el-timeline v-if="informationList.length">
-              <el-timeline-item
-                v-for="item in informationList"
-                :key="item.id"
-                :type="getTimelineType(item.information_type)"
-                :timestamp="formatDate(item.information_date)"
-                placement="top"
-              >
+              <el-timeline-item v-for="item in informationList" :key="item.id"
+                :type="getInfoTypeTag(item.information_type)" :timestamp="formatDate(item.information_date)"
+                placement="top">
                 <el-card shadow="never" class="info-card">
                   <template #header>
                     <div class="info-header">
                       <span class="info-title">{{ item.information_title }}</span>
-                      <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type }}</el-tag>
+                      <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
+                      }}</el-tag>
                     </div>
                   </template>
                   <p class="info-content">{{ item.information_content || '暂无内容' }}</p>
                   <p v-if="item.partner_name" class="info-partner">
-                    <el-icon><Link /></el-icon>
+                    <el-icon>
+                      <Link />
+                    </el-icon>
                     关联合作方：{{ item.partner_name }}
                   </p>
                 </el-card>
@@ -185,12 +185,7 @@
       </div>
 
       <!-- 编辑对话框 -->
-      <ProjectFormDialog
-        v-model:visible="formDialogVisible"
-        :type="formType"
-        :data="project"
-        @success="fetchData"
-      />
+      <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="project" @success="fetchData" />
 
       <!-- 操作按钮 -->
       <div class="section actions">
@@ -337,17 +332,9 @@ const handleUpdateAttachmentType = async (row, newType) => {
 // 资讯类型标签样式
 const getInfoTypeTag = (type) => {
   const typeMap = {
-    '项目推进': 'primary',
-    '会议活动': 'warning'
-  }
-  return typeMap[type] || 'info'
-}
-
-// 时间线类型
-const getTimelineType = (type) => {
-  const typeMap = {
-    '项目推进': 'primary',
-    '会议活动': 'warning'
+    '项目实施': 'primary',
+    '拜访客户': 'warning',
+    '会议活动': 'danger'
   }
   return typeMap[type] || 'info'
 }
@@ -414,7 +401,8 @@ onMounted(() => {
         &.highlight {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
-          .amount-label, .amount-value {
+          .amount-label,
+          .amount-value {
             color: #fff;
           }
         }

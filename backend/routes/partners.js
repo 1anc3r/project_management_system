@@ -1,6 +1,6 @@
 /**
  * 合作方路由
- * 处理合作方的CRUD操作
+ * 处理合作方的CRUD操作及联系人排序
  */
 const express = require('express');
 const router = express.Router();
@@ -63,6 +63,13 @@ router.put('/:id/contacts/:contactId', authenticate, partnerController.updatePar
  * @access  Private
  */
 router.delete('/:id/contacts/:contactId', authenticate, partnerController.deletePartnerContact);
+
+/**
+ * @route   PUT /api/partners/:id/contacts-sort
+ * @desc    批量更新联系人排序
+ * @access  Private
+ */
+router.put('/:id/contacts-sort', authenticate, partnerController.sortPartnerContacts);
 
 /**
  * @route   GET /api/partners

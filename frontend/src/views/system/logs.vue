@@ -3,28 +3,16 @@
     <!-- 筛选面板 -->
     <el-card class="filter-card" shadow="never">
       <div class="filter-bar">
-        <el-input
-          v-model="searchForm.username"
-          placeholder="操作人"
-          clearable
-          style="width: 150px"
-          @keyup.enter="handleSearch"
-        />
+        <el-input v-model="searchForm.username" placeholder="操作人" clearable style="width: 150px"
+          @keyup.enter="handleSearch" />
         <el-select v-model="searchForm.module" placeholder="模块" clearable style="width: 120px">
           <el-option v-for="item in filterOptions.modules" :key="item" :label="item" :value="item" />
         </el-select>
         <el-select v-model="searchForm.operation" placeholder="操作" clearable style="width: 120px">
           <el-option v-for="item in filterOptions.operations" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-date-picker
-          v-model="searchForm.dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="YYYY-MM-DD"
-          style="width: 260px"
-        />
+        <el-date-picker v-model="searchForm.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
+          end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 260px" />
         <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
         <el-button @click="handleReset">重置</el-button>
         <el-button type="success" :icon="Download" @click="handleExport">导出</el-button>
@@ -33,13 +21,7 @@
 
     <!-- 日志列表 -->
     <el-card class="list-card" shadow="never">
-      <el-table
-        v-loading="loading"
-        :data="logList"
-        style="width: 100%"
-        border
-        stripe
-      >
+      <el-table v-loading="loading" :data="logList" style="width: 100%" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="username" label="操作人" width="120" />
         <el-table-column prop="module" label="模块" width="100">
@@ -58,18 +40,12 @@
           <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
   </div>
@@ -211,7 +187,7 @@ onMounted(() => {
 .logs-container {
   .filter-card {
     margin-bottom: 15px;
-    
+
     .filter-bar {
       display: flex;
       align-items: center;
@@ -219,7 +195,7 @@ onMounted(() => {
       flex-wrap: wrap;
     }
   }
-  
+
   .list-card {
     .pagination-wrapper {
       margin-top: 20px;

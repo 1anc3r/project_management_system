@@ -6,32 +6,37 @@
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
           <el-button :icon="Edit" :disabled=!selectedRows.length @click="handleBatchEdit">编辑</el-button>
-          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length @click="handleBatchDelete">删除</el-button>
+          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length
+            @click="handleBatchDelete">删除</el-button>
+          <el-button :icon="Download" @click="handleExport">导出</el-button>
         </div>
-        
+
         <div class="center-search">
-          <el-input
-            v-model="searchForm.keyword"
-            placeholder="搜索项目、合作方、地点、联系人"
-            clearable
-            style="width: 300px"
-            @keyup.enter="handleSearch"
-          >
+          <el-input v-model="searchForm.keyword" placeholder="搜索项目、合作方、地点、联系人" clearable style="width: 300px"
+            @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
             </template>
           </el-input>
         </div>
-        
+
         <div class="right-btns">
-          <!-- <el-button :icon="Upload" @click="handleImport">导入</el-button> -->
-          <el-button :icon="Download" @click="handleExport">导出</el-button>
-          <el-button :icon="View" @click="viewMode = viewMode === 'list' ? 'grid' : 'list'">
-            {{ viewMode === 'list' ? '网格' : '列表' }}
-          </el-button>
+          <!-- 视图切换 -->
+          <el-radio-group v-model="viewMode" size="middle">
+            <el-radio-button label="list">
+              <el-icon>
+                <List />
+              </el-icon> 列表
+            </el-radio-button>
+            <el-radio-button label="grid">
+              <el-icon>
+                <Timer />
+              </el-icon> 网格
+            </el-radio-button>
+          </el-radio-group>
         </div>
       </div>
-      
+
       <!-- 筛选条件 -->
       <div class="filter-bar">
         <el-select v-model="searchForm.type" placeholder="项目类型" clearable style="width: 100px">
@@ -67,17 +72,8 @@
 
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never">
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="projectList"
-        style="width: 100%"
-        @selection-change="handleSelectionChange"
-        @row-dblclick="handleRowDblClick"
-        border
-        stripe
-        highlight-current-row
-      >
+      <el-table ref="tableRef" v-loading="loading" :data="projectList" style="width: 100%"
+        @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column prop="type" label="项目类型" width="100" align="center">
@@ -132,18 +128,12 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
@@ -158,7 +148,9 @@
                 <el-tag :type="getStageType(item.stage)" size="small">{{ item.stage }}</el-tag>
               </div>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
-                <el-icon class="more-icon"><More /></el-icon>
+                <el-icon class="more-icon">
+                  <More />
+                </el-icon>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="edit">编辑</el-dropdown-item>
@@ -185,27 +177,16 @@
           </el-card>
         </el-col>
       </el-row>
-      
+
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
-    <ProjectFormDialog
-      v-model:visible="formDialogVisible"
-      :type="formType"
-      :data="currentRow"
-      @success="fetchData"
-    />
+    <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
 
     <!-- 导入对话框 -->
     <!-- <el-dialog v-model="importDialogVisible" title="导入项目" width="500px">
@@ -479,10 +460,10 @@ const handleFileChange = (file) => {
 //     ElMessage.warning('请选择要导入的文件')
 //     return
 //   }
-  
+
 //   const formData = new FormData()
 //   formData.append('file', importFile.value)
-  
+
 //   try {
 //     const res = await importProjects(formData)
 //     ElMessage.success(res.message)
@@ -507,7 +488,7 @@ const handleCardCommand = (command, row) => {
 onMounted(async () => {
   // 先加载筛选选项
   await fetchFilterOptions()
-  
+
   // 从URL参数获取搜索条件
   if (route.query.city) {
     searchForm.city = route.query.city
@@ -521,7 +502,7 @@ onMounted(async () => {
   if (route.query.keyword) {
     searchForm.keyword = route.query.keyword
   }
-  
+
   // 再获取数据
   fetchData()
 })
@@ -531,7 +512,7 @@ onMounted(async () => {
 .projects-container {
   .operation-card {
     margin-bottom: 15px;
-    
+
     .operation-bar {
       display: flex;
       align-items: center;
@@ -539,8 +520,17 @@ onMounted(async () => {
       margin-bottom: 15px;
       flex-wrap: wrap;
       gap: 10px;
+
+      .view-toggle {
+        .el-radio-group {
+          .el-radio-button__inner {
+            display: flex;
+            align-items: center;
+          }
+        }
+      }
     }
-    
+
     .filter-bar {
       display: flex;
       align-items: center;
@@ -548,47 +538,48 @@ onMounted(async () => {
       flex-wrap: wrap;
     }
   }
-  
-  .list-card, .grid-card {
+
+  .list-card,
+  .grid-card {
     .pagination-wrapper {
       margin-top: 20px;
       display: flex;
       justify-content: flex-end;
     }
   }
-  
+
   .grid-card {
     .project-card {
       margin-bottom: 20px;
       cursor: pointer;
       transition: all 0.3s;
-      
+
       &:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
       }
-      
+
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
-        
+
         .card-tags {
           display: flex;
           gap: 5px;
         }
-        
+
         .more-icon {
           cursor: pointer;
           padding: 5px;
-          
+
           &:hover {
             color: #409EFF;
           }
         }
       }
-      
+
       .card-body {
         .project-name {
           font-size: 16px;
@@ -599,27 +590,27 @@ onMounted(async () => {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        
+
         .partner-name {
           font-size: 13px;
           color: #909399;
           margin-bottom: 12px;
         }
-        
+
         .amount-info {
           display: flex;
           justify-content: space-between;
-          
+
           .amount-item {
             text-align: center;
-            
+
             .label {
               display: block;
               font-size: 12px;
               color: #909399;
               margin-bottom: 4px;
             }
-            
+
             .value {
               font-size: 14px;
               font-weight: 600;

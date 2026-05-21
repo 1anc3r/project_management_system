@@ -6,21 +6,16 @@
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增字典</el-button>
         </div>
-        
+
         <div class="center-search">
-          <el-input
-            v-model="searchForm.keyword"
-            placeholder="搜索字典编码、名称"
-            clearable
-            style="width: 250px"
-            @keyup.enter="handleSearch"
-          >
+          <el-input v-model="searchForm.keyword" placeholder="搜索字典编码、名称" clearable style="width: 250px"
+            @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
             </template>
           </el-input>
         </div>
-        
+
         <div class="right-filters">
           <el-select v-model="searchForm.status" placeholder="状态" clearable style="width: 100px" @change="handleSearch">
             <el-option label="启用" :value="1" />
@@ -32,15 +27,8 @@
 
     <!-- 字典列表 -->
     <el-card class="list-card" shadow="never">
-      <el-table
-        v-loading="loading"
-        :data="dictionaryList"
-        style="width: 100%"
-        border
-        stripe
-        row-key="id"
-        default-expand-all
-      >
+      <el-table v-loading="loading" :data="dictionaryList" style="width: 100%" border stripe row-key="id"
+        default-expand-all>
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="items-table">
@@ -90,41 +78,26 @@
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button 
-              link 
-              :type="row.status === 1 ? 'danger' : 'success'" 
-              size="small" 
-              @click="handleToggleStatus(row)"
-            >
+            <el-button link :type="row.status === 1 ? 'danger' : 'success'" size="small"
+              @click="handleToggleStatus(row)">
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
             <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
     <!-- 字典表单对话框 -->
-    <el-dialog
-      :title="dictFormType === 'add' ? '新增字典' : '编辑字典'"
-      v-model="dictDialogVisible"
-      width="600px"
-      :close-on-click-modal="false"
-      @close="handleDictClose"
-    >
+    <el-dialog :title="dictFormType === 'add' ? '新增字典' : '编辑字典'" v-model="dictDialogVisible" width="600px"
+      :close-on-click-modal="false" @close="handleDictClose">
       <el-form ref="dictFormRef" :model="dictForm" :rules="dictRules" label-width="100px">
         <el-form-item label="字典编码" prop="dict_code">
           <el-input v-model="dictForm.dict_code" placeholder="请输入字典编码" :disabled="dictFormType === 'edit'" />
@@ -145,7 +118,7 @@
         <el-form-item label="排序" prop="sort_order">
           <el-input-number v-model="dictForm.sort_order" :min="0" style="width: 100%" />
         </el-form-item>
-        
+
         <!-- 字典项列表 -->
         <div v-if="dictFormType === 'add'" class="items-section">
           <div class="items-header">
@@ -189,13 +162,8 @@
     </el-dialog>
 
     <!-- 字典项表单对话框 -->
-    <el-dialog
-      :title="itemFormType === 'add' ? '添加字典项' : '编辑字典项'"
-      v-model="itemDialogVisible"
-      width="500px"
-      :close-on-click-modal="false"
-      @close="handleItemClose"
-    >
+    <el-dialog :title="itemFormType === 'add' ? '添加字典项' : '编辑字典项'" v-model="itemDialogVisible" width="500px"
+      :close-on-click-modal="false" @close="handleItemClose">
       <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="100px">
         <el-form-item label="编码" prop="item_code">
           <el-input v-model="itemForm.item_code" placeholder="请输入字典项编码" :disabled="itemFormType === 'edit'" />
@@ -231,10 +199,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
-import { 
-  getDictionaries, 
-  createDictionary, 
-  updateDictionary, 
+import {
+  getDictionaries,
+  createDictionary,
+  updateDictionary,
   deleteDictionary,
   addDictionaryItem,
   updateDictionaryItem,
@@ -369,7 +337,7 @@ const handleEdit = (row) => {
 // 提交字典
 const handleSubmitDict = async () => {
   await dictFormRef.value.validate()
-  
+
   submitLoading.value = true
   try {
     if (dictFormType.value === 'add') {
@@ -380,7 +348,7 @@ const handleSubmitDict = async () => {
       await updateDictionary(id, updateData)
       ElMessage.success('字典更新成功')
     }
-    
+
     dictDialogVisible.value = false
     fetchData()
   } catch (error) {
@@ -469,7 +437,7 @@ const handleEditItem = (dict, item) => {
 // 提交字典项
 const handleSubmitItem = async () => {
   await itemFormRef.value.validate()
-  
+
   itemSubmitLoading.value = true
   try {
     if (itemFormType.value === 'add') {
@@ -480,7 +448,7 @@ const handleSubmitItem = async () => {
       await updateDictionaryItem(currentDict.value.id, id, updateData)
       ElMessage.success('字典项更新成功')
     }
-    
+
     itemDialogVisible.value = false
     fetchData()
   } catch (error) {
@@ -517,7 +485,7 @@ onMounted(() => {
 .dictionaries-container {
   .operation-card {
     margin-bottom: 15px;
-    
+
     .operation-bar {
       display: flex;
       align-items: center;
@@ -526,12 +494,12 @@ onMounted(() => {
       gap: 10px;
     }
   }
-  
+
   .list-card {
     .items-table {
       padding: 15px;
       background-color: #f5f7fa;
-      
+
       .items-header {
         display: flex;
         justify-content: space-between;
@@ -540,17 +508,17 @@ onMounted(() => {
         font-weight: 600;
       }
     }
-    
+
     .pagination-wrapper {
       margin-top: 20px;
       display: flex;
       justify-content: flex-end;
     }
   }
-  
+
   .items-section {
     margin-top: 20px;
-    
+
     .items-header {
       display: flex;
       justify-content: space-between;

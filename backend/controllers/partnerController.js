@@ -1,6 +1,6 @@
 /**
  * 合作方控制器
- * 处理合作方的CRUD操作
+ * 处理合作方的CRUD操作及联系人排序
  */
 const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
@@ -83,8 +83,8 @@ const getPartners = async (req, res) => {
         p.created_at, p.updated_at,
         COUNT(DISTINCT proj.id) as project_count,
         COALESCE(SUM(proj.total_amount), 0) as total_contract_amount,
-        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as primary_contact_name,
-        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as primary_contact_phone
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_name,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_phone
       FROM partners p
       LEFT JOIN projects proj ON p.id = proj.partner_id
       ${whereClause}
@@ -138,12 +138,12 @@ const getPartnerById = async (req, res) => {
 
     const partner = partners[0];
 
-    // 查询关联的联系人
+    // 查询关联的联系人（按 sort_order 排序）
     const contacts = await query(
-      `SELECT id, name, phone, position, created_at 
+      `SELECT id, name, phone, position, sort_order, created_at 
        FROM partner_contacts 
        WHERE partner_id = ? 
-       ORDER BY id ASC`,
+       ORDER BY sort_order ASC, id ASC`,
       [id]
     );
     partner.contacts = contacts;
@@ -240,19 +240,21 @@ const createPartner = async (req, res) => {
 
       const newPartnerId = result.insertId;
 
-      // 创建联系人
+      // 创建联系人（带排序序号）
       if (partnerContacts && partnerContacts.length > 0) {
-        for (const contact of partnerContacts) {
+        for (let i = 0; i < partnerContacts.length; i++) {
+          const contact = partnerContacts[i];
           if (!contact.name) continue;
           await connection.execute(
             `INSERT INTO partner_contacts 
-             (partner_id, name, phone, position) 
-             VALUES (?, ?, ?, ?)`,
+             (partner_id, name, phone, position, sort_order) 
+             VALUES (?, ?, ?, ?, ?)`,
             [
               newPartnerId,
               contact.name,
               contact.phone || null,
-              contact.position || null
+              contact.position || null,
+              contact.sort_order !== undefined ? contact.sort_order : i
             ]
           );
         }
@@ -351,19 +353,21 @@ const updatePartner = async (req, res) => {
       // 删除旧联系人
       await connection.execute('DELETE FROM partner_contacts WHERE partner_id = ?', [id]);
 
-      // 插入新联系人
+      // 插入新联系人（带排序序号）
       if (partnerContacts && partnerContacts.length > 0) {
-        for (const contact of partnerContacts) {
+        for (let i = 0; i < partnerContacts.length; i++) {
+          const contact = partnerContacts[i];
           if (!contact.name) continue;
           await connection.execute(
             `INSERT INTO partner_contacts 
-             (partner_id, name, phone, position) 
-             VALUES (?, ?, ?, ?)`,
+             (partner_id, name, phone, position, sort_order) 
+             VALUES (?, ?, ?, ?, ?)`,
             [
               id,
               contact.name,
               contact.phone || null,
-              contact.position || null
+              contact.position || null,
+              contact.sort_order !== undefined ? contact.sort_order : i
             ]
           );
         }
@@ -467,7 +471,7 @@ const exportPartners = async (req, res) => {
         p.bank_account as '银行账号',
         COUNT(DISTINCT proj.id) as '项目数量',
         COALESCE(SUM(proj.total_amount), 0) as '合同总金额(万元)',
-        (SELECT GROUP_CONCAT(pc.name, '（', IFNULL(pc.position, ''), '）:', IFNULL(pc.phone, '') SEPARATOR '; ') 
+        (SELECT GROUP_CONCAT(pc.name, '（', IFNULL(pc.position, ''), '）:', IFNULL(pc.phone, '') ORDER BY pc.sort_order ASC SEPARATOR '; ') 
          FROM partner_contacts pc WHERE pc.partner_id = p.id) as '联系人'
       FROM partners p
       LEFT JOIN projects proj ON p.id = proj.partner_id
@@ -527,8 +531,8 @@ const searchPartners = async (req, res) => {
     const partners = await query(
       `SELECT 
         p.id, p.name, p.type, p.tax_id, p.address, p.bank, p.bank_account,
-        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact,
-        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact_phone
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as contact_phone
       FROM partners p
       WHERE p.name LIKE ? OR p.tax_id LIKE ? OR EXISTS (
         SELECT 1 FROM partner_contacts pc WHERE pc.partner_id = p.id 
@@ -561,8 +565,8 @@ const getAllPartners = async (req, res) => {
     const partners = await query(
       `SELECT 
         p.id, p.name,
-        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact,
-        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.id ASC LIMIT 1) as contact_phone
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as contact_phone
       FROM partners p
       ORDER BY p.name ASC`
     );
@@ -624,7 +628,7 @@ const getPartnerTypes = async (req, res) => {
 };
 
 /**
- * 获取合作方联系人列表
+ * 获取合作方联系人列表（按排序序号排序）
  * GET /api/partners/:id/contacts
  */
 const getPartnerContacts = async (req, res) => {
@@ -632,10 +636,10 @@ const getPartnerContacts = async (req, res) => {
     const { id } = req.params;
 
     const contacts = await query(
-      `SELECT id, name, phone, position, created_at, updated_at 
+      `SELECT id, name, phone, position, sort_order, created_at, updated_at 
        FROM partner_contacts 
        WHERE partner_id = ? 
-       ORDER BY id ASC`,
+       ORDER BY sort_order ASC, id ASC`,
       [id]
     );
 
@@ -659,7 +663,7 @@ const getPartnerContacts = async (req, res) => {
 const addPartnerContact = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone, position } = req.body;
+    const { name, phone, position, sort_order } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -681,10 +685,17 @@ const addPartnerContact = async (req, res) => {
       });
     }
 
+    // 获取当前最大排序序号
+    const maxOrderResult = await query(
+      'SELECT COALESCE(MAX(sort_order), -1) as max_order FROM partner_contacts WHERE partner_id = ?',
+      [id]
+    );
+    const newSortOrder = sort_order !== undefined ? sort_order : (maxOrderResult[0].max_order + 1);
+
     const result = await query(
-      `INSERT INTO partner_contacts (partner_id, name, phone, position) 
-       VALUES (?, ?, ?, ?)`,
-      [id, name, phone || null, position || null]
+      `INSERT INTO partner_contacts (partner_id, name, phone, position, sort_order) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [id, name, phone || null, position || null, newSortOrder]
     );
 
     res.status(201).json({
@@ -708,7 +719,7 @@ const addPartnerContact = async (req, res) => {
 const updatePartnerContact = async (req, res) => {
   try {
     const { id, contactId } = req.params;
-    const { name, phone, position } = req.body;
+    const { name, phone, position, sort_order } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -718,9 +729,9 @@ const updatePartnerContact = async (req, res) => {
     }
 
     await query(
-      `UPDATE partner_contacts SET name = ?, phone = ?, position = ? 
+      `UPDATE partner_contacts SET name = ?, phone = ?, position = ?, sort_order = ? 
        WHERE id = ? AND partner_id = ?`,
-      [name, phone || null, position || null, contactId, id]
+      [name, phone || null, position || null, sort_order !== undefined ? sort_order : 0, contactId, id]
     );
 
     res.json({
@@ -764,6 +775,60 @@ const deletePartnerContact = async (req, res) => {
   }
 };
 
+/**
+ * 批量更新联系人排序
+ * PUT /api/partners/:id/contacts-sort
+ * Request Body: { contacts: [{ id, sort_order }, ...] }
+ */
+const sortPartnerContacts = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { contacts } = req.body;
+
+    if (!Array.isArray(contacts) || contacts.length === 0) {
+      return res.status(400).json({
+        code: 400,
+        message: '请提供需要排序的联系人列表'
+      });
+    }
+
+    // 验证合作方是否存在
+    const existingPartners = await query(
+      'SELECT id FROM partners WHERE id = ?',
+      [id]
+    );
+
+    if (existingPartners.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: '合作方不存在'
+      });
+    }
+
+    // 使用事务批量更新排序
+    await transaction(async (connection) => {
+      for (const contact of contacts) {
+        if (!contact.id || contact.sort_order === undefined) continue;
+        await connection.execute(
+          `UPDATE partner_contacts SET sort_order = ? WHERE id = ? AND partner_id = ?`,
+          [contact.sort_order, contact.id, id]
+        );
+      }
+    });
+
+    res.json({
+      code: 200,
+      message: '联系人排序更新成功'
+    });
+  } catch (error) {
+    console.error('更新联系人排序错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '更新联系人排序失败'
+    });
+  }
+};
+
 module.exports = {
   getPartners,
   getPartnerById,
@@ -778,5 +843,6 @@ module.exports = {
   addPartnerContact,
   updatePartnerContact,
   deletePartnerContact,
+  sortPartnerContacts,
   getPartnerTypesFromDB
 };
