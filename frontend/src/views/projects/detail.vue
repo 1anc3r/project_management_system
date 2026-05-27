@@ -1,7 +1,5 @@
 <template>
   <div class="project-detail">
-    <el-page-header @back="handleBack" title="项目详情" />
-
     <el-card v-loading="loading" class="detail-card">
       <template #header>
         <div class="card-header">
