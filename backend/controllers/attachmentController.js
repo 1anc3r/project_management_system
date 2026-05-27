@@ -37,7 +37,7 @@ const validateAttachmentType = async (type) => {
  */
 const uploadAttachment = async (req, res) => {
   try {
-    const { project_id, attachment_type } = req.body;
+    const { project_id, knowledge_id, attachment_type } = req.body;
 
     if (!req.file) {
       return res.status(400).json({
@@ -46,17 +46,9 @@ const uploadAttachment = async (req, res) => {
       });
     }
 
-    if (!project_id) {
-      // 删除已上传的文件
-      deleteFile(req.file.filename);
-      return res.status(400).json({
-        code: 400,
-        message: '项目ID不能为空'
-      });
-    }
-
     // 验证附件类型
-    if (attachment_type && !validateAttachmentType(attachment_type)) {
+    const isValidType = await validateAttachmentType(attachment_type);
+    if (attachment_type && !isValidType) {
       deleteFile(req.file.filename);
       return res.status(400).json({
         code: 400,
@@ -64,18 +56,20 @@ const uploadAttachment = async (req, res) => {
       });
     }
 
-    // 检查项目是否存在
-    const projects = await query(
-      'SELECT id FROM projects WHERE id = ?',
-      [project_id]
-    );
+    // 如果指定了 project_id，检查项目是否存在
+    if (project_id) {
+      const projects = await query(
+        'SELECT id FROM projects WHERE id = ?',
+        [project_id]
+      );
 
-    if (projects.length === 0) {
-      deleteFile(req.file.filename);
-      return res.status(404).json({
-        code: 404,
-        message: '项目不存在'
-      });
+      if (projects.length === 0) {
+        deleteFile(req.file.filename);
+        return res.status(404).json({
+          code: 404,
+          message: '项目不存在'
+        });
+      }
     }
 
     // 处理文件名编码问题
@@ -89,26 +83,33 @@ const uploadAttachment = async (req, res) => {
       }
     }
 
-    // 保存附件记录
-    const result = await query(
-      `INSERT INTO attachments (project_id, attachment_type, file_path, file_name, file_size) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        project_id,
-        attachment_type || '其他',
-        req.file.filename,
-        originalName,
-        req.file.size
-      ]
-    );
-    console.error("文件上传成功")
+    // 保存附件记录（支持 project_id 和 knowledge_id）
+    let sql, sqlParams;
+    if (project_id) {
+      sql = `INSERT INTO attachments (project_id, attachment_type, file_path, file_name, file_size) 
+             VALUES (?, ?, ?, ?, ?)`;
+      sqlParams = [project_id, attachment_type || '其他', req.file.filename, originalName, req.file.size];
+    } else if (knowledge_id) {
+      sql = `INSERT INTO attachments (knowledge_id, attachment_type, file_path, file_name, file_size) 
+             VALUES (?, ?, ?, ?, ?)`;
+      sqlParams = [knowledge_id, attachment_type || '其他', req.file.filename, originalName, req.file.size];
+    } else {
+      // 临时附件（知识库表单中使用，稍后关联）
+      sql = `INSERT INTO attachments (attachment_type, file_path, file_name, file_size) 
+             VALUES (?, ?, ?, ?)`;
+      sqlParams = [attachment_type || '其他', req.file.filename, originalName, req.file.size];
+    }
+
+    const result = await query(sql, sqlParams);
+    console.log('文件上传成功:', originalName);
 
     res.status(201).json({
       code: 201,
       message: '文件上传成功',
       data: {
         id: result.insertId,
-        project_id: parseInt(project_id),
+        project_id: project_id ? parseInt(project_id) : null,
+        knowledge_id: knowledge_id ? parseInt(knowledge_id) : null,
         attachment_type: attachment_type || '其他',
         file_name: originalName,
         file_size: req.file.size,
@@ -157,6 +158,39 @@ const getAttachmentsByProject = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '获取附件列表失败'
+    });
+  }
+};
+
+/**
+ * 获取知识库附件列表
+ * GET /api/attachments/knowledge/:knowledgeId
+ */
+const getAttachmentsByKnowledge = async (req, res) => {
+  try {
+    const { knowledgeId } = req.params;
+
+    const attachments = await query(
+      `SELECT id, knowledge_id, attachment_type, file_path, file_name, file_size, created_at 
+       FROM attachments WHERE knowledge_id = ? ORDER BY created_at DESC`,
+      [knowledgeId]
+    );
+
+    // 添加文件URL
+    const attachmentsWithUrl = attachments.map(att => ({
+      ...att,
+      file_url: getFileUrl(att.file_path)
+    }));
+
+    res.json({
+      code: 200,
+      data: attachmentsWithUrl
+    });
+  } catch (error) {
+    console.error('获取知识库附件列表错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取知识库附件列表失败'
     });
   }
 };
@@ -326,6 +360,7 @@ const updateAttachment = async (req, res) => {
 module.exports = {
   uploadAttachment,
   getAttachmentsByProject,
+  getAttachmentsByKnowledge,
   downloadAttachment,
   deleteAttachment,
   getAttachmentTypes,

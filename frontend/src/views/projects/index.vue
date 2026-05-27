@@ -71,8 +71,8 @@
     </el-card>
 
     <!-- 列表视图 -->
-    <el-card v-if="viewMode === 'list'" class="list-card" shadow="never">
-      <el-table ref="tableRef" v-loading="loading" :data="projectList" style="width: 100%"
+    <el-card v-if="viewMode === 'list'" class="list-card" shadow="never" v-loading="loading">
+      <el-table ref="tableRef" :data="projectList" style="width: 100%"
         @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="200" show-overflow-tooltip />
@@ -138,7 +138,8 @@
     </el-card>
 
     <!-- 网格视图 -->
-    <el-card v-else class="grid-card" shadow="never">
+    <el-card v-else class="grid-card" shadow="never" v-loading="loading">
+      <el-empty v-if="projectList.length === 0" description="暂无项目" />
       <el-row :gutter="20">
         <el-col v-for="item in projectList" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card class="project-card" shadow="hover" @dblclick="handleView(item)">
@@ -148,7 +149,7 @@
                 <el-tag :type="getStageType(item.stage)" size="small">{{ item.stage }}</el-tag>
               </div>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
-                <el-icon class="more-icon">
+                <el-icon class="more-icon" size="28">
                   <More />
                 </el-icon>
                 <template #dropdown>
@@ -184,6 +185,11 @@
           @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
+
+    <!-- 批量操作栏 -->
+    <div class="batch-bar" v-if="selectedRows.length > 0">
+      <span>已选择 {{ selectedRows.length }} 项</span>
+    </div>
 
     <!-- 新增/编辑对话框 -->
     <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
@@ -594,6 +600,9 @@ onMounted(async () => {
         .partner-name {
           font-size: 13px;
           color: #909399;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           margin-bottom: 12px;
         }
 
@@ -619,6 +628,26 @@ onMounted(async () => {
           }
         }
       }
+    }
+  }
+
+  .batch-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+
+    span {
+      font-size: 14px;
+      color: #606266;
     }
   }
 }

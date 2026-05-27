@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :title="dialogTitle" v-model="visible" width="850px" :close-on-click-modal="false" @close="handleClose">
+  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
       <el-form-item label="合作方名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入合作方名称" />

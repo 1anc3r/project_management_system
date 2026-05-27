@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" title="合作方详情" width="850px" destroy-on-close>
+  <el-dialog v-model="visible" title="合作方详情" width="900px" destroy-on-close>
     <el-descriptions :column="2" border v-if="partner">
       <el-descriptions-item label="合作方名称" :span="2">{{ partner.name }}</el-descriptions-item>
       <el-descriptions-item label="类型" :span="2">

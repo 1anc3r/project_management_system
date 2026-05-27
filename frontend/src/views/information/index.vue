@@ -110,7 +110,6 @@
 
     <!-- 时间线视图 -->
     <template v-else class="timeline-card" shadow="never">
-
       <!-- 资讯列表（可折叠/展开） -->
       <el-row :gutter="20" class="info-row">
         <el-col :span="24">
@@ -132,7 +131,7 @@
                         <div class="info-item-header">
                           <span class="info-item-title">{{ item.information_title }}</span>
                           <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                          }}</el-tag>
+                            }}</el-tag>
                         </div>
                       </template>
                       <p class="info-item-content">{{ item.information_content || '暂无内容' }}</p>
@@ -156,10 +155,22 @@
                 <el-empty v-else description="暂无资讯" />
               </el-collapse-item>
             </el-collapse>
+
+        <!-- 分页 -->
+        <div class="pagination-wrapper">
+          <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+            :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+        </div>
           </el-card>
         </el-col>
       </el-row>
     </template>
+
+    <!-- 批量操作栏 -->
+    <div class="batch-bar" v-if="selectedRows.length > 0">
+      <span>已选择 {{ selectedRows.length }} 项</span>
+    </div>
 
     <!-- 新增/编辑对话框 -->
     <InformationFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow"
@@ -235,7 +246,7 @@ const fetchData = async () => {
   try {
     const params = {
       page: pagination.page,
-      pageSize: viewMode != 'list' ? 1000 : pagination.pageSize,
+      pageSize: pagination.pageSize,
       keyword: searchForm.keyword || undefined,
       informationType: searchForm.informationType || undefined,
       partnerId: searchForm.partnerId || undefined,
@@ -383,11 +394,6 @@ onMounted(() => {
       flex-wrap: wrap;
       gap: 10px;
 
-      .left-btns {
-        display: flex;
-        gap: 8px;
-      }
-
       .view-toggle {
         .el-radio-group {
           .el-radio-button__inner {
@@ -406,7 +412,8 @@ onMounted(() => {
     }
   }
 
-  .list-card {
+  .list-card,
+  .info-card {
     .pagination-wrapper {
       margin-top: 20px;
       display: flex;
@@ -470,6 +477,26 @@ onMounted(() => {
           }
         }
       }
+    }
+  }
+
+  .batch-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+
+    span {
+      font-size: 14px;
+      color: #606266;
     }
   }
 }

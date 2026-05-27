@@ -479,6 +479,103 @@ INSERT INTO information (partner_id, project_id, information_date, information_t
 (2, 5, '2024-04-20', '会议活动', '企业数字化转型咨询启动会', '咨询服务正式启动，确定了咨询范围和交付物');
 
 -- =====================================================
+-- 10. 知识库模块表结构
+-- =====================================================
+
+-- 知识条目表
+CREATE TABLE IF NOT EXISTS `knowledge` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '知识条目ID',
+  `question` VARCHAR(500) NOT NULL COMMENT '标题',
+  `answer` TEXT NOT NULL COMMENT '内容（支持富文本/HTML）',
+  `category` VARCHAR(50) DEFAULT NULL COMMENT '分类（如：内控流程/文件模板/操作手册/优秀案例/常见业务问题/常见技术问题/其他）',
+  `tags` VARCHAR(255) DEFAULT NULL COMMENT '标签，多个以逗号分隔',
+  `view_count` INT UNSIGNED DEFAULT '0' COMMENT '浏览次数',
+  `created_by` BIGINT UNSIGNED NOT NULL COMMENT '创建人ID（关联users.id）',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_category` (`category`),
+  KEY `idx_created_by` (`created_by`),
+  KEY `idx_created_at` (`created_at`),
+  FULLTEXT KEY `ft_question` (`question`) WITH PARSER ngram,
+  FULLTEXT KEY `ft_answer` (`answer`) WITH PARSER ngram,
+  FULLTEXT KEY `ft_question_answer` (`question`, `answer`) WITH PARSER ngram,
+  CONSTRAINT `fk_knowledge_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库条目表';
+
+-- 知识浏览记录表（可选，P2）
+CREATE TABLE IF NOT EXISTS `knowledge_views` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `knowledge_id` BIGINT UNSIGNED NOT NULL COMMENT '知识条目ID',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '浏览用户ID',
+  `viewed_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_knowledge_id` (`knowledge_id`),
+  KEY `idx_user_id` (`user_id`),
+  CONSTRAINT `fk_views_knowledge` FOREIGN KEY (`knowledge_id`) REFERENCES `knowledge` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_views_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库浏览记录';
+
+-- 知识库字典数据
+-- 知识分类字典
+INSERT INTO `dictionaries` (`dict_code`, `dict_name`, `dict_type`, `description`, `sort_order`, `status`) 
+VALUES ('knowledge_category', '知识分类', 'string', '知识库条目分类', 9, 1)
+ON DUPLICATE KEY UPDATE `dict_name` = '知识分类';
+
+-- 使用更可靠的方式插入字典项
+SET @knowledge_cat_dict_id = (SELECT id FROM dictionaries WHERE dict_code = 'knowledge_category' LIMIT 1);
+
+INSERT INTO `dictionary_items` (`dict_id`, `item_code`, `item_name`, `item_value`, `sort_order`, `status`) VALUES
+(@knowledge_cat_dict_id, 'contract', '内控流程', '内控流程', 1, 1),
+(@knowledge_cat_dict_id, 'template', '文件模板', '文件模板', 2, 1),
+(@knowledge_cat_dict_id, 'manual', '操作手册', '操作手册', 3, 1),
+(@knowledge_cat_dict_id, 'case', '优秀案例', '优秀案例', 4, 1),
+(@knowledge_cat_dict_id, 'business', '常见业务问题', '常见业务问题', 5, 1),
+(@knowledge_cat_dict_id, 'technical', '常见技术问题', '常见技术问题', 6, 1),
+(@knowledge_cat_dict_id, 'other', '其他', '其他', 7, 1)
+ON DUPLICATE KEY UPDATE `item_name` = VALUES(`item_name`), `status` = 1;
+
+-- 知识标签字典（可选）
+INSERT INTO `dictionaries` (`dict_code`, `dict_name`, `dict_type`, `description`, `sort_order`, `status`) 
+VALUES ('knowledge_tag', '知识标签', 'string', '知识库标签分类', 10, 1)
+ON DUPLICATE KEY UPDATE `dict_name` = '知识标签';
+
+SET @knowledge_tag_dict_id = (SELECT id FROM dictionaries WHERE dict_code = 'knowledge_tag' LIMIT 1);
+
+INSERT INTO `dictionary_items` (`dict_id`, `item_code`, `item_name`, `item_value`, `sort_order`, `status`) VALUES
+(@knowledge_tag_dict_id, 'enterprise', '企业', '企业', 1, 1),
+(@knowledge_tag_dict_id, 'financial', '金融机构', '金融机构', 2, 1),
+(@knowledge_tag_dict_id, 'government', '政府', '政府', 3, 1),
+(@knowledge_tag_dict_id, 'system', '系统', '系统', 4, 1),
+(@knowledge_tag_dict_id, 'data', '数据', '数据', 5, 1)
+ON DUPLICATE KEY UPDATE `item_name` = VALUES(`item_name`), `status` = 1;
+
+-- 示例数据
+INSERT INTO `knowledge` (`question`, `answer`, `category`, `tags`, `created_by`) VALUES
+('如何编写项目验收报告？', '<p><strong>一、验收报告结构</strong></p><p>1. 封面：项目名称、验收日期、甲乙双方</p><p>2. 正文：项目概述、验收依据、验收结论</p><p>3. 附件：验收清单、测试报告</p><p><strong>二、注意事项</strong></p><p>- 验收需甲乙双方签字盖章</p><p>- 验收报告需附验收清单</p><p>- 验收结论需明确是否通过</p>', '文件模板', '模板,验收,项目', 1),
+('项目款项比例如何分配？', '<p>一般按照以下比例分配：</p><p>1. 首款：30%（合同签订后支付）</p><p>2. 第二笔款：40%（系统上线验收后支付）</p><p>3. 尾款：30%（质保期满后支付）</p><p><strong>特殊情况</strong>可根据项目实际情况调整比例，但需双方协商一致。</p>', '常见业务问题', '款项,比例,合同', 1),
+('如何配置MySQL数据库连接池？', '<p><strong>一、连接池配置参数</strong></p><pre><code>const pool = mysql.createPool({\n  host: ''localhost'',\n  port: 3306,\n  user: ''root'',\n  password: ''password'',\n  database: ''project_management'',\n  waitForConnections: true,\n  connectionLimit: 10,\n  queueLimit: 0,\n  enableKeepAlive: true,\n  keepAliveInitialDelay: 0\n});</code></pre><p><strong>二、关键参数说明</strong></p><p>- connectionLimit: 最大连接数</p><p>- waitForConnections: 连接耗尽时是否等待</p><p>- queueLimit: 最大等待队列长度（0表示无限制）</p>', '常见技术问题', 'MySQL,数据库,配置', 1)
+ON DUPLICATE KEY UPDATE `question` = VALUES(`question`), `answer` = VALUES(`answer`);
+
+-- 创建知识库视图
+CREATE OR REPLACE VIEW v_knowledge_full AS
+SELECT 
+    k.id,
+    k.question,
+    k.answer,
+    k.category,
+    k.tags,
+    k.view_count,
+    k.created_by,
+    u.nickname AS created_by_name,
+    u.username AS created_by_username,
+    k.created_at,
+    k.updated_at,
+    (SELECT COUNT(*) FROM attachments a WHERE a.knowledge_id = k.id) AS attachment_count
+FROM knowledge k
+LEFT JOIN users u ON k.created_by = u.id;
+
+-- =====================================================
 -- 完成
 -- =====================================================
 SELECT '数据库初始化完成！' AS message;

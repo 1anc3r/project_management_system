@@ -49,6 +49,15 @@
           </template>
         </el-menu-item>
 
+        <el-menu-item index="/knowledge">
+          <el-icon>
+            <Collection />
+          </el-icon>
+          <template #title>
+            <span>知识库管理</span>
+          </template>
+        </el-menu-item>
+
         <el-sub-menu v-if="userStore.isAdmin" index="/system">
           <template #title>
             <el-icon>

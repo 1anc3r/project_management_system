@@ -23,6 +23,13 @@ router.get('/types', authenticate, attachmentController.getAttachmentTypes);
 router.get('/project/:projectId', authenticate, attachmentController.getAttachmentsByProject);
 
 /**
+ * @route   GET /api/attachments/knowledge/:knowledgeId
+ * @desc    获取知识库附件列表
+ * @access  Private
+ */
+router.get('/knowledge/:knowledgeId', authenticate, attachmentController.getAttachmentsByKnowledge);
+
+/**
  * @route   POST /api/attachments
  * @desc    上传附件
  * @access  Private

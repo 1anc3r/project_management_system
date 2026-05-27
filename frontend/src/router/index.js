@@ -46,6 +46,12 @@ const routes = [
         meta: { title: '资讯管理', icon: 'ChatDotRound' }
       },
       {
+        path: '/knowledge',
+        name: 'Knowledge',
+        component: () => import('@/views/knowledge/index.vue'),
+        meta: { title: '知识库管理', icon: 'Collection' }
+      },
+      {
         path: '/system',
         name: 'System',
         component: () => import('@/views/system/index.vue'),

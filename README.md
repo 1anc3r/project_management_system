@@ -12,7 +12,7 @@
 | 图表 | ECharts + vue-echarts |
 | 地图 | Leaflet + 天地图瓦片 |
 | 后端 | Node.js + Express |
-| 数据库 | MySQL 8.0 |
+| 数据库 | MySQL 8.0（含 ngram 全文索引） |
 | 其他 | Multer（文件上传）、xlsx（Excel 处理）、bcryptjs（密码加密）、JWT（认证） |
 
 ---
@@ -30,6 +30,7 @@ project-management/
 │   │   ├── partnerController.js     # 合作方（CRUD/搜索/导出）
 │   │   ├── userController.js        # 用户（CRUD/重置密码）
 │   │   ├── informationController.js # 资讯（CRUD/搜索）
+│   │   ├── knowledgeController.js   # 知识库（CRUD/全文搜索/导入导出）
 │   │   ├── attachmentController.js  # 附件（上传/下载/删除）
 │   │   ├── dictionaryController.js  # 字典（CRUD/字典项管理）
 │   │   └── logController.js         # 操作日志（查询/导出）
@@ -43,6 +44,7 @@ project-management/
 │   │   ├── partners.js
 │   │   ├── users.js
 │   │   ├── information.js
+│   │   ├── knowledge.js
 │   │   ├── attachments.js
 │   │   ├── dictionaries.js
 │   │   └── logs.js
@@ -59,6 +61,7 @@ project-management/
 │   │   │   ├── projects.js         # 项目接口
 │   │   │   ├── partners.js         # 合作方接口
 │   │   │   ├── information.js      # 资讯接口
+│   │   │   ├── knowledge.js        # 知识库接口
 │   │   │   ├── users.js            # 用户接口
 │   │   │   ├── attachments.js      # 附件接口
 │   │   │   ├── dictionaries.js     # 字典接口
@@ -73,6 +76,11 @@ project-management/
 │   │   │   │       └── TiandituMap.vue
 │   │   │   ├── information/        # 资讯管理
 │   │   │   │   ├── components/
+│   │   │   │   └── index.vue
+│   │   │   ├── knowledge/          # 知识库管理
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── KnowledgeFormDialog.vue
+│   │   │   │   │   └── KnowledgeDetailDialog.vue
 │   │   │   │   └── index.vue
 │   │   │   ├── projects/           # 项目管理
 │   │   │   │   ├── components/
@@ -139,7 +147,30 @@ project-management/
 | 新增/编辑 | 资讯标题、内容、类型、时间、关联项目、关联合作方 |
 | 搜索 | 支持按名称关键词搜索 |
 
-### 4. 用户与权限
+### 4. 知识库管理
+
+| 功能 | 说明 |
+|------|------|
+| 知识列表 | 支持列表/卡片两种视图，分页展示 |
+| 全文搜索 | 基于 MySQL ngram 全文索引，支持问题/答案关键词搜索 |
+| 多条件筛选 | 按分类、标签筛选 |
+| 排序 | 支持按创建时间、更新时间、浏览次数排序 |
+| 新增/编辑 | 标题、分类、标签、内容（富文本）、附件上传 |
+| 详情查看 | 展示知识完整信息、富文本答案、附件列表、浏览统计 |
+| 批量操作 | 支持批量删除 |
+| 导入导出 | 支持 Excel (.xlsx)、CSV、JSON 格式 |
+| 访问统计 | 自动记录浏览次数，识别高价值知识 |
+| 权限控制 | 仅创建人或管理员可编辑/删除 |
+
+**知识库字段：**
+- 标题：2-500 字符，必填
+- 内容：富文本（支持 HTML），最少 10 字符，必填
+- 分类：内控流程/文件模板/操作手册/优秀案例/常见业务问题/常见技术问题/其他
+- 标签：最多 10 个，单个最多 20 字符
+- 浏览次数：自动统计
+- 附件：支持文档、图片等格式
+
+### 5. 用户与权限
 
 | 角色 | 权限 |
 |------|------|
@@ -147,13 +178,19 @@ project-management/
 | 全局用户 (global) | 可查看所有项目，但不能删除他人数据 |
 | 普通用户 (normal) | 仅能查看/编辑/删除自己创建的项目 |
 
+**知识库权限：**
+- 列表页：所有角色可见全部知识条目（知识库强调共享）
+- 编辑/删除：仅创建人或管理员可操作
+- 详情页：所有角色可见，浏览次数自动 +1
+- 导入：仅管理员和全局用户可操作
+
 **用户管理功能：**
 - 用户的增删改查
 - 角色分配
 - 密码重置
 - 个人密码修改
 
-### 5. 字典管理
+### 6. 字典管理
 
 系统采用字典驱动设计，所有下拉选项均来自字典表，支持动态配置：
 
@@ -166,13 +203,15 @@ project-management/
 | `project_city` | 履约地点 | 四川省 21 个市州 |
 | `payment_type` | 款项类型 | 首款/第二笔款/第三笔款/尾款/其他 |
 | `attachment_type` | 附件类型 | 合同/协议/补充合同/协议/验收报告/发票/其他 |
+| `knowledge_category` | 知识分类 | 内控流程/文件模板/操作手册/优秀案例/常见业务问题/常见技术问题/其他 |
+| `knowledge_tag` | 知识标签 | 企业/金融机构/政府/系统/数据 |
 
 **字典管理功能：**
 - 字典的增删改查
 - 字典项的增删改查（支持排序、启用/禁用）
 - 字典编码唯一性校验
 
-### 6. 数据仪表板
+### 7. 数据仪表板
 
 | 组件 | 说明 |
 |------|------|
@@ -183,7 +222,7 @@ project-management/
 | 最新资讯 | 以时间线展示最新20条资讯 |
 | 项目地图分布 | Leaflet + 天地图，展示四川省各市州项目分布，右侧城市列表，点击可跳转 |
 
-### 7. 操作日志
+### 8. 操作日志
 
 - 自动记录所有增删改操作
 - 记录操作人、模块、操作类型、数据ID、数据名称、IP 地址
@@ -199,7 +238,9 @@ project-management/
 | `users` | 用户表 | username, password(BCrypt), nickname, role(admin/global/normal), status |
 | `projects` | 项目表 | name, city, type(收入/支出合同), stage, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by |
 | `payments` | 款项表 | project_id, payment_type, payment_condition, payment_ratio, payment_amount, is_paid, payment_date |
-| `attachments` | 附件表 | project_id, attachment_type, file_path, file_name, file_size |
+| `attachments` | 附件表 | project_id, knowledge_id, attachment_type, file_path, file_name, file_size |
+| `knowledge` | 知识库条目表 | question, answer(富文本), category, tags, view_count, created_by, 全文索引 |
+| `knowledge_views` | 知识浏览记录表 | knowledge_id, user_id, viewed_at |
 | `partners` | 合作方表 | name, type, tax_id, address, bank, bank_account, contact, contact_phone |
 | `information` | 资讯表 | partner_id, project_id, information_date, information_type, information_title, information_content |
 | `dictionaries` | 字典表 | dict_code, dict_name, dict_type, description, sort_order, status |
@@ -209,6 +250,7 @@ project-management/
 **数据库视图：**
 - `v_project_full` - 项目完整信息视图（含合作方、创建人）
 - `v_partner_projects` - 合作方项目统计视图
+- `v_knowledge_full` - 知识库完整信息视图（含创建人、附件数统计）
 
 ---
 
@@ -274,13 +316,29 @@ project-management/
 | PUT | `/api/information/:id` | 更新资讯 |
 | DELETE | `/api/information/:id` | 删除资讯 |
 
+### 知识库接口 (knowledge.js)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/knowledge` | 获取知识库列表（分页/筛选/搜索） |
+| GET | `/api/knowledge/:id` | 获取知识详情 |
+| POST | `/api/knowledge` | 创建知识条目 |
+| PUT | `/api/knowledge/:id` | 更新知识条目 |
+| DELETE | `/api/knowledge/:id` | 删除知识条目 |
+| POST | `/api/knowledge/batch-delete` | 批量删除 |
+| GET | `/api/knowledge/filters` | 获取筛选选项（分类、热门标签） |
+| GET | `/api/knowledge/export` | 导出知识库 (xlsx/csv/json) |
+| POST | `/api/knowledge/import` | 导入知识库 |
+| POST | `/api/knowledge/:id/view` | 记录浏览 |
+
 ### 附件接口 (attachments.js)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/attachments/types` | 获取附件类型选项 |
 | GET | `/api/attachments/project/:projectId` | 获取项目附件列表 |
-| POST | `/api/attachments` | 上传附件 |
+| GET | `/api/attachments/knowledge/:knowledgeId` | 获取知识库附件列表 |
+| POST | `/api/attachments` | 上传附件（支持 project_id 或 knowledge_id） |
 | GET | `/api/attachments/:id/download` | 下载附件 |
 | DELETE | `/api/attachments/:id` | 删除附件 |
 | PUT | `/api/attachments/:id` | 更新附件类型 |
@@ -369,11 +427,12 @@ npm run build            # 生产构建
 - **字典驱动设计** - 所有下拉选项均来自字典表，支持动态配置，无需修改代码
 - **数据可视化** - ECharts 图表 + Leaflet 地图，直观展示项目分布和趋势
 - **全生命周期管理** - 覆盖项目从意向到完结的完整流程
+- **知识库管理** - 基于 MySQL ngram 全文索引的搜索，支持富文本编辑、标签分类、附件关联、访问统计
 - **权限控制** - 基于角色的细粒度权限控制（管理员/全局用户/普通用户）
 - **操作审计** - 自动记录所有增删改操作，支持追溯
 - **导入导出** - 支持 Excel/CSV/JSON 多种格式
 - **款项跟踪** - 支持多笔款项按比例分配，自动计算已开票/待开票金额
-- **附件管理** - 支持项目附件分类上传、下载、管理
+- **附件管理** - 支持项目和知识库附件分类上传、下载、管理
 
 ---
 

@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :title="dialogTitle" v-model="visible" width="750px" :close-on-click-modal="false" @close="handleClose"
+  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose"
     class="information-form-dialog">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="20">
@@ -35,7 +35,7 @@
       </el-form-item>
 
       <el-form-item label="资讯内容">
-        <el-input v-model="form.information_content" type="textarea" :rows="6" placeholder="请输入资讯内容" />
+        <el-input v-model="form.information_content" type="textarea" :rows="10" placeholder="请输入资讯内容" />
       </el-form-item>
     </el-form>
 
