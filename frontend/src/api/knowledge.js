@@ -1,10 +1,5 @@
 import request from './request'
 
-/**
- * 知识库 API 接口
- * 提供知识条目的增删改查、搜索、导入导出功能
- */
-
 // 获取知识库列表
 export const getKnowledgeList = (params) => {
   return request.get('/api/knowledge', { params })

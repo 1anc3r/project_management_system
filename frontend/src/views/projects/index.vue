@@ -78,12 +78,12 @@
         <el-table-column prop="name" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column prop="type" label="项目类型" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="getTypeType(row.type)" size="small">{{ row.type }}</el-tag>
+            <el-tag :type="getProjectTypeTag(row.type)" size="small">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="stage" label="项目阶段" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="getStageType(row.stage)" size="small">{{ row.stage }}</el-tag>
+            <el-tag :type="getProjectStageTag(row.stage)" size="small">{{ row.stage }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="expansion_method" label="签约方式" width="120" />
@@ -145,8 +145,8 @@
           <el-card class="project-card" shadow="hover" @dblclick="handleView(item)">
             <div class="card-header">
               <div class="card-tags">
-                <el-tag :type="getTypeType(item.type)" size="small">{{ item.type }}</el-tag>
-                <el-tag :type="getStageType(item.stage)" size="small">{{ item.stage }}</el-tag>
+                <el-tag :type="getProjectTypeTag(item.type)" size="small">{{ item.type }}</el-tag>
+                <el-tag :type="getProjectStageTag(item.stage)" size="small">{{ item.stage }}</el-tag>
               </div>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
                 <el-icon class="more-icon" size="28">
@@ -227,7 +227,7 @@ import {
   Plus, Edit, Delete, Search, Upload, Download, View, More
 } from '@element-plus/icons-vue'
 import { getProjects, deleteProject, exportProjects, importProjects, getFilterOptions } from '@/api/projects'
-import { formatAmount, formatPercent, downloadBlob } from '@/utils/format'
+import { formatAmount, formatPercent, downloadBlob, getProjectStageTag, getProjectTypeTag } from '@/utils/format'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
 
 const route = useRoute()
@@ -280,29 +280,6 @@ const currentRow = ref(null)
 const importDialogVisible = ref(false)
 const uploadRef = ref(null)
 const importFile = ref(null)
-
-// 获取阶段标签类型
-const getStageType = (stage) => {
-  const typeMap = {
-    '意向': 'danger',
-    '签约': 'warning',
-    '建设': 'primary',
-    '运营': 'primary',
-    '交付': 'primary',
-    '验收': 'success',
-    '完结': 'info'
-  }
-  return typeMap[stage] || 'info'
-}
-
-// 获取项目类型标签类型
-const getTypeType = (type) => {
-  const typeMap = {
-    '收入合同': 'success',
-    '支出合同': 'danger'
-  }
-  return typeMap[type] || 'info'
-}
 
 // 获取数据
 const fetchData = async () => {

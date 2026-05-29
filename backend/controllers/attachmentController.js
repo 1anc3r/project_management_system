@@ -1,11 +1,24 @@
 /**
  * 附件控制器
- * 处理附件的上传、下载、删除
+ * 处理附件的上传、下载、删除、图片上传
  */
 const { query } = require('../config/db');
 const { deleteFile, getFileUrl } = require('../middleware/upload');
 const path = require('path');
 const fs = require('fs');
+
+// 图片文件扩展名
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+
+/**
+ * 判断文件是否为图片
+ * @param {string} filename - 文件名
+ * @returns {boolean}
+ */
+const isImageFile = (filename) => {
+  const ext = path.extname(filename).toLowerCase();
+  return IMAGE_EXTENSIONS.includes(ext);
+};
 
 // 从字典表获取附件类型
 const getAttachmentTypesFromDB = async () => {
@@ -29,6 +42,133 @@ const getAttachmentTypesFromDB = async () => {
 const validateAttachmentType = async (type) => {
   const types = await getAttachmentTypesFromDB();
   return types.includes(type);
+};
+
+/**
+ * 上传图片（专用于富文本编辑器）
+ * POST /api/attachments/image
+ * 返回图片URL，不关联到任何项目或知识条目
+ */
+const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        code: 400,
+        message: '请选择要上传的图片'
+      });
+    }
+
+    // 验证是否为图片文件
+    if (!isImageFile(req.file.originalname)) {
+      deleteFile(req.file.filename);
+      return res.status(400).json({
+        code: 400,
+        message: '仅支持图片文件（jpg, jpeg, png, gif, bmp, webp）'
+      });
+    }
+
+    // 处理文件名编码问题
+    let originalName = req.file.originalname;
+    if (/[\ufffd]/.test(originalName) || !/[\u4e00-\u9fa5]/.test(originalName)) {
+      try {
+        originalName = Buffer.from(originalName, 'binary').toString('utf8');
+      } catch (e) {
+        // 转换失败则保持原样
+      }
+    }
+
+    // 保存图片记录到数据库（不关联任何项目/知识，仅用于记录）
+    const result = await query(
+      `INSERT INTO attachments (attachment_type, file_path, file_name, file_size) 
+       VALUES (?, ?, ?, ?)`,
+      ['图片', req.file.filename, originalName, req.file.size]
+    );
+
+    const imageUrl = getFileUrl(req.file.filename);
+
+    res.status(201).json({
+      code: 201,
+      message: '图片上传成功',
+      data: {
+        id: result.insertId,
+        file_name: originalName,
+        file_size: req.file.size,
+        file_url: imageUrl,
+        is_image: true
+      }
+    });
+  } catch (error) {
+    console.error('上传图片错误:', error);
+    if (req.file) {
+      deleteFile(req.file.filename);
+    }
+    res.status(500).json({
+      code: 500,
+      message: '图片上传失败'
+    });
+  }
+};
+
+/**
+ * 获取图片预览
+ * GET /api/attachments/:id/preview
+ */
+const previewImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const attachments = await query(
+      'SELECT file_path, file_name FROM attachments WHERE id = ?',
+      [id]
+    );
+
+    if (attachments.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: '附件不存在'
+      });
+    }
+
+    const attachment = attachments[0];
+    
+    // 验证是否为图片
+    if (!isImageFile(attachment.file_name)) {
+      return res.status(400).json({
+        code: 400,
+        message: '该文件不是图片，无法预览'
+      });
+    }
+
+    const filePath = path.join(__dirname, '..', 'uploads', attachment.file_path);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        code: 404,
+        message: '文件不存在'
+      });
+    }
+
+    // 设置图片Content-Type
+    const ext = path.extname(attachment.file_name).toLowerCase();
+    const mimeTypes = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.bmp': 'image/bmp',
+      '.webp': 'image/webp'
+    };
+    res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+    
+    // 发送文件
+    res.sendFile(path.resolve(filePath));
+  } catch (error) {
+    console.error('图片预览错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '图片预览失败'
+    });
+  }
 };
 
 /**
@@ -359,6 +499,8 @@ const updateAttachment = async (req, res) => {
 
 module.exports = {
   uploadAttachment,
+  uploadImage,
+  previewImage,
   getAttachmentsByProject,
   getAttachmentsByKnowledge,
   downloadAttachment,

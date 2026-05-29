@@ -152,7 +152,7 @@ import {
   Plus, Edit, Delete, Search, Download, View, More, User, Phone
 } from '@element-plus/icons-vue'
 import { getPartners, deletePartner, exportPartners } from '@/api/partners'
-import { formatAmount, downloadBlob } from '@/utils/format'
+import { formatAmount, downloadBlob, getPartnerTypeTag } from '@/utils/format'
 import PartnerFormDialog from './components/PartnerFormDialog.vue'
 import PartnerDetailDialog from './components/PartnerDetailDialog.vue'
 
@@ -188,17 +188,6 @@ const currentRow = ref(null)
 // 详情对话框
 const detailDialogVisible = ref(false)
 const detailRow = ref(null)
-
-// 合作方类型标签样式
-const getPartnerTypeTag = (type) => {
-  const typeMap = {
-    '甲方': 'success',
-    '乙方': 'danger',
-    '丙方': 'warning',
-    '其他': 'primary'
-  }
-  return typeMap[type] || 'info'
-}
 
 // 获取数据
 const fetchData = async () => {

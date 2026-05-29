@@ -19,6 +19,20 @@ export const uploadAttachment = (formData) => {
   })
 }
 
+// 上传图片（专用于富文本编辑器）
+export const uploadImage = (formData) => {
+  return request.post('/api/attachments/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+// 获取图片预览URL
+export const getImagePreviewUrl = (id) => {
+  return `/api/attachments/${id}/preview`
+}
+
 // 删除附件
 export const deleteAttachment = (id) => {
   return request.delete(`/api/attachments/${id}`)

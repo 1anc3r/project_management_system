@@ -30,6 +30,25 @@ router.get('/project/:projectId', authenticate, attachmentController.getAttachme
 router.get('/knowledge/:knowledgeId', authenticate, attachmentController.getAttachmentsByKnowledge);
 
 /**
+ * @route   POST /api/attachments/image
+ * @desc    上传图片（专用于富文本编辑器）
+ * @access  Private
+ */
+router.post('/image',
+  authenticate,
+  upload.single('file'),
+  handleUploadError,
+  attachmentController.uploadImage
+);
+
+/**
+ * @route   GET /api/attachments/:id/preview
+ * @desc    图片预览
+ * @access  Private
+ */
+router.get('/:id/preview', authenticate, attachmentController.previewImage);
+
+/**
  * @route   POST /api/attachments
  * @desc    上传附件
  * @access  Private

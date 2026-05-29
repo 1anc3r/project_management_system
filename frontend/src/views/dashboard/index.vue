@@ -190,7 +190,7 @@ import VChart from 'vue-echarts'
 import { Folder, Money, DocumentChecked, Document, User } from '@element-plus/icons-vue'
 import { getDashboard } from '@/api/projects'
 import { getAllInformation } from '@/api/information'
-import { formatAmount, formatDate } from '@/utils/format'
+import { formatAmount, formatDate, getInfoTypeTag, getProjectStageColor, getProjectTypeColor } from '@/utils/format'
 import TiandituMap from './components/TiandituMap.vue'
 
 // 注册 ECharts 组件
@@ -219,23 +219,6 @@ const activeCollapse = ref(['information'])
 
 // 资讯列表
 const informationList = ref([])
-
-// 阶段颜色映射
-const stageColors = {
-  '意向': '#F57FAC',
-  '签约': '#EBAA3C',
-  '建设': '#409EFF',
-  '运营': '#03A9F4',
-  '交付': '#009688',
-  '验收': '#8FC25C',
-  '完结': '#909399'
-}
-
-// 项目类型颜色映射
-const typeColors = {
-  '收入合同': '#67C23A',
-  '支出合同': '#F56C6C'
-}
 
 // 项目阶段分布图表配置
 const stageChartOption = computed(() => ({
@@ -277,7 +260,7 @@ const stageChartOption = computed(() => ({
         name: item.stage,
         value: item.count,
         amount: item.amount,
-        itemStyle: { color: stageColors[item.stage] || '#909399' }
+        itemStyle: { color: getProjectStageColor[item.stage]}
       }))
     }
   ]
@@ -386,7 +369,7 @@ const typeChartOption = computed(() => ({
         name: item.type,
         value: item.count,
         amount: item.amount,
-        itemStyle: { color: typeColors[item.type] || '#909399' }
+        itemStyle: { color: getProjectTypeColor[item.type]}
       }))
     }
   ]
@@ -431,16 +414,6 @@ const handleTypeClick = (params) => {
     path: '/projects',
     query: { type: params.name }
   })
-}
-
-// 资讯类型标签样式
-const getInfoTypeTag = (type) => {
-  const typeMap = {
-    '项目实施': 'primary',
-    '拜访客户': 'warning',
-    '会议活动': 'danger'
-  }
-  return typeMap[type] || 'info'
 }
 
 onMounted(() => {

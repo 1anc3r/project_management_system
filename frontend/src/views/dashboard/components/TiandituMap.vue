@@ -68,7 +68,7 @@
                   <el-tag 
                     v-for="(count, stage) in city.stageDistribution" 
                     :key="stage"
-                    :type="getStageTagType(stage)"
+                    :type="getProjectStageTag(stage)"
                     size="small"
                     effect="light"
                   >
@@ -115,7 +115,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Loading, Warning, MapLocation, ArrowRight } from '@element-plus/icons-vue';
 import { getCityDistribution } from '@/api/projects';
-import { formatAmount } from '@/utils/format';
+import { formatAmount, getProjectStageColor, getProjectStageTag } from '@/utils/format';
 
 // ===================== Props =====================
 const props = defineProps({
@@ -141,17 +141,6 @@ const MAP_CONFIG = {
     low: '#67C23A',     // 1-4个
     none: '#DCDFE6'     // 无项目
   }
-};
-
-// 项目阶段颜色映射
-const STAGE_COLORS = {
-    '意向': '#F57FAC',
-    '签约': '#EBAA3C',
-    '建设': '#409EFF',
-    '运营': '#03A9F4',
-    '交付': '#009688',
-    '验收': '#8FC25C',
-    '完结': '#909399'
 };
 
 // GeoJSON文件路径
@@ -422,7 +411,7 @@ function createTooltipContent(cityName, cityData) {
   if (cityData.stageDistribution && Object.keys(cityData.stageDistribution).length > 0) {
     stagesHtml = '<div class="tooltip-stages">';
     for (const [stage, count] of Object.entries(cityData.stageDistribution)) {
-      stagesHtml += `<span class="stage-tag" style="background:${STAGE_COLORS[stage] || '#909399'}">${stage}: ${count}</span>`;
+      stagesHtml += `<span class="stage-tag" style="background:${getProjectStageColor[stage] || '#909399'}">${stage}: ${count}</span>`;
     }
     stagesHtml += '</div>';
   }
@@ -523,22 +512,6 @@ function getProjectCountTagType(count) {
   if (count >= 5) return 'warning';
   if (count >= 1) return 'success';
   return 'info';
-}
-
-/**
- * 获取阶段标签类型
- */
-function getStageTagType(stage) {
-  const typeMap = {
-    '意向': 'danger',
-    '签约': 'warning',
-    '建设': 'primary',
-    '运营': 'primary',
-    '交付': 'primary',
-    '验收': 'success',
-    '完结': 'info'
-  };
-  return typeMap[stage] || 'info';
 }
 
 /**

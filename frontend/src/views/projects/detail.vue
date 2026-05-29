@@ -5,8 +5,8 @@
         <div class="card-header">
           <span class="title">{{ project.name }}</span>
           <div class="header-tags">
-            <el-tag :type="getTypeType(project.type)" size="large">{{ project.type || '收入合同' }}</el-tag>
-            <el-tag :type="getStageType(project.stage)" size="large">{{ project.stage }}</el-tag>
+            <el-tag :type="getProjectTypeTag(project.type)" size="large">{{ project.type || '收入合同' }}</el-tag>
+            <el-tag :type="getProjectStageTag(project.stage)" size="large">{{ project.stage }}</el-tag>
           </div>
         </div>
       </template>
@@ -18,12 +18,12 @@
           <el-descriptions-item label="项目名称" :span="2">{{ project.name }}</el-descriptions-item>
           <el-descriptions-item label="履约地点">{{ project.city }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">
-            <el-tag :type="getTypeType(project.type)" size="small">{{ project.type || '收入合同' }}</el-tag>
+            <el-tag :type="getProjectTypeTag(project.type)" size="small">{{ project.type || '收入合同' }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="签约方式">{{ project.expansion_method }}</el-descriptions-item>
           <el-descriptions-item label="项目内容">{{ project.content }}</el-descriptions-item>
           <el-descriptions-item label="项目阶段">
-            <el-tag :type="getStageType(project.stage)" size="small">{{ project.stage }}</el-tag>
+            <el-tag :type="getProjectStageTag(project.stage)" size="small">{{ project.stage }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="项目周期">
             {{ formatDate(project.start_date) }} 至 {{ formatDate(project.end_date) }}
@@ -187,8 +187,10 @@
 
       <!-- 操作按钮 -->
       <div class="section actions">
-        <el-button type="primary" @click="handleEdit">编辑项目</el-button>
-        <el-button @click="handleBack">返回列表</el-button>
+        <el-button @click="handleBack">
+          <el-icon><ArrowLeft /></el-icon> 返回列表
+        </el-button>
+        <el-button type="primary" @click="handleEdit">编辑</el-button>
       </div>
     </el-card>
   </div>
@@ -201,13 +203,15 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjectById } from '@/api/projects'
 import { getInformationByProject } from '@/api/information'
 import { downloadAttachment, deleteAttachment, getAttachmentTypes } from '@/api/attachments'
-import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob } from '@/utils/format'
+import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob, getProjectTypeTag, getProjectStageTag, getInfoTypeTag } from '@/utils/format'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 
+// 加载状态
 const loading = ref(false)
+
 const project = ref({})
 const attachmentTypes = ref([])
 
@@ -229,29 +233,6 @@ const fetchAttachmentTypes = async () => {
   } catch (error) {
     console.error('获取附件类型失败:', error)
   }
-}
-
-// 标签类型
-const getStageType = (stage) => {
-  const typeMap = {
-    '意向': 'danger',
-    '签约': 'warning',
-    '建设': 'primary',
-    '运营': 'primary',
-    '交付': 'primary',
-    '验收': 'success',
-    '完结': 'info'
-  }
-  return typeMap[stage] || 'info'
-}
-
-// 项目类型标签类型
-const getTypeType = (Type) => {
-  const typeMap = {
-    '收入合同': 'success',
-    '支出合同': 'danger'
-  }
-  return typeMap[Type] || 'success'
 }
 
 // 获取数据
@@ -327,16 +308,6 @@ const handleUpdateAttachmentType = async (row, newType) => {
   }
 }
 
-// 资讯类型标签样式
-const getInfoTypeTag = (type) => {
-  const typeMap = {
-    '项目实施': 'primary',
-    '拜访客户': 'warning',
-    '会议活动': 'danger'
-  }
-  return typeMap[type] || 'info'
-}
-
 onMounted(() => {
   fetchData()
   fetchAttachmentTypes()
@@ -367,8 +338,6 @@ onMounted(() => {
     }
 
     .section {
-      margin-bottom: 30px;
-
       .section-title {
         font-size: 15px;
         font-weight: 600;

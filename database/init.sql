@@ -101,16 +101,19 @@ CREATE TABLE payments (
 DROP TABLE IF EXISTS attachments;
 CREATE TABLE attachments (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    project_id BIGINT UNSIGNED NOT NULL COMMENT '项目ID',
-    attachment_type VARCHAR(50) NOT NULL COMMENT '附件类型(测算表/报价函/合同/协议/补充合同/协议/法律审查意见书/营业执照/验收报告/其他)',
+    project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID（与知识条目二选一）',
+    knowledge_id BIGINT UNSIGNED DEFAULT NULL COMMENT '知识条目ID（与项目二选一）',
+    attachment_type VARCHAR(50) NOT NULL COMMENT '附件类型(测算表/报价函/合同/协议/补充合同/协议/法律审查意见书/营业执照/验收报告/图片/其他)',
     file_path VARCHAR(512) NOT NULL COMMENT '文件路径',
     file_name VARCHAR(255) DEFAULT NULL COMMENT '原文件名',
     file_size BIGINT DEFAULT NULL COMMENT '文件大小(字节)',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
     PRIMARY KEY (id),
     KEY idx_project_id (project_id),
-    CONSTRAINT fk_attachment_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目附件表';
+    KEY idx_knowledge_id (knowledge_id),
+    CONSTRAINT fk_attachment_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_attachment_knowledge FOREIGN KEY (knowledge_id) REFERENCES knowledge(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目附件表（支持项目和知识库）';
 
 -- =====================================================
 -- 5. 用户表 users

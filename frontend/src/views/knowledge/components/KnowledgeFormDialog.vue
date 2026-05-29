@@ -22,7 +22,7 @@
 
       <!-- 内容 -->
       <el-form-item label="内容" prop="answer">
-        <RichTextEditor v-model="form.answer" placeholder="请输入内容..." />
+        <RichTextEditor v-model="editorAnswer" placeholder="请输入内容..." />
       </el-form-item>
 
       <!-- 附件上传 -->
@@ -46,6 +46,7 @@
     </el-form>
 
     <template #footer>
+      <el-divider></el-divider>
       <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="handleSubmit" :loading="submitLoading">保存</el-button>
     </template>
@@ -59,6 +60,7 @@ import { Upload, Document, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { createKnowledge, updateKnowledge, getKnowledgeDetail } from '@/api/knowledge'
 import { getKnowledgeFilters } from '@/api/knowledge'
+import { injectImageToken } from '@/utils/format'
 import TagInput from '@/components/TagInput.vue'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 
@@ -97,6 +99,9 @@ const form = ref({
   tags: [],
   attachmentIds: []
 })
+
+// 编辑器显示内容（独立变量，用于图片认证token注入）
+const editorAnswer = ref('')
 
 // 已上传的附件列表
 const uploadedAttachments = ref([])
@@ -160,6 +165,8 @@ const loadEditData = async () => {
         tags: data.tags || [],
         attachmentIds: data.attachments?.map(a => a.id) || []
       }
+      // 为编辑器内容中的图片注入认证token，确保编辑器内图片正常显示
+      editorAnswer.value = injectImageToken(data.answer, userStore.token)
       uploadedAttachments.value = data.attachments || []
       fileList.value = data.attachments?.map(a => ({
         name: a.file_name,
@@ -171,6 +178,20 @@ const loadEditData = async () => {
       ElMessage.error('加载知识详情失败')
     }
   }
+}
+
+// 编辑器内容变化时同步到表单（包含token，提交前会清除）
+watch(editorAnswer, (val) => {
+  form.value.answer = val
+})
+
+/**
+ * 移除HTML中图片URL的认证token参数
+ * 提交前调用，确保数据库存储纯净的URL
+ */
+const stripImageToken = (html) => {
+  if (!html) return html
+  return html.replace(/(\/uploads\/[^"']+)([?&])token=[^&"']+/g, '$1')
 }
 
 // 提交表单
@@ -186,7 +207,7 @@ const handleSubmit = async () => {
   try {
     const submitData = {
       question: form.value.question.trim(),
-      answer: form.value.answer,
+      answer: stripImageToken(form.value.answer),
       category: form.value.category,
       tags: form.value.tags,
       attachmentIds: form.value.attachmentIds
@@ -219,6 +240,7 @@ const handleClose = () => {
     tags: [],
     attachmentIds: []
   }
+  editorAnswer.value = ''
   uploadedAttachments.value = []
   fileList.value = []
   visible.value = false

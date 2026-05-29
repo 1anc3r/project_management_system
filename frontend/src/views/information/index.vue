@@ -185,7 +185,7 @@ import { Plus, Edit, Delete, Search, List, Timer } from '@element-plus/icons-vue
 import { getInformationList, deleteInformation, getInformationTypes } from '@/api/information'
 import { getAllPartners } from '@/api/partners'
 import { getProjects } from '@/api/projects'
-import { formatDate, formatDateTime } from '@/utils/format'
+import { formatDate, formatDateTime, getInfoTypeTag } from '@/utils/format'
 import InformationFormDialog from './components/InformationFormDialog.vue'
 
 // 加载状态
@@ -229,16 +229,6 @@ const projectOptions = ref([])
 const formDialogVisible = ref(false)
 const formType = ref('add')
 const currentRow = ref(null)
-
-// 资讯类型标签样式
-const getInfoTypeTag = (type) => {
-  const typeMap = {
-    '项目实施': 'primary',
-    '拜访客户': 'warning',
-    '会议活动': 'danger'
-  }
-  return typeMap[type] || 'info'
-}
 
 // 获取数据
 const fetchData = async () => {

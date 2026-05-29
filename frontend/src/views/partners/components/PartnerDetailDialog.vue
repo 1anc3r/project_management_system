@@ -65,7 +65,7 @@
                   <div class="info-header">
                     <span class="info-title">{{ item.information_title }}</span>
                     <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                    }}</el-tag>
+                      }}</el-tag>
                   </div>
                 </template>
                 <p class="info-content">{{ item.information_content || '暂无内容' }}</p>
@@ -84,7 +84,11 @@
     </div>
 
     <template #footer>
-      <el-button @click="visible = false">关闭</el-button>
+      <el-button @click="visible = false">
+        <el-icon>
+          <ArrowLeft />
+        </el-icon> 返回列表
+      </el-button>
       <el-button type="primary" @click="handleEdit">编辑</el-button>
     </template>
   </el-dialog>
@@ -93,7 +97,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Link } from '@element-plus/icons-vue'
-import { formatDate, formatAmount } from '@/utils/format'
+import { formatDate, formatAmount, getPartnerTypeTag, getInfoTypeTag } from '@/utils/format'
 import { getPartnerById } from '@/api/partners'
 import { getInformationByPartner } from '@/api/information'
 
@@ -107,17 +111,6 @@ const props = defineProps({
     default: null
   }
 })
-
-// 合作方类型标签样式
-const getPartnerTypeTag = (type) => {
-  const typeMap = {
-    '甲方': 'success',
-    '乙方': 'danger',
-    '丙方': 'warning',
-    '其他': 'primary'
-  }
-  return typeMap[type] || 'info'
-}
 
 const emit = defineEmits(['update:modelValue', 'edit'])
 
@@ -176,16 +169,6 @@ watch(() => visible.value, (val) => {
 const handleEdit = () => {
   visible.value = false
   emit('edit', props.partner)
-}
-
-// 资讯类型标签样式
-const getInfoTypeTag = (type) => {
-  const typeMap = {
-    '项目实施': 'primary',
-    '拜访客户': 'warning',
-    '会议活动': 'danger'
-  }
-  return typeMap[type] || 'info'
 }
 </script>
 

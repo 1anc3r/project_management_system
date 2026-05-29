@@ -155,7 +155,9 @@
           </el-table>
         </div>
       </el-form>
+
       <template #footer>
+        <el-divider></el-divider>
         <el-button @click="dictDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmitDict" :loading="submitLoading">保存</el-button>
       </template>
@@ -187,7 +189,9 @@
           </el-radio-group>
         </el-form-item>
       </el-form>
+
       <template #footer>
+        <el-divider></el-divider>
         <el-button @click="itemDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmitItem" :loading="itemSubmitLoading">保存</el-button>
       </template>

@@ -73,6 +73,100 @@ export const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+/**
+ * 处理 HTML 内容中的图片 URL，添加认证 token
+ * 用于富文本编辑器中插入的图片在展示时能够通过认证
+ * @param {string} html - HTML 内容
+ * @param {string} token - JWT token
+ * @returns {string} 处理后的 HTML
+ */
+export const injectImageToken = (html, token) => {
+  if (!html || !token) return html
+  
+  // 匹配 /uploads/ 开头的图片 src
+  // 将 /uploads/filename 替换为 /uploads/filename?token=xxx
+  // 避免重复添加 token
+  return html.replace(
+    /(src=["'])\/uploads\/([^"'?]+)(\?[^"']*)?(["'])/g,
+    (match, prefix, filename, existingQuery, suffix) => {
+      // 如果已经有 token 参数，先移除
+      const cleanQuery = existingQuery 
+        ? existingQuery.replace(/[?&]token=[^&]*/, '').replace(/^&/, '?')
+        : ''
+      const separator = cleanQuery && cleanQuery !== '?' ? '&' : '?'
+      const newQuery = cleanQuery + separator + 'token=' + encodeURIComponent(token)
+      return prefix + '/uploads/' + filename + newQuery + suffix
+    }
+  )
+}
+
+// 项目类型颜色映射
+export const getProjectTypeColor = (type) => {
+  const typeMap = {
+    '收入合同': '#67C23A',
+    '支出合同': '#F56C6C'
+  }
+  return typeMap[type] || '#909399' 
+}
+
+// 项目阶段颜色映射
+export const getProjectStageColor = (type) => {
+  const typeMap = {
+    '意向': '#F57FAC',
+    '签约': '#EBAA3C',
+    '建设': '#409EFF',
+    '运营': '#03A9F4',
+    '交付': '#009688',
+    '验收': '#8FC25C',
+    '完结': '#909399'
+  }
+  return typeMap[type] || '#909399' 
+}
+
+// 获取项目类型标签类型
+const getProjectTypeTag = (type) => {
+  const typeMap = {
+    '收入合同': 'success',
+    '支出合同': 'danger'
+  }
+  return typeMap[type] || 'info'
+}
+
+// 获取阶段标签类型
+const getProjectStageTag = (stage) => {
+  const typeMap = {
+    '意向': 'danger',
+    '签约': 'warning',
+    '建设': 'primary',
+    '运营': 'primary',
+    '交付': 'primary',
+    '验收': 'success',
+    '完结': 'info'
+  }
+  return typeMap[stage] || 'info'
+}
+
+// 合作方类型标签样式
+export const getPartnerTypeTag = (type) => {
+  const typeMap = {
+    '甲方': 'success',
+    '乙方': 'danger',
+    '丙方': 'warning',
+    '其他': 'primary'
+  }
+  return typeMap[type] || 'info'
+}
+
+// 资讯类型标签样式
+export const getInfoTypeTag = (type) => {
+  const typeMap = {
+    '项目实施': 'primary',
+    '拜访客户': 'warning',
+    '会议活动': 'danger'
+  }
+  return typeMap[type] || 'info'
+}
+
 // 下载Blob文件
 export const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob)

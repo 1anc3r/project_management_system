@@ -10,20 +10,30 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 
 /**
  * 验证JWT Token
+ * 支持从 Header 或 Query String 中获取 Token
  */
 const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    let token = null;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // 优先从 Header 获取
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+    
+    // 如果 Header 中没有，尝试从 Query String 获取（用于图片预览等场景）
+    if (!token && req.query.token) {
+      token = req.query.token;
+    }
+    
+    if (!token) {
       return res.status(401).json({
         code: 401,
         message: '未提供认证令牌'
       });
     }
 
-    const token = authHeader.substring(7);
-    
     // 验证Token
     const decoded = jwt.verify(token, JWT_SECRET);
     

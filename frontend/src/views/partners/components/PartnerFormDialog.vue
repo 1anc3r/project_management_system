@@ -92,6 +92,7 @@
     </el-form>
 
     <template #footer>
+      <el-divider></el-divider>
       <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="handleSubmit" :loading="submitLoading">保存</el-button>
     </template>
@@ -138,6 +139,16 @@ const form = ref({
   bank_account: ''
 })
 
+// 表单默认值
+const DEFAULT_FORM = {
+  name: '',
+  type: '其他',
+  tax_id: '',
+  address: '',
+  bank: '',
+  bank_account: ''
+}
+
 // 联系人列表
 const contacts = ref([])
 
@@ -151,16 +162,6 @@ let tempIdCounter = 0
 const rules = {
   name: [{ required: true, message: '请输入合作方名称', trigger: 'blur' }],
   type: [{ required: true, message: '请选择合作方类型', trigger: 'change' }]
-}
-
-// 表单默认值
-const DEFAULT_FORM = {
-  name: '',
-  type: '其他',
-  tax_id: '',
-  address: '',
-  bank: '',
-  bank_account: ''
 }
 
 /**
