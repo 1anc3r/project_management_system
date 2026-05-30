@@ -30,7 +30,7 @@
             </el-radio-button>
             <el-radio-button label="grid">
               <el-icon>
-                <Timer />
+                <Grid />
               </el-icon> 网格
             </el-radio-button>
           </el-radio-group>
@@ -72,8 +72,8 @@
 
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never" v-loading="loading">
-      <el-table ref="tableRef" :data="projectList" style="width: 100%"
-        @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
+      <el-table ref="tableRef" :data="projectList" style="width: 100%" @selection-change="handleSelectionChange"
+        @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column prop="type" label="项目类型" width="100" align="center">
@@ -193,29 +193,6 @@
 
     <!-- 新增/编辑对话框 -->
     <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
-
-    <!-- 导入对话框 -->
-    <!-- <el-dialog v-model="importDialogVisible" title="导入项目" width="500px">
-      <el-upload
-        ref="uploadRef"
-        action=""
-        :auto-upload="false"
-        :on-change="handleFileChange"
-        :limit="1"
-        accept=".xlsx,.xls,.csv,.json"
-      >
-        <el-button type="primary">选择文件</el-button>
-        <template #tip>
-          <div class="el-upload__tip">
-            支持 Excel (.xlsx, .xls)、CSV、JSON 格式文件
-          </div>
-        </template>
-      </el-upload>
-      <template #footer>
-        <el-button @click="importDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleImportSubmit">导入</el-button>
-      </template>
-    </el-dialog> -->
   </div>
 </template>
 
@@ -230,18 +207,20 @@ import { getProjects, deleteProject, exportProjects, importProjects, getFilterOp
 import { formatAmount, formatPercent, downloadBlob, getProjectStageTag, getProjectTypeTag } from '@/utils/format'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
 
+// 路由
 const route = useRoute()
 const router = useRouter()
 
-// 视图模式
+// 视图模式，默认列表
 const viewMode = ref('list')
 
 // 加载状态
 const loading = ref(false)
 
-// 项目列表
+// 项目列表及选中行
 const projectList = ref([])
 const selectedRows = ref([])
+const currentRow = ref(null)
 
 // 分页
 const pagination = reactive({
@@ -274,12 +253,6 @@ const filterOptions = reactive({
 // 表单对话框
 const formDialogVisible = ref(false)
 const formType = ref('add')
-const currentRow = ref(null)
-
-// 导入对话框
-const importDialogVisible = ref(false)
-const uploadRef = ref(null)
-const importFile = ref(null)
 
 // 获取数据
 const fetchData = async () => {
@@ -426,37 +399,6 @@ const handleExport = async () => {
   }
 }
 
-// 导入
-// const handleImport = () => {
-//   importDialogVisible.value = true
-//   importFile.value = null
-// }
-
-// 附件更新
-const handleFileChange = (file) => {
-  importFile.value = file.raw
-}
-
-// 附件导入
-// const handleImportSubmit = async () => {
-//   if (!importFile.value) {
-//     ElMessage.warning('请选择要导入的文件')
-//     return
-//   }
-
-//   const formData = new FormData()
-//   formData.append('file', importFile.value)
-
-//   try {
-//     const res = await importProjects(formData)
-//     ElMessage.success(res.message)
-//     importDialogVisible.value = false
-//     fetchData()
-//   } catch (error) {
-//     console.error('导入失败:', error)
-//   }
-// }
-
 // 卡片操作
 const handleCardCommand = (command, row) => {
   if (command === 'edit') {
@@ -584,6 +526,9 @@ onMounted(async () => {
         }
 
         .amount-info {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid #ebeef5;
           display: flex;
           justify-content: space-between;
 

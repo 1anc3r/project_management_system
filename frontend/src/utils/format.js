@@ -100,6 +100,8 @@ export const injectImageToken = (html, token) => {
   )
 }
 
+
+
 // 项目类型颜色映射
 export const getProjectTypeColor = (type) => {
   const typeMap = {
@@ -124,7 +126,7 @@ export const getProjectStageColor = (type) => {
 }
 
 // 获取项目类型标签类型
-const getProjectTypeTag = (type) => {
+export const getProjectTypeTag = (type) => {
   const typeMap = {
     '收入合同': 'success',
     '支出合同': 'danger'
@@ -133,7 +135,7 @@ const getProjectTypeTag = (type) => {
 }
 
 // 获取阶段标签类型
-const getProjectStageTag = (stage) => {
+export const getProjectStageTag = (stage) => {
   const typeMap = {
     '意向': 'danger',
     '签约': 'warning',
@@ -165,6 +167,20 @@ export const getInfoTypeTag = (type) => {
     '会议活动': 'danger'
   }
   return typeMap[type] || 'info'
+}
+
+// 获取操作类型
+export const getOperationTypeTag = (operation) => {
+  const typeMap = {
+    '新增': 'success',
+    '编辑': 'primary',
+    '删除': 'danger',
+    '登录': 'info',
+    '登出': 'info',
+    '导出': 'warning',
+    '导入': 'warning'
+  }
+  return typeMap[operation] || 'info'
 }
 
 // 下载Blob文件

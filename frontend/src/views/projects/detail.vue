@@ -146,7 +146,7 @@
       </div>
 
       <!-- 相关资讯列表（可折叠/展开） -->
-      <div class="section">
+      <div class="info-section">
         <el-collapse v-model="activeCollapse">
           <el-collapse-item name="information">
             <template #title>
@@ -188,7 +188,9 @@
       <!-- 操作按钮 -->
       <div class="section actions">
         <el-button @click="handleBack">
-          <el-icon><ArrowLeft /></el-icon> 返回列表
+          <el-icon>
+            <ArrowLeft />
+          </el-icon> 返回列表
         </el-button>
         <el-button type="primary" @click="handleEdit">编辑</el-button>
       </div>
@@ -206,34 +208,29 @@ import { downloadAttachment, deleteAttachment, getAttachmentTypes } from '@/api/
 import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob, getProjectTypeTag, getProjectStageTag, getInfoTypeTag } from '@/utils/format'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
 
+// 路由
 const route = useRoute()
 const router = useRouter()
 
 // 加载状态
 const loading = ref(false)
 
+// 当前项目
 const project = ref({})
+
+// 附件类型列表
 const attachmentTypes = ref([])
+
+// 资讯列表
+const informationList = ref([])
 
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
-// 资讯列表
-const informationList = ref([])
 
 // 表单对话框
 const formDialogVisible = ref(false)
 const formType = ref('edit')
 const currentRow = ref(null)
-
-// 获取附件类型列表
-const fetchAttachmentTypes = async () => {
-  try {
-    const res = await getAttachmentTypes()
-    attachmentTypes.value = res.data
-  } catch (error) {
-    console.error('获取附件类型失败:', error)
-  }
-}
 
 // 获取数据
 const fetchData = async () => {
@@ -242,7 +239,6 @@ const fetchData = async () => {
     const res = await getProjectById(route.params.id)
     project.value = res.data
     // 同时获取资讯列表
-    await fetchInformationList()
   } catch (error) {
     console.error('获取项目详情失败:', error)
   } finally {
@@ -258,6 +254,16 @@ const fetchInformationList = async () => {
   } catch (error) {
     console.error('获取资讯列表失败:', error)
     informationList.value = []
+  }
+}
+
+// 获取附件类型列表
+const fetchAttachmentTypes = async () => {
+  try {
+    const res = await getAttachmentTypes()
+    attachmentTypes.value = res.data
+  } catch (error) {
+    console.error('获取附件类型失败:', error)
   }
 }
 
@@ -310,6 +316,7 @@ const handleUpdateAttachmentType = async (row, newType) => {
 
 onMounted(() => {
   fetchData()
+  fetchInformationList()
   fetchAttachmentTypes()
 })
 </script>
@@ -338,6 +345,8 @@ onMounted(() => {
     }
 
     .section {
+      margin-bottom: 30px;
+
       .section-title {
         font-size: 15px;
         font-weight: 600;

@@ -262,10 +262,7 @@ const handleTabClick = (tab) => {
 // 关闭标签页
 const handleCloseTab = (tab) => {
   tabStore.removeView(tab.path)
-  if (tabStore.activeTab === tab.path && tabStore.visitedViews.length > 0) {
-    const lastTab = tabStore.visitedViews[tabStore.visitedViews.length - 1]
-    router.push(lastTab.fullPath)
-  }
+  router.push(tabStore.activeTab)
 }
 
 // 标签页下拉菜单

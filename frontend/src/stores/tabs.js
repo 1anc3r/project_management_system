@@ -47,6 +47,8 @@ export const useTabStore = defineStore('tabs', () => {
         const nextView = visitedViews.value[index] || visitedViews.value[index - 1]
         if (nextView) {
           activeTab.value = nextView.path
+        } else {
+          activeTab.value = '/dashboard'
         }
       }
     }

@@ -1,33 +1,28 @@
 <template>
-  <el-dialog
-    :title="dialogTitle"
-    v-model="visible"
-    width="900px"
-    :close-on-click-modal="false"
-    class="knowledge-detail-dialog"
-    destroy-on-close
-  >
+  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false"
+    class="knowledge-detail-dialog" destroy-on-close>
     <div v-loading="loading" class="detail-content">
       <!-- 头部信息 -->
       <div class="detail-header" v-if="detailData">
         <div class="detail-meta">
           分类：<el-tag type="primary" size="small" class="meta-tag">{{ detailData.category }}</el-tag>
-          标签：<el-tag
-            v-for="tag in formatTags(detailData.tags)"
-            :key="tag"
-            size="small"
-            class="meta-tag"
-          >
+          标签：<el-tag v-for="tag in formatTags(detailData.tags)" :key="tag" size="small" class="meta-tag">
             {{ tag }}
           </el-tag>
           <span class="meta-item">
-            <el-icon><User /></el-icon> {{ detailData.created_by_name }}
+            <el-icon>
+              <User />
+            </el-icon> {{ detailData.created_by_name }}
           </span>
           <span class="meta-item">
-            <el-icon><Calendar /></el-icon> {{ formatDateTime(detailData.created_at) }}
+            <el-icon>
+              <Calendar />
+            </el-icon> {{ formatDateTime(detailData.created_at) }}
           </span>
           <span class="meta-item">
-            <el-icon><View /></el-icon> {{ detailData.view_count || 0 }} 次浏览
+            <el-icon>
+              <View />
+            </el-icon> {{ detailData.view_count || 0 }} 次浏览
           </span>
         </div>
       </div>
@@ -49,29 +44,22 @@
 
         <!-- 图片附件预览区域 -->
         <div class="image-gallery" v-if="imageAttachments.length > 0">
-          <div
-            v-for="img in imageAttachments"
-            :key="img.id"
-            class="image-preview-item"
-            @click="openImagePreview(img)"
-          >
-            <el-image
-              :src="getAttachmentImageUrl(img)"
-              :preview-src-list="imagePreviewList"
-              :initial-index="getImagePreviewIndex(img)"
-              fit="cover"
-              class="gallery-thumbnail"
-              @click.stop
-            >
+          <div v-for="img in imageAttachments" :key="img.id" class="image-preview-item" @click="openImagePreview(img)">
+            <el-image :src="getAttachmentImageUrl(img)" :preview-src-list="imagePreviewList"
+              :initial-index="getImagePreviewIndex(img)" fit="cover" class="gallery-thumbnail" @click.stop>
               <template #error>
                 <div class="image-error">
-                  <el-icon><Picture /></el-icon>
+                  <el-icon>
+                    <Picture />
+                  </el-icon>
                   <span>加载失败</span>
                 </div>
               </template>
             </el-image>
             <div class="image-overlay">
-              <el-icon><ZoomIn /></el-icon>
+              <el-icon>
+                <ZoomIn />
+              </el-icon>
             </div>
             <span class="image-name" :title="img.file_name">{{ img.file_name }}</span>
           </div>
@@ -79,21 +67,16 @@
 
         <!-- 普通附件列表 -->
         <div class="attachment-list">
-          <div
-            v-for="att in nonImageAttachments"
-            :key="att.id"
-            class="attachment-item"
-          >
-            <el-icon class="att-icon"><Document /></el-icon>
+          <div v-for="att in nonImageAttachments" :key="att.id" class="attachment-item">
+            <el-icon class="att-icon">
+              <Document />
+            </el-icon>
             <span class="att-name" :title="att.file_name">{{ att.file_name }}</span>
             <span class="att-size">{{ att.fileSizeText || formatFileSize(att.file_size) }}</span>
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="downloadAttachment(att.id)"
-            >
-              <el-icon><Download /></el-icon> 下载
+            <el-button link type="primary" size="small" @click="downloadAttachment(att.id)">
+              <el-icon>
+                <Download />
+              </el-icon> 下载
             </el-button>
           </div>
         </div>
@@ -102,11 +85,15 @@
       <!-- 底部操作 -->
       <div class="detail-footer" v-if="detailData">
         <el-button @click="handleClose">
-          <el-icon><ArrowLeft /></el-icon> 返回列表
+          <el-icon>
+            <ArrowLeft />
+          </el-icon> 返回列表
         </el-button>
         <div class="footer-actions">
           <el-button type="primary" @click="handleEdit" v-if="canEdit">
-            <el-icon><Edit /></el-icon> 编辑
+            <el-icon>
+              <Edit />
+            </el-icon> 编辑
           </el-button>
         </div>
       </div>
@@ -285,7 +272,7 @@ const handleDelete = () => {
     ElMessage.success('删除成功')
     visible.value = false
     emit('delete')
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 // 关闭

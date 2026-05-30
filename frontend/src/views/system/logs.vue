@@ -31,7 +31,7 @@
         </el-table-column>
         <el-table-column prop="operation" label="操作" width="100">
           <template #default="{ row }">
-            <el-tag :type="getOperationType(row.operation)" size="small">{{ row.operation }}</el-tag>
+            <el-tag :type="getOperationTypeTag(row.operation)" size="small">{{ row.operation }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="target_name" label="数据名称" min-width="200" show-overflow-tooltip />
@@ -56,7 +56,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Download } from '@element-plus/icons-vue'
 import { getLogs, exportLogs, getLogFilterOptions } from '@/api/logs'
-import { formatDateTime, downloadBlob } from '@/utils/format'
+import { formatDateTime, downloadBlob, getOperationTypeTag } from '@/utils/format'
 
 // 加载状态
 const loading = ref(false)
@@ -84,20 +84,6 @@ const filterOptions = reactive({
   modules: [],
   operations: []
 })
-
-// 获取操作类型
-const getOperationType = (operation) => {
-  const typeMap = {
-    '新增': 'success',
-    '编辑': 'primary',
-    '删除': 'danger',
-    '登录': 'info',
-    '登出': 'info',
-    '导出': 'warning',
-    '导入': 'warning'
-  }
-  return typeMap[operation] || ''
-}
 
 // 获取数据
 const fetchData = async () => {

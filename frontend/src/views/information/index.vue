@@ -131,7 +131,7 @@
                         <div class="info-item-header">
                           <span class="info-item-title">{{ item.information_title }}</span>
                           <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                            }}</el-tag>
+                          }}</el-tag>
                         </div>
                       </template>
                       <p class="info-item-content">{{ item.information_content || '暂无内容' }}</p>
@@ -156,12 +156,12 @@
               </el-collapse-item>
             </el-collapse>
 
-        <!-- 分页 -->
-        <div class="pagination-wrapper">
-          <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
-            :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange" @current-change="handleCurrentChange" />
-        </div>
+            <!-- 分页 -->
+            <div class="pagination-wrapper">
+              <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
+                :page-sizes="[20, 50, 100]" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+            </div>
           </el-card>
         </el-col>
       </el-row>

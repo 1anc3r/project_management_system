@@ -109,19 +109,6 @@
       </el-col>
     </el-row>
 
-    <!-- <el-row :gutter="20" class="chart-row">
-      <el-col :span="24">
-        <el-card class="chart-card" shadow="hover">
-          <template #header>
-            <div class="card-header">
-              <span>合同金额趋势</span>
-            </div>
-          </template>
-          <v-chart class="chart" :option="trendChartOption" autoresize />
-        </el-card>
-      </el-col>
-    </el-row> -->
-
     <!-- 资讯列表（可折叠/展开） -->
     <el-row :gutter="20" class="info-row">
       <el-col :span="24">
@@ -143,7 +130,7 @@
                       <div class="info-item-header">
                         <span class="info-item-title">{{ item.information_title }}</span>
                         <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                          }}</el-tag>
+                        }}</el-tag>
                       </div>
                     </template>
                     <p class="info-item-content">{{ item.information_content || '暂无内容' }}</p>
@@ -220,6 +207,23 @@ const activeCollapse = ref(['information'])
 // 资讯列表
 const informationList = ref([])
 
+// 阶段颜色映射
+const STAGE_COLORS = {
+  '意向': '#F57FAC',
+  '签约': '#EBAA3C',
+  '建设': '#409EFF',
+  '运营': '#03A9F4',
+  '交付': '#009688',
+  '验收': '#8FC25C',
+  '完结': '#909399'
+}
+
+// 项目类型颜色映射
+const TYPE_COLORS = {
+  '收入合同': '#67C23A',
+  '支出合同': '#F56C6C'
+}
+
 // 项目阶段分布图表配置
 const stageChartOption = computed(() => ({
   tooltip: {
@@ -260,7 +264,7 @@ const stageChartOption = computed(() => ({
         name: item.stage,
         value: item.count,
         amount: item.amount,
-        itemStyle: { color: getProjectStageColor[item.stage]}
+        itemStyle: { color: STAGE_COLORS[item.stage] }
       }))
     }
   ]
@@ -369,7 +373,7 @@ const typeChartOption = computed(() => ({
         name: item.type,
         value: item.count,
         amount: item.amount,
-        itemStyle: { color: getProjectTypeColor[item.type]}
+        itemStyle: { color: TYPE_COLORS[item.type] }
       }))
     }
   ]

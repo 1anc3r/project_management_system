@@ -65,7 +65,7 @@
                   <div class="info-header">
                     <span class="info-title">{{ item.information_title }}</span>
                     <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                      }}</el-tag>
+                    }}</el-tag>
                   </div>
                 </template>
                 <p class="info-content">{{ item.information_content || '暂无内容' }}</p>

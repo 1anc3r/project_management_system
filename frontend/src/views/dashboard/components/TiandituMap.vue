@@ -2,58 +2,46 @@
   <div class="sichuan-map-wrapper">
     <!-- 地图区域 -->
     <div class="map-container">
-      <div 
-        ref="mapRef" 
-        class="tianditu-map"
-        :style="{ height: mapHeight }"
-      ></div>
+      <div ref="mapRef" class="tianditu-map" :style="{ height: mapHeight }"></div>
       <!-- 加载状态 -->
       <div v-if="isLoading" class="map-loading">
-        <el-icon class="loading-icon"><Loading /></el-icon>
+        <el-icon class="loading-icon">
+          <Loading />
+        </el-icon>
         <span>地图加载中...</span>
       </div>
       <!-- 错误提示 -->
       <div v-if="hasError" class="map-error">
-        <el-icon><Warning /></el-icon>
+        <el-icon>
+          <Warning />
+        </el-icon>
         <span>{{ errorMsg }}</span>
       </div>
     </div>
-    
+
     <!-- 右侧城市列表面板 -->
     <div class="city-panel">
       <div class="panel-header">
         <div class="header-title">
-          <el-icon><MapLocation /></el-icon>
+          <el-icon>
+            <MapLocation />
+          </el-icon>
           <span>项目列表</span>
         </div>
         <el-tag type="primary" size="small" effect="dark">
           共计 {{ totalProjects }} 个项目，{{ totalAmount }} 万元
         </el-tag>
       </div>
-      
+
       <div class="city-list" ref="cityListRef">
-        <div 
-          v-for="city in sortedCityList" 
-          :key="city.city"
-          :data-city="city.city"
-          class="city-item"
-          :class="{ 
-            'has-projects': city.project_count > 0,
-            'active': hoveredCity === city.city 
-          }"
-          @mouseenter="handleCityHover(city)"
-          @mouseleave="handleCityLeave"
-          @click="handleCityClick(city)"
-        >
+        <div v-for="city in sortedCityList" :key="city.city" :data-city="city.city" class="city-item" :class="{
+          'has-projects': city.project_count > 0,
+          'active': hoveredCity === city.city
+        }" @mouseenter="handleCityHover(city)" @mouseleave="handleCityLeave" @click="handleCityClick(city)">
           <div class="city-main">
             <div class="city-header">
               <span class="city-name">{{ city.city }}</span>
-              <el-tag 
-                :type="getProjectCountTagType(city.project_count)" 
-                size="small"
-                class="count-tag"
-                effect="plain"
-              >
+              <el-tag :type="getProjectCountTagType(city.project_count)" size="small" class="count-tag" effect="plain">
                 {{ city.project_count }} 个项目
               </el-tag>
             </div>
@@ -62,26 +50,24 @@
                 <span class="info-label">合同金额:</span>
                 <span class="info-value amount"><b>{{ formatAmount(city.total_amount) }} 万</b></span>
               </div>
-              <div class="info-row stages" v-if="city.stageDistribution && Object.keys(city.stageDistribution).length > 0">
+              <div class="info-row stages"
+                v-if="city.stageDistribution && Object.keys(city.stageDistribution).length > 0">
                 <span class="info-label">项目阶段:</span>
                 <div class="stage-tags">
-                  <el-tag 
-                    v-for="(count, stage) in city.stageDistribution" 
-                    :key="stage"
-                    :type="getProjectStageTag(stage)"
-                    size="small"
-                    effect="light"
-                  >
+                  <el-tag v-for="(count, stage) in city.stageDistribution" :key="stage"
+                    :type="getProjectStageTag(stage)" size="small" effect="light">
                     {{ stage }}: {{ count }}
                   </el-tag>
                 </div>
               </div>
             </div>
           </div>
-          <el-icon v-if="city.project_count > 0" class="arrow-icon"><ArrowRight /></el-icon>
+          <el-icon v-if="city.project_count > 0" class="arrow-icon">
+            <ArrowRight />
+          </el-icon>
         </div>
       </div>
-      
+
       <!-- 图例 -->
       <div class="panel-legend">
         <div class="legend-title">项目数量图例</div>
@@ -141,6 +127,17 @@ const MAP_CONFIG = {
     low: '#67C23A',     // 1-4个
     none: '#DCDFE6'     // 无项目
   }
+};
+
+// 项目阶段颜色映射
+const STAGE_COLORS = {
+  '意向': '#F57FAC',
+  '签约': '#EBAA3C',
+  '建设': '#409EFF',
+  '运营': '#03A9F4',
+  '交付': '#009688',
+  '验收': '#8FC25C',
+  '完结': '#909399'
 };
 
 // GeoJSON文件路径
@@ -262,7 +259,7 @@ async function fetchCityDistribution() {
       ...city,
       stageDistribution: city.stageDistribution || {}
     }));
-    
+
     // 如果地图已初始化，重新渲染图层
     if (geoJsonLayer.value) {
       geoJsonLayer.value.eachLayer((layer) => {
@@ -310,7 +307,7 @@ function renderGeoJSON(geoJsonData) {
     onEachFeature: (feature, layer) => {
       const cityName = feature.properties.name;
       const cityData = getCityData(cityName);
-      
+
       // 绑定tooltip
       const tooltipContent = createTooltipContent(cityName, cityData);
       layer.bindTooltip(tooltipContent, {
@@ -399,7 +396,7 @@ function getCityStyle(cityData) {
 function createTooltipContent(cityName, cityData) {
   const count = cityData?.project_count || 0;
   const amount = cityData?.total_amount || 0;
-  
+
   if (count === 0) {
     return `<div class="tooltip-content">
       <div class="tooltip-title">${cityName}</div>
@@ -411,7 +408,7 @@ function createTooltipContent(cityName, cityData) {
   if (cityData.stageDistribution && Object.keys(cityData.stageDistribution).length > 0) {
     stagesHtml = '<div class="tooltip-stages">';
     for (const [stage, count] of Object.entries(cityData.stageDistribution)) {
-      stagesHtml += `<span class="stage-tag" style="background:${getProjectStageColor[stage] || '#909399'}">${stage}: ${count}</span>`;
+      stagesHtml += `<span class="stage-tag" style="background:${STAGE_COLORS[stage] || '#909399'}">${stage}: ${count}</span>`;
     }
     stagesHtml += '</div>';
   }
@@ -442,7 +439,7 @@ function navigateToProjects(cityName) {
  */
 function handleCityHover(city) {
   hoveredCity.value = city.city;
-  
+
   // 高亮地图上的对应区域
   if (geoJsonLayer.value) {
     geoJsonLayer.value.eachLayer((layer) => {
@@ -467,7 +464,7 @@ function scrollToCity(cityName) {
   if (cityElement) {
     // 计算列表需要滚动的位置（只滚动内部，不影响外层）
     const top = cityElement.offsetTop - listEl.offsetHeight / 2 + cityElement.offsetHeight / 2;
-    
+
     // 平滑滚动
     listEl.scrollTo({
       top: top,
@@ -481,7 +478,7 @@ function scrollToCity(cityName) {
  */
 function handleCityLeave() {
   hoveredCity.value = '';
-  
+
   // 恢复地图样式
   if (geoJsonLayer.value) {
     geoJsonLayer.value.eachLayer((layer) => {
@@ -575,8 +572,13 @@ watch(() => props.type, () => {
 }
 
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .map-error {
@@ -784,10 +786,21 @@ watch(() => props.type, () => {
   border-radius: 3px;
 }
 
-.color-box.high { background: #F56C6C; }
-.color-box.medium { background: #E6A23C; }
-.color-box.low { background: #67C23A; }
-.color-box.none { background: #DCDFE6; }
+.color-box.high {
+  background: #F56C6C;
+}
+
+.color-box.medium {
+  background: #E6A23C;
+}
+
+.color-box.low {
+  background: #67C23A;
+}
+
+.color-box.none {
+  background: #DCDFE6;
+}
 
 /* 滚动条样式 */
 .city-list::-webkit-scrollbar {

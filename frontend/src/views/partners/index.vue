@@ -30,7 +30,7 @@
             </el-radio-button>
             <el-radio-button label="grid">
               <el-icon>
-                <Timer />
+                <Grid />
               </el-icon> 网格
             </el-radio-button>
           </el-radio-group>
@@ -40,8 +40,8 @@
 
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never" v-loading="loading">
-      <el-table ref="tableRef" :data="partnerList" style="width: 100%"
-        @selection-change="handleSelectionChange" border stripe highlight-current-row>
+      <el-table ref="tableRef" :data="partnerList" style="width: 100%" @selection-change="handleSelectionChange" border
+        stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="合作方名称" min-width="180" show-overflow-tooltip />
         <el-table-column prop="type" label="类型" width="80" align="center">
