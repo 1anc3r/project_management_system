@@ -193,12 +193,15 @@
 
     <!-- 新增/编辑对话框 -->
     <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
+
+    <!-- 详情对话框 -->
+    <ProjectDetailDialog v-model="detailDialogVisible" :project="detailRow" @edit="handleEditFromDetail" />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, Edit, Delete, Search, Upload, Download, View, More
@@ -206,10 +209,10 @@ import {
 import { getProjects, deleteProject, exportProjects, importProjects, getFilterOptions } from '@/api/projects'
 import { formatAmount, formatPercent, downloadBlob, getProjectStageTag, getProjectTypeTag } from '@/utils/format'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
+import ProjectDetailDialog from './components/ProjectDetailDialog.vue'
 
 // 路由
 const route = useRoute()
-const router = useRouter()
 
 // 视图模式，默认列表
 const viewMode = ref('list')
@@ -253,6 +256,10 @@ const filterOptions = reactive({
 // 表单对话框
 const formDialogVisible = ref(false)
 const formType = ref('add')
+
+// 详情对话框
+const detailDialogVisible = ref(false)
+const detailRow = ref(null)
 
 // 获取数据
 const fetchData = async () => {
@@ -343,15 +350,19 @@ const handleBatchEdit = () => {
 
 // 查看
 const handleView = (row) => {
-  router.push({
-    name: 'ProjectDetail',
-    params: { id: row.id }
-  })
+  detailRow.value = row
+  detailDialogVisible.value = true
 }
 
 // 双击行
 const handleRowDblClick = (row) => {
   handleView(row)
+}
+
+// 从详情页编辑
+const handleEditFromDetail = (row) => {
+  detailDialogVisible.value = false
+  handleEdit(row)
 }
 
 // 删除

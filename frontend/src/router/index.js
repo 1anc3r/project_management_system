@@ -28,12 +28,6 @@ const routes = [
         meta: { title: '项目管理', icon: 'Folder' }
       },
       {
-        path: '/projects/detail/:id',
-        name: 'ProjectDetail',
-        component: () => import('@/views/projects/detail.vue'),
-        meta: { title: '项目详情', hidden: true }
-      },
-      {
         path: '/partners',
         name: 'Partners',
         component: () => import('@/views/partners/index.vue'),

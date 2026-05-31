@@ -1,56 +1,58 @@
 <template>
-  <div class="project-detail">
-    <el-card v-loading="loading" class="detail-card">
-      <template #header>
-        <div class="card-header">
-          <span class="title">{{ project.name }}</span>
+  <el-dialog v-model="visible" title="项目详情" width="900px" :close-on-click-modal="false" class="project-detail-dialog"
+    destroy-on-close>
+    <div v-loading="loading" class="detail-content">
+      <!-- 头部信息 -->
+      <div class="detail-header" v-if="projectData">
+        <div class="detail-title">
+          <span class="title-text">{{ projectData.name }}</span>
           <div class="header-tags">
-            <el-tag :type="getProjectTypeTag(project.type)" size="large">{{ project.type || '收入合同' }}</el-tag>
-            <el-tag :type="getProjectStageTag(project.stage)" size="large">{{ project.stage }}</el-tag>
+            <el-tag :type="getProjectTypeTag(projectData.type)" size="large">{{ projectData.type || '收入合同' }}</el-tag>
+            <el-tag :type="getProjectStageTag(projectData.stage)" size="large">{{ projectData.stage }}</el-tag>
           </div>
         </div>
-      </template>
+      </div>
 
       <!-- 基本信息 -->
-      <div class="section">
+      <div class="section" v-if="projectData">
         <div class="section-title">基本信息</div>
         <el-descriptions :column="3" border>
-          <el-descriptions-item label="项目名称" :span="2">{{ project.name }}</el-descriptions-item>
-          <el-descriptions-item label="履约地点">{{ project.city }}</el-descriptions-item>
+          <el-descriptions-item label="项目名称" :span="2">{{ projectData.name }}</el-descriptions-item>
+          <el-descriptions-item label="履约地点">{{ projectData.city }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">
-            <el-tag :type="getProjectTypeTag(project.type)" size="small">{{ project.type || '收入合同' }}</el-tag>
+            <el-tag :type="getProjectTypeTag(projectData.type)" size="small">{{ projectData.type || '收入合同' }}</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="签约方式">{{ project.expansion_method }}</el-descriptions-item>
-          <el-descriptions-item label="项目内容">{{ project.content }}</el-descriptions-item>
+          <el-descriptions-item label="签约方式">{{ projectData.expansion_method }}</el-descriptions-item>
+          <el-descriptions-item label="项目内容">{{ projectData.content }}</el-descriptions-item>
           <el-descriptions-item label="项目阶段">
-            <el-tag :type="getProjectStageTag(project.stage)" size="small">{{ project.stage }}</el-tag>
+            <el-tag :type="getProjectStageTag(projectData.stage)" size="small">{{ projectData.stage }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="项目周期">
-            {{ formatDate(project.start_date) }} 至 {{ formatDate(project.end_date) }}
+            {{ formatDate(projectData.start_date) }} 至 {{ formatDate(projectData.end_date) }}
           </el-descriptions-item>
         </el-descriptions>
       </div>
 
       <!-- 金额信息 -->
-      <div class="section">
+      <div class="section" v-if="projectData">
         <div class="section-title">金额信息</div>
         <el-row :gutter="20">
           <el-col :span="8">
             <div class="amount-card highlight">
               <div class="amount-label">合同总金额</div>
-              <div class="amount-value">{{ formatAmount(project.total_amount) }} 万元</div>
+              <div class="amount-value">{{ formatAmount(projectData.total_amount) }} 万元</div>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="amount-card">
               <div class="amount-label">已开票金额</div>
-              <div class="amount-value">{{ formatAmount(project.receipt_amount) }} 万元</div>
+              <div class="amount-value">{{ formatAmount(projectData.receipt_amount) }} 万元</div>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="amount-card">
               <div class="amount-label">待开票金额</div>
-              <div class="amount-value">{{ formatAmount(project.pending_amount) }} 万元</div>
+              <div class="amount-value">{{ formatAmount(projectData.pending_amount) }} 万元</div>
             </div>
           </el-col>
         </el-row>
@@ -58,28 +60,31 @@
           <el-col :span="8">
             <div class="amount-card highlight">
               <div class="amount-label">成本</div>
-              <div class="amount-value">{{ formatAmount(project.cost) }} 万元</div>
+              <div class="amount-value">{{ formatAmount(projectData.cost) }} 万元</div>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="amount-card">
               <div class="amount-label">毛利</div>
-              <div class="amount-value">{{ formatAmount(project.profit) }} 万元</div>
+              <div class="amount-value">{{ formatAmount(projectData.profit) }} 万元</div>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="amount-card">
               <div class="amount-label">毛利率</div>
-              <div class="amount-value">{{ formatPercent(project.profit_rate) }}</div>
+              <div class="amount-value">{{ formatPercent(projectData.profit_rate) }}</div>
             </div>
           </el-col>
         </el-row>
       </div>
 
       <!-- 款项情况 -->
-      <div class="section">
-        <div class="section-title">款项情况</div>
-        <el-table :data="project.payments" border>
+      <div class="section" v-if="projectData?.payments?.length">
+        <div class="section-title">
+          款项情况
+          <el-tag type="info" size="small" class="count-tag">{{ projectData.payments.length }} 条</el-tag>
+        </div>
+        <el-table :data="projectData.payments" border size="small">
           <el-table-column type="index" label="序号" width="50" align="center" />
           <el-table-column prop="payment_type" label="款项" width="100" />
           <el-table-column prop="payment_condition" label="款项条件" min-width="200" show-overflow-tooltip />
@@ -103,30 +108,30 @@
       </div>
 
       <!-- 合作方信息 -->
-      <div class="section">
+      <div class="section" v-if="projectData">
         <div class="section-title">合作方信息</div>
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="合作方名称" :span="2">{{ project.partner_name }}</el-descriptions-item>
-          <el-descriptions-item label="纳税人识别号" :span="2">{{ project.partner_tax_id || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="地址" :span="2">{{ project.partner_address || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="开户银行">{{ project.partner_bank || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="银行账号">{{ project.partner_bank_account || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="联系人">{{ project.partner_contact || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="联系电话">{{ project.partner_contact_phone || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="合作方名称" :span="2">{{ projectData.partner_name }}</el-descriptions-item>
+          <el-descriptions-item label="纳税人识别号" :span="2">{{ projectData.partner_tax_id || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="地址" :span="2">{{ projectData.partner_address || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="开户银行">{{ projectData.partner_bank || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="银行账号">{{ projectData.partner_bank_account || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="联系人">{{ projectData.partner_contact || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ projectData.partner_contact_phone || '-' }}</el-descriptions-item>
         </el-descriptions>
       </div>
 
       <!-- 附件列表 -->
-      <div class="section">
-        <div class="section-title">项目附件</div>
-        <el-table v-if="project.attachments?.length" :data="project.attachments" border>
+      <div class="section" v-if="projectData">
+        <div class="section-title">
+          项目附件
+          <el-tag type="info" size="small" class="count-tag">{{ projectData.attachments?.length || 0 }} 个</el-tag>
+        </div>
+        <el-table v-if="projectData.attachments?.length" :data="projectData.attachments" border size="small">
           <el-table-column prop="file_name" label="文件名" min-width="250" show-overflow-tooltip />
           <el-table-column prop="attachment_type" label="类型" width="160">
             <template #default="{ row }">
-              <el-select v-model="row.attachment_type" size="small" disabled=true
-                @change="(val) => handleUpdateAttachmentType(row, val)">
-                <el-option v-for="type in attachmentTypes" :key="type" :label="type" :value="type" />
-              </el-select>
+              <el-tag size="small" type="info">{{ row.attachment_type || '其他' }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="file_size" label="大小" width="100">
@@ -135,10 +140,9 @@
           <el-table-column prop="created_at" label="上传时间" width="160">
             <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="150" align="center">
+          <el-table-column label="操作" width="80" align="center">
             <template #default="{ row }">
               <el-button link type="primary" size="small" @click="handleDownload(row)">下载</el-button>
-              <el-button link type="danger" size="small" @click="handleDeleteAttachment(row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -146,7 +150,7 @@
       </div>
 
       <!-- 相关资讯列表（可折叠/展开） -->
-      <div class="info-section">
+      <div class="info-section" v-if="projectData">
         <el-collapse v-model="activeCollapse">
           <el-collapse-item name="information">
             <template #title>
@@ -181,45 +185,51 @@
           </el-collapse-item>
         </el-collapse>
       </div>
+    </div>
 
-      <!-- 编辑对话框 -->
-      <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="project" @success="fetchData" />
-
-      <!-- 操作按钮 -->
-      <div class="section actions">
-        <el-button @click="handleBack">
-          <el-icon>
-            <ArrowLeft />
-          </el-icon> 返回列表
-        </el-button>
-        <el-button type="primary" @click="handleEdit">编辑</el-button>
-      </div>
-    </el-card>
-  </div>
+    <template #footer>
+      <el-button @click="handleClose">
+        <el-icon>
+          <ArrowLeft />
+        </el-icon> 返回列表
+      </el-button>
+      <el-button type="primary" @click="handleEdit">编辑</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Link, ArrowLeft } from '@element-plus/icons-vue'
 import { getProjectById } from '@/api/projects'
 import { getInformationByProject } from '@/api/information'
-import { downloadAttachment, deleteAttachment, getAttachmentTypes } from '@/api/attachments'
+import { downloadAttachment } from '@/api/attachments'
 import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob, getProjectTypeTag, getProjectStageTag, getInfoTypeTag } from '@/utils/format'
-import ProjectFormDialog from './components/ProjectFormDialog.vue'
 
-// 路由
-const route = useRoute()
-const router = useRouter()
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
+  project: {
+    type: Object,
+    default: null
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'edit'])
+
+const visible = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
 
 // 加载状态
 const loading = ref(false)
 
-// 当前项目
-const project = ref({})
-
-// 附件类型列表
-const attachmentTypes = ref([])
+// 项目详情数据
+const projectData = ref(null)
 
 // 资讯列表
 const informationList = ref([])
@@ -227,20 +237,16 @@ const informationList = ref([])
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
 
-// 表单对话框
-const formDialogVisible = ref(false)
-const formType = ref('edit')
-const currentRow = ref(null)
-
-// 获取数据
-const fetchData = async () => {
+// 获取项目详情
+const fetchProjectDetail = async () => {
+  if (!props.project?.id) return
   loading.value = true
   try {
-    const res = await getProjectById(route.params.id)
-    project.value = res.data
-    // 同时获取资讯列表
+    const res = await getProjectById(props.project.id)
+    projectData.value = res.data
   } catch (error) {
     console.error('获取项目详情失败:', error)
+    ElMessage.error('获取项目详情失败')
   } finally {
     loading.value = false
   }
@@ -248,8 +254,9 @@ const fetchData = async () => {
 
 // 获取资讯列表
 const fetchInformationList = async () => {
+  if (!props.project?.id) return
   try {
-    const res = await getInformationByProject(route.params.id, { limit: 50 })
+    const res = await getInformationByProject(props.project.id, { limit: 50 })
     informationList.value = res.data || []
   } catch (error) {
     console.error('获取资讯列表失败:', error)
@@ -257,95 +264,81 @@ const fetchInformationList = async () => {
   }
 }
 
-// 获取附件类型列表
-const fetchAttachmentTypes = async () => {
-  try {
-    const res = await getAttachmentTypes()
-    attachmentTypes.value = res.data
-  } catch (error) {
-    console.error('获取附件类型失败:', error)
+// 监听项目ID变化，加载数据
+watch(() => props.project?.id, (newId) => {
+  if (newId && visible.value) {
+    projectData.value = null
+    informationList.value = []
+    activeCollapse.value = ['information']
+    fetchProjectDetail()
+    fetchInformationList()
   }
-}
+})
 
-// 返回
-const handleBack = () => {
-  router.back()
-}
+// 监听对话框显示
+watch(() => visible.value, (val) => {
+  if (val && props.project?.id) {
+    projectData.value = null
+    informationList.value = []
+    activeCollapse.value = ['information']
+    fetchProjectDetail()
+    fetchInformationList()
+  }
+})
 
-// 编辑
-const handleEdit = () => {
-  console.log('handleEdit')
-  formType.value = 'edit'
-  currentRow.value = project
-  formDialogVisible.value = true
-}
-
-// 下载
+// 下载附件
 const handleDownload = async (row) => {
   try {
     const response = await downloadAttachment(row.id)
     downloadBlob(response.data, row.file_name)
   } catch (error) {
     console.error('下载失败:', error)
+    ElMessage.error('下载失败')
   }
 }
 
-// 删除附件
-const handleDeleteAttachment = (row) => {
-  ElMessageBox.confirm(`确定要删除附件 "${row.file_name}" 吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    await deleteAttachment(row.id)
-    ElMessage.success('删除成功')
-    fetchData()
-  })
+// 编辑
+const handleEdit = () => {
+  visible.value = false
+  emit('edit', props.project)
 }
 
-// 更新附件类型
-const handleUpdateAttachmentType = async (row, newType) => {
-  try {
-    await updateAttachment(row.id, { attachment_type: newType })
-    ElMessage.success('附件类型更新成功')
-  } catch (error) {
-    console.error('更新附件类型失败:', error)
-    fetchData()
-  }
+// 关闭
+const handleClose = () => {
+  projectData.value = null
+  informationList.value = []
+  visible.value = false
 }
-
-onMounted(() => {
-  fetchData()
-  fetchInformationList()
-  fetchAttachmentTypes()
-})
 </script>
 
 <style scoped lang="scss">
-.project-detail {
-  .el-page-header {
-    margin-bottom: 20px;
-  }
+.project-detail-dialog {
+  .detail-content {
+    .detail-header {
+      margin-bottom: 20px;
 
-  .detail-card {
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      .title {
-        font-size: 18px;
-        font-weight: 600;
-      }
-
-      .header-tags {
+      .detail-title {
         display: flex;
-        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+
+        .title-text {
+          font-size: 18px;
+          font-weight: 600;
+          color: #303133;
+        }
+
+        .header-tags {
+          display: flex;
+          gap: 8px;
+        }
       }
     }
 
     .section {
-      margin-bottom: 30px;
+      margin-bottom: 20px;
 
       .section-title {
         font-size: 15px;
@@ -354,6 +347,12 @@ onMounted(() => {
         margin-bottom: 15px;
         padding-left: 10px;
         border-left: 4px solid #409EFF;
+      }
+
+      .count-tag {
+        font-size: 12px;
+        margin-left: 10px;
+        font-weight: normal;
       }
 
       .amount-card {
@@ -385,54 +384,59 @@ onMounted(() => {
       }
     }
 
-    .collapse-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
+    .info-section {
+      margin-top: 10px;
 
-      .count-tag {
-        font-size: 12px;
-      }
-    }
-
-    .info-card {
-      margin-bottom: 5px;
-
-      .info-header {
+      .collapse-title {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 10px;
+        width: 100%;
 
-        .info-title {
+        .section-title {
+          font-size: 15px;
           font-weight: 600;
-          font-size: 14px;
+          color: #303133;
+          padding-left: 10px;
+          border-left: 4px solid #409EFF;
+          margin-bottom: 0;
+        }
+
+        .count-tag {
+          font-size: 12px;
         }
       }
 
-      .info-content {
-        font-size: 13px;
-        color: #606266;
-        line-height: 1.6;
-        white-space: pre-wrap;
-      }
+      .info-card {
+        margin-bottom: 5px;
 
-      .info-partner {
-        margin-top: 8px;
-        font-size: 12px;
-        color: #909399;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-    }
+        .info-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
 
-    .actions {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      padding-top: 20px;
-      border-top: 1px solid #ebeef5;
+          .info-title {
+            font-weight: 600;
+            font-size: 14px;
+          }
+        }
+
+        .info-content {
+          font-size: 13px;
+          color: #606266;
+          line-height: 1.6;
+          white-space: pre-wrap;
+        }
+
+        .info-partner {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #909399;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+      }
     }
   }
 }
