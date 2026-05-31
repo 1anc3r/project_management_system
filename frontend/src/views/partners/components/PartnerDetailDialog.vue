@@ -1,5 +1,14 @@
 <template>
   <el-dialog v-model="visible" title="合作方详情" width="900px" destroy-on-close>
+    <!-- 头部信息 -->
+    <div class="detail-header" v-if="partner">
+      <div class="detail-title">
+        <span class="title-text">{{ partner.name }}</span>
+        <div class="header-tags">
+          <el-tag :type="getPartnerTypeTag(partner.type)" size="large">{{ partner.type || '其他' }}</el-tag>
+        </div>
+      </div>
+    </div>
     <el-descriptions :column="2" border v-if="partner">
       <el-descriptions-item label="合作方名称" :span="2">{{ partner.name }}</el-descriptions-item>
       <el-descriptions-item label="类型" :span="2">
@@ -65,7 +74,7 @@
                   <div class="info-header">
                     <span class="info-title">{{ item.information_title }}</span>
                     <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                    }}</el-tag>
+                      }}</el-tag>
                   </div>
                 </template>
                 <p class="info-content">{{ item.information_content || '暂无内容' }}</p>
@@ -173,6 +182,29 @@ const handleEdit = () => {
 </script>
 
 <style scoped lang="scss">
+.detail-header {
+  margin-bottom: 20px;
+
+  .detail-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .title-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #303133;
+    }
+
+    .header-tags {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}
+
 .contacts-section {
   margin-top: 20px;
 

@@ -40,18 +40,18 @@
 
       <!-- 列表视图筛选条件 -->
       <div class="filter-bar">
-        <el-select v-model="searchForm.category" placeholder="分类" clearable style="width: 130px">
+        <el-select v-model="searchForm.category" placeholder="分类" clearable style="width: 150px">
           <el-option v-for="item in filterOptions.categories" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.tags" placeholder="标签" clearable multiple collapse-tags style="width: 180px">
+        <el-select v-model="searchForm.tags" placeholder="标签" clearable multiple collapse-tags style="width: 150px">
           <el-option v-for="item in filterOptions.hotTags" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.sortBy" placeholder="排序字段" clearable style="width: 140px">
+        <el-select v-model="searchForm.sortBy" placeholder="排序字段" clearable style="width: 150px">
           <el-option label="创建时间" value="created_at" />
           <el-option label="更新时间" value="updated_at" />
           <el-option label="浏览次数" value="view_count" />
         </el-select>
-        <el-select v-model="searchForm.sortOrder" style="width: 100px">
+        <el-select v-model="searchForm.sortOrder" style="width: 75px">
           <el-option label="降序" value="desc" />
           <el-option label="升序" value="asc" />
         </el-select>
@@ -226,7 +226,7 @@ const searchForm = reactive({
   keyword: '',
   category: '',
   tags: [],
-  sortBy: 'created_at',
+  sortBy: '',
   sortOrder: 'desc'
 })
 

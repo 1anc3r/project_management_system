@@ -61,7 +61,7 @@
           <el-option label="成本" value="cost" />
           <el-option label="创建时间" value="created_at" />
         </el-select>
-        <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 100px">
+        <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 75px">
           <el-option label="降序" value="desc" />
           <el-option label="升序" value="asc" />
         </el-select>
