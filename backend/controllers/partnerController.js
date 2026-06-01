@@ -40,7 +40,9 @@ const getPartners = async (req, res) => {
       page = 1,
       pageSize = 20,
       keyword,
-      type
+      type,
+      sortField,
+      sortOrder = 'desc'
     } = req.query;
 
     // 确保分页参数是有效的数字
@@ -69,6 +71,21 @@ const getPartners = async (req, res) => {
       params.push(type);
     }
 
+    const fieldMap = {
+      'project_count': 'project_count', 
+      'total_contract_amount': 'total_contract_amount',
+      'created_at': 'p.created_at'
+    };
+
+    // 排序
+    let orderClause = 'ORDER BY p.created_at DESC';
+    const allowedSortFields = ['project_count', 'total_contract_amount', 'created_at'];
+    if (sortField && allowedSortFields.includes(sortField)) {
+      const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
+      // stage 字段为中文，使用 CONVERT 指定 GBK 编码实现拼音排序；其他字段直接排序
+      orderClause = `ORDER BY ${fieldMap[sortField]} ${order}`;
+    }
+
     // 查询总数
     const countResult = await query(
       `SELECT COUNT(*) as total FROM partners p ${whereClause}`,
@@ -90,7 +107,7 @@ const getPartners = async (req, res) => {
       LEFT JOIN projects proj ON p.id = proj.partner_id
       ${whereClause}
       GROUP BY p.id
-      ORDER BY p.created_at DESC
+      ${orderClause}
       LIMIT ${limit} OFFSET ${offset}`,
       params
     );
@@ -441,6 +458,44 @@ const deletePartner = async (req, res) => {
 };
 
 /**
+ * 获取筛选选项
+ * GET /api/partners/filters
+ */
+const getFilterOptions = async (req, res) => {
+  try {
+    // 从字典表读取筛选选项
+    const getDictItems = async (dictCode) => {
+      const items = await query(
+        `SELECT di.item_name 
+         FROM dictionary_items di
+         JOIN dictionaries d ON di.dict_id = d.id
+         WHERE d.dict_code = ? AND di.status = 1 AND d.status = 1
+         ORDER BY di.sort_order ASC`,
+        [dictCode]
+      );
+      return items.map(item => item.item_name);
+    };
+
+    const [types] = await Promise.all([
+      getDictItems('partner_type')
+    ]);
+
+    res.json({
+      code: 200,
+      data: {
+        types
+      }
+    });
+  } catch (error) {
+    console.error('获取筛选选项错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取筛选选项失败'
+    });
+  }
+};
+
+/**
  * 导出合作方
  * GET /api/partners/export
  */
@@ -499,9 +554,9 @@ const exportPartners = async (req, res) => {
     const ws = xlsx.utils.json_to_sheet(partners);
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, '合作方列表');
-    
+
     const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=partners_${moment().format('YYYYMMDD')}.xlsx`);
     res.send(buffer);
@@ -588,11 +643,11 @@ const getAllPartners = async (req, res) => {
 // 辅助函数：转换为CSV
 function convertToCSV(data) {
   if (data.length === 0) return '';
-  
+
   const headers = Object.keys(data[0]);
   const csvContent = [
     headers.join(','),
-    ...data.map(row => 
+    ...data.map(row =>
       headers.map(header => {
         const value = row[header];
         if (value === null || value === undefined) return '';
@@ -604,7 +659,7 @@ function convertToCSV(data) {
       }).join(',')
     )
   ].join('\n');
-  
+
   return csvContent;
 }
 
@@ -844,5 +899,6 @@ module.exports = {
   addPartnerContact,
   updatePartnerContact,
   deletePartnerContact,
-  sortPartnerContacts
+  sortPartnerContacts,
+  getFilterOptions
 };

@@ -30,6 +30,13 @@ router.get('/all', authenticate, partnerController.getAllPartners);
 router.get('/search', authenticate, partnerController.searchPartners);
 
 /**
+ * @route   GET /api/partners/filters
+ * @desc    获取筛选选项
+ * @access  Private
+ */
+router.get('/filters', authenticate, partnerController.getFilterOptions);
+
+/**
  * @route   GET /api/partners/export
  * @desc    导出合作方
  * @access  Private

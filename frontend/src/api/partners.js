@@ -72,3 +72,8 @@ export const deletePartnerContact = (id, contactId) => {
 export const sortPartnerContacts = (id, contacts) => {
   return request.put(`/api/partners/${id}/contacts-sort`, { contacts })
 }
+
+// 获取筛选选项
+export const getFilterOptions = () => {
+  return request.get('/api/partners/filters')
+}

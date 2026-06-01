@@ -43,8 +43,8 @@
           <el-option v-for="item in filterOptions.types" :key="item" :label="item" :value="item" />
         </el-select>
         <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">
-          <el-option label="项目数量" value="total_count" />
-          <el-option label="合同金额" value="total_amount" />
+          <el-option label="项目数量" value="project_count" />
+          <el-option label="合同金额" value="total_contract_amount" />
           <el-option label="创建时间" value="created_at" />
         </el-select>
         <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 75px">
@@ -169,7 +169,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, Edit, Delete, Search, Download, View, More, User, Phone
 } from '@element-plus/icons-vue'
-import { getPartners, deletePartner, exportPartners } from '@/api/partners'
+import { getPartners, deletePartner, exportPartners, getFilterOptions } from '@/api/partners'
 import { formatAmount, downloadBlob, getPartnerTypeTag } from '@/utils/format'
 import PartnerFormDialog from './components/PartnerFormDialog.vue'
 import PartnerDetailDialog from './components/PartnerDetailDialog.vue'
@@ -222,7 +222,10 @@ const fetchData = async () => {
     const params = {
       page: pagination.page,
       pageSize: pagination.pageSize,
-      keyword: searchForm.keyword
+      keyword: searchForm.keyword,
+      type: searchForm.type || undefined,
+      sortField: searchForm.sortField || undefined,
+      sortOrder: searchForm.sortOrder
     }
     const res = await getPartners(params)
     partnerList.value = res.data.list
@@ -231,6 +234,18 @@ const fetchData = async () => {
     console.error('获取合作方列表失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 获取筛选选项
+const fetchFilterOptions = async () => {
+  try {
+    const res = await getFilterOptions()
+    if (res.data) {
+      filterOptions.types = res.data.types || []
+    }
+  } catch (error) {
+    console.error('获取筛选选项失败:', error)
   }
 }
 
@@ -349,6 +364,8 @@ const handleCardCommand = (command, row) => {
 }
 
 onMounted(() => {
+  // 先加载筛选选项
+  fetchFilterOptions()
   fetchData()
 })
 </script>
