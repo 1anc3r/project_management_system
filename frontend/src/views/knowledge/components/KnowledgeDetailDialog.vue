@@ -109,7 +109,7 @@ import {
   ArrowLeft, Edit, Delete, Picture, ZoomIn
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { getKnowledgeDetail, deleteKnowledge, recordView } from '@/api/knowledge'
+import { getKnowledgeById, deleteKnowledge, recordView } from '@/api/knowledge'
 import { formatDateTime, injectImageToken } from '@/utils/format'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 
@@ -218,7 +218,7 @@ const fetchDetail = async () => {
     // 先记录浏览
     await recordView(props.data.id)
     // 再获取详情
-    const res = await getKnowledgeDetail(props.data.id)
+    const res = await getKnowledgeById(props.data.id)
     detailData.value = res.data
   } catch (error) {
     console.error('获取知识详情失败:', error)

@@ -34,7 +34,7 @@ const formatFileSize = (bytes) => {
  * 获取知识库列表（支持分页/筛选/搜索/排序）
  * GET /api/knowledge
  */
-const getList = async (req, res) => {
+const getKnowledges = async (req, res) => {
   try {
     const {
       page = 1,
@@ -178,7 +178,7 @@ const getList = async (req, res) => {
  * 获取知识详情
  * GET /api/knowledge/:id
  */
-const getDetail = async (req, res) => {
+const getKnowledgeById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -255,7 +255,7 @@ const getDetail = async (req, res) => {
  * 创建知识条目
  * POST /api/knowledge
  */
-const create = async (req, res) => {
+const createKnowledge = async (req, res) => {
   try {
     const {
       question,
@@ -356,7 +356,7 @@ const create = async (req, res) => {
  * 更新知识条目
  * PUT /api/knowledge/:id
  */
-const update = async (req, res) => {
+const updateKnowledge = async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -527,7 +527,7 @@ const deleteKnowledge = async (req, res) => {
  * 批量删除
  * POST /api/knowledge/batch-delete
  */
-const batchDelete = async (req, res) => {
+const batchDeleteKnowledge = async (req, res) => {
   try {
     const { ids } = req.body;
     const user = req.user;
@@ -592,7 +592,7 @@ const batchDelete = async (req, res) => {
  * 获取筛选选项
  * GET /api/knowledge/filters
  */
-const getFilters = async (req, res) => {
+const getFilterOptions = async (req, res) => {
   try {
     // 获取分类选项
     const categories = await query(
@@ -954,14 +954,14 @@ function parseCSV(content) {
 }
 
 module.exports = {
-  getList,
-  getDetail,
-  create,
-  update,
-  delete: deleteKnowledge,
-  batchDelete,
-  getFilters,
-  export: exportKnowledge,
-  import: importKnowledge,
+  getKnowledges,
+  getKnowledgeById,
+  createKnowledge,
+  updateKnowledge,
+  deleteKnowledge,
+  batchDeleteKnowledge,
+  getFilterOptions,
+  exportKnowledge,
+  importKnowledge,
   recordView
 };

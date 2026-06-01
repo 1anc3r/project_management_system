@@ -14,14 +14,14 @@ const { createLogMiddleware } = require('../middleware/logger');
  * @desc    获取筛选选项（分类、热门标签）
  * @access  Private
  */
-router.get('/filters', authenticate, knowledgeController.getFilters);
+router.get('/filters', authenticate, knowledgeController.getFilterOptions);
 
 /**
  * @route   GET /api/knowledge/export
  * @desc    导出知识库
  * @access  Private
  */
-router.get('/export', authenticate, knowledgeController.export);
+router.get('/export', authenticate, knowledgeController.exportKnowledge);
 
 /**
  * @route   POST /api/knowledge/import
@@ -32,7 +32,7 @@ router.post('/import',
   authenticate, 
   upload.single('file'),
   handleUploadError,
-  knowledgeController.import
+  knowledgeController.importKnowledge
 );
 
 /**
@@ -40,14 +40,14 @@ router.post('/import',
  * @desc    批量删除知识条目
  * @access  Private
  */
-router.post('/batch-delete', authenticate, knowledgeController.batchDelete);
+router.post('/batch-delete', authenticate, knowledgeController.batchDeleteKnowledge);
 
 /**
  * @route   GET /api/knowledge
  * @desc    获取知识库列表（分页/筛选/搜索）
  * @access  Private
  */
-router.get('/', authenticate, knowledgeController.getList);
+router.get('/', authenticate, knowledgeController.getKnowledges);
 
 /**
  * @route   POST /api/knowledge
@@ -57,7 +57,7 @@ router.get('/', authenticate, knowledgeController.getList);
 router.post('/', 
   authenticate, 
   createLogMiddleware('knowledge', 'create'),
-  knowledgeController.create
+  knowledgeController.createKnowledge
 );
 
 /**
@@ -65,7 +65,7 @@ router.post('/',
  * @desc    获取知识详情
  * @access  Private
  */
-router.get('/:id', authenticate, knowledgeController.getDetail);
+router.get('/:id', authenticate, knowledgeController.getKnowledgeById);
 
 /**
  * @route   PUT /api/knowledge/:id
@@ -75,7 +75,7 @@ router.get('/:id', authenticate, knowledgeController.getDetail);
 router.put('/:id', 
   authenticate, 
   createLogMiddleware('knowledge', 'update'),
-  knowledgeController.update
+  knowledgeController.updateKnowledge
 );
 
 /**
@@ -86,7 +86,7 @@ router.put('/:id',
 router.delete('/:id', 
   authenticate, 
   createLogMiddleware('knowledge', 'delete'),
-  knowledgeController.delete
+  knowledgeController.deleteKnowledge
 );
 
 /**

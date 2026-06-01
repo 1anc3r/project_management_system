@@ -24,7 +24,7 @@ const normalizeDate = (dateValue) => {
  * 获取资讯列表
  * GET /api/information
  */
-const getInformationList = async (req, res) => {
+const getInformations = async (req, res) => {
   try {
     const {
       page = 1,
@@ -431,7 +431,7 @@ const getInformationByProject = async (req, res) => {
  */
 const getAllInformation = async (req, res) => {
   try {
-    const limitNum = Math.max(1, parseInt(req.query.limit) || 20);
+    const limitNum = Math.max(1, parseInt(req.query.limit) || 1000);
 
     const list = await query(
       `SELECT 
@@ -465,7 +465,7 @@ const getAllInformation = async (req, res) => {
 };
 
 module.exports = {
-  getInformationList,
+  getInformations,
   getInformationById,
   createInformation,
   updateInformation,

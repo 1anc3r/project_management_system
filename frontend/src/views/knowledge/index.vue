@@ -196,7 +196,7 @@ import {
   View, Paperclip, Delete
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { getKnowledgeList, deleteKnowledge, batchDeleteKnowledge, exportKnowledge, importKnowledge, getKnowledgeFilters } from '@/api/knowledge'
+import { getKnowledges, deleteKnowledge, batchDeleteKnowledge, exportKnowledge, importKnowledge, getFilterOptions } from '@/api/knowledge'
 import { formatDate, formatDateTime, downloadBlob } from '@/utils/format'
 import KnowledgeFormDialog from './components/KnowledgeFormDialog.vue'
 import KnowledgeDetailDialog from './components/KnowledgeDetailDialog.vue'
@@ -275,7 +275,7 @@ const fetchData = async () => {
       sortBy: searchForm.sortBy || undefined,
       sortOrder: searchForm.sortOrder
     }
-    const res = await getKnowledgeList(params)
+    const res = await getKnowledges(params)
     knowledgeList.value = res.data.list || []
     pagination.total = res.data.pagination?.total || 0
     pagination.totalPages = res.data.pagination?.totalPages || 0
@@ -296,7 +296,7 @@ const fetchData = async () => {
 // 获取筛选选项
 const fetchFilterOptions = async () => {
   try {
-    const res = await getKnowledgeFilters()
+    const res = await getFilterOptions()
     if (res.data) {
       filterOptions.categories = res.data.categories || []
       filterOptions.hotTags = res.data.hotTags || []

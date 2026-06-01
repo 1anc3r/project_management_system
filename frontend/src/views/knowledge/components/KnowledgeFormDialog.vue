@@ -58,8 +58,8 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Upload, Document, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { createKnowledge, updateKnowledge, getKnowledgeDetail } from '@/api/knowledge'
-import { getKnowledgeFilters } from '@/api/knowledge'
+import { createKnowledge, updateKnowledge, getKnowledgeById } from '@/api/knowledge'
+import { getFilterOptions } from '@/api/knowledge'
 import { injectImageToken } from '@/utils/format'
 import TagInput from '@/components/TagInput.vue'
 import RichTextEditor from '@/components/RichTextEditor.vue'
@@ -145,7 +145,7 @@ const rules = {
 // 获取分类选项
 const fetchCategoryOptions = async () => {
   try {
-    const res = await getKnowledgeFilters()
+    const res = await getFilterOptions()
     categoryOptions.value = res.data?.categories || []
   } catch (error) {
     console.error('获取分类选项失败:', error)
@@ -156,7 +156,7 @@ const fetchCategoryOptions = async () => {
 const loadEditData = async () => {
   if (props.type === 'edit' && props.data?.id) {
     try {
-      const res = await getKnowledgeDetail(props.data.id)
+      const res = await getKnowledgeById(props.data.id)
       const data = res.data
       form.value = {
         question: data.question,

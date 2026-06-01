@@ -41,7 +41,7 @@ router.get('/all', authenticate, informationController.getAllInformation);
  * @desc    获取资讯列表
  * @access  Private
  */
-router.get('/', authenticate, informationController.getInformationList);
+router.get('/', authenticate, informationController.getInformations);
 
 /**
  * @route   POST /api/information

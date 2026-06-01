@@ -6,9 +6,7 @@ const { query } = require('../config/db');
 const { deleteFile, getFileUrl } = require('../middleware/upload');
 const path = require('path');
 const fs = require('fs');
-
-// 图片文件扩展名
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+const { ATTACHMENT_TYPES, IMAGE_EXTENSIONS } = require('../config/const');
 
 /**
  * 判断文件是否为图片
@@ -34,7 +32,7 @@ const getAttachmentTypesFromDB = async () => {
   } catch (error) {
     console.error('获取附件类型失败:', error);
     // 返回默认类型
-    return ['测算表', '报价函', '合同/协议', '补充合同/协议', '法律审查意见书', '营业执照', '验收报告', '其他'];
+    return ATTACHMENT_TYPES;
   }
 };
 

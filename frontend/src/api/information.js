@@ -1,7 +1,7 @@
 import request from './request'
 
 // 获取资讯列表
-export const getInformationList = (params) => {
+export const getInformations = (params) => {
   return request.get('/api/information', { params })
 }
 

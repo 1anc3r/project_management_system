@@ -6,26 +6,122 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const fs = require('fs');
+const { PROJECT_STAGES, PROJECT_TYPES, PROJECT_EXPANSION_METHODS, PROJECT_CONTENTS, SICHUAN_CITIES } = require('../config/const');
 
-// 项目阶段枚举
-const STAGES = ['意向', '签约', '建设', '运营', '交付', '验收', '完结'];
+// 从字典表获取项目类型
+const getProjectTypesFromDB = async () => {
+  try {
+    const items = await query(
+      `SELECT di.item_name 
+       FROM dictionary_items di
+       JOIN dictionaries d ON di.dict_id = d.id
+       WHERE d.dict_code = 'project_type' AND di.status = 1 AND d.status = 1
+       ORDER BY di.sort_order ASC`
+    );
+    return items.map(item => item.item_name);
+  } catch (error) {
+    console.error('获取项目类型失败:', error);
+    return PROJECT_TYPES;
+  }
+};
 
-// 项目类型枚举
-const TYPES = ['收入合同', '支出合同'];
+// 验证项目类型
+const validateProjectType = async (type) => {
+  const types = await getProjectTypesFromDB();
+  return types.includes(type);
+};
 
-// 签约方式枚举
-const EXPANSION_METHODS = ['投标', '比选', '比价', '直接谈判', '单一来源采购', '其他'];
+// 从字典表获取项目阶段
+const getProjectStagesFromDB = async () => {
+  try {
+    const items = await query(
+      `SELECT di.item_name 
+       FROM dictionary_items di
+       JOIN dictionaries d ON di.dict_id = d.id
+       WHERE d.dict_code = 'project_stage' AND di.status = 1 AND d.status = 1
+       ORDER BY di.sort_order ASC`
+    );
+    return items.map(item => item.item_name);
+  } catch (error) {
+    console.error('获取项目阶段失败:', error);
+    return PROJECT_STAGES;
+  }
+};
 
-// 项目内容枚举
-const CONTENTS = ['系统建设', '数据服务', '技术服务', '业务运营', '业务咨询', '其他'];
+// 验证项目阶段
+const validateProjectStage = async (type) => {
+  const types = await getProjectStagesFromDB();
+  return types.includes(type);
+};
 
-// 四川省市州列表
-const SICHUAN_CITIES = [
-  '成都市', '自贡市', '攀枝花市', '泸州市', '德阳市', '绵阳市',
-  '广元市', '遂宁市', '内江市', '乐山市', '南充市', '眉山市',
-  '宜宾市', '广安市', '达州市', '雅安市', '巴中市', '资阳市',
-  '阿坝藏族羌族自治州', '甘孜藏族自治州', '凉山彝族自治州'
-];
+// 从字典表获取项目拓展方式
+const getProjectExpansionMethodsFromDB = async () => {
+  try {
+    const items = await query(
+      `SELECT di.item_name 
+       FROM dictionary_items di
+       JOIN dictionaries d ON di.dict_id = d.id
+       WHERE d.dict_code = 'expansion_method' AND di.status = 1 AND d.status = 1
+       ORDER BY di.sort_order ASC`
+    );
+    return items.map(item => item.item_name);
+  } catch (error) {
+    console.error('获取项目拓展方式失败:', error);
+    return PROJECT_EXPANSION_METHODS;
+  }
+};
+
+// 验证项目拓展方式
+const validateProjectExpansionMethod = async (type) => {
+  const types = await getProjectExpansionMethodsFromDB();
+  return types.includes(type);
+};
+
+// 从字典表获取项目内容
+const getProjectContentsFromDB = async () => {
+  try {
+    const items = await query(
+      `SELECT di.item_name 
+       FROM dictionary_items di
+       JOIN dictionaries d ON di.dict_id = d.id
+       WHERE d.dict_code = 'project_content' AND di.status = 1 AND d.status = 1
+       ORDER BY di.sort_order ASC`
+    );
+    return items.map(item => item.item_name);
+  } catch (error) {
+    console.error('获取项目内容失败:', error);
+    return PROJECT_CONTENTS;
+  }
+};
+
+// 验证项目内容
+const validateProjectContent = async (type) => {
+  const types = await getProjectContentsFromDB();
+  return types.includes(type);
+};
+
+// 从字典表获取项目履约地点
+const getProjectCitysFromDB = async () => {
+  try {
+    const items = await query(
+      `SELECT di.item_name 
+       FROM dictionary_items di
+       JOIN dictionaries d ON di.dict_id = d.id
+       WHERE d.dict_code = 'project_city' AND di.status = 1 AND d.status = 1
+       ORDER BY di.sort_order ASC`
+    );
+    return items.map(item => item.item_name);
+  } catch (error) {
+    console.error('获取项目履约地点失败:', error);
+    return SICHUAN_CITIES;
+  }
+};
+
+// 验证项目履约地点
+const validateProjectCity = async (type) => {
+  const types = await getProjectContentsFromDB();
+  return types.includes(type);
+};
 
 // 辅助函数：格式化日期为 YYYY-MM-DD
 const formatDate = (dateValue) => {
@@ -291,20 +387,26 @@ const createProject = async (req, res) => {
       });
     }
 
-    // 验证阶段
-    if (!STAGES.includes(stage)) {
-      return res.status(400).json({
-        code: 400,
-        message: '无效的项目阶段'
-      });
+    // 验证项目阶段
+    if (stage) {
+      const isValid = await validateProjectStage(stage);
+      if (!isValid) {
+        return res.status(400).json({
+          code: 400,
+          message: '无效的项目阶段'
+        });
+      }
     }
 
     // 验证项目类型
-    if (!TYPES.includes(type)) {
-      return res.status(400).json({
-        code: 400,
-        message: '无效的项目类型'
-      });
+    if (type) {
+      const isValid = await validateProjectType(type);
+      if (!isValid) {
+        return res.status(400).json({
+          code: 400,
+          message: '无效的项目类型'
+        });
+      }
     }
 
     // 验证日期
@@ -1071,10 +1173,5 @@ module.exports = {
   importProjects,
   getDashboard,
   getFilterOptions,
-  getCityDistribution,
-  STAGES,
-  TYPES,
-  EXPANSION_METHODS,
-  CONTENTS,
-  SICHUAN_CITIES
+  getCityDistribution
 };

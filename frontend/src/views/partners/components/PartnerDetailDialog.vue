@@ -148,7 +148,7 @@ const fetchPartnerDetail = async () => {
 }
 
 // 获取资讯列表
-const fetchInformationList = async () => {
+const fetchInformationData = async () => {
   if (!props.partner?.id) return
   try {
     const res = await getInformationByPartner(props.partner.id, { limit: 50 })
@@ -163,14 +163,14 @@ const fetchInformationList = async () => {
 watch(() => props.partner?.id, (newId) => {
   if (newId && visible.value) {
     fetchPartnerDetail()
-    fetchInformationList()
+    fetchInformationData()
   }
 })
 
 watch(() => visible.value, (val) => {
   if (val && props.partner?.id) {
     fetchPartnerDetail()
-    fetchInformationList()
+    fetchInformationData()
   }
 })
 

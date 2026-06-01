@@ -7,7 +7,7 @@
 
       <el-form-item label="合作方类型" prop="type">
         <el-select v-model="form.type" placeholder="请选择合作方类型" style="width: 100%">
-          <el-option v-for="item in partnerTypes" :key="item" :label="item" :value="item" />
+          <el-option v-for="item in types" :key="item" :label="item" :value="item" />
         </el-select>
       </el-form-item>
 
@@ -104,7 +104,7 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Rank } from '@element-plus/icons-vue'
 import Sortable from 'sortablejs'
-import { createPartner, updatePartner, getPartnerById } from '@/api/partners'
+import { createPartner, updatePartner, getPartnerById, getPartnerTypes } from '@/api/partners'
 
 const props = defineProps({
   visible: Boolean,
@@ -152,8 +152,20 @@ const DEFAULT_FORM = {
 // 联系人列表
 const contacts = ref([])
 
+// 获取字典选项
+const fetchDictOptions = async () => {
+  try {
+    const [typeRes] = await Promise.all([
+      getPartnerTypes()
+    ])
+    types.value = typeRes.data || []
+  } catch (error) {
+    console.error('获取字典选项失败:', error)
+  }
+}
+
 // 合作方类型
-const partnerTypes = ['甲方', '乙方', '丙方', '其他']
+const types = ref([])
 
 // 临时ID计数器（用于拖拽的 row-key）
 let tempIdCounter = 0
@@ -361,6 +373,7 @@ const loadEditData = async () => {
 
 // 监听对话框显示
 watch(() => props.visible, (val) => {
+  fetchDictOptions()
   if (val && props.type === 'edit') {
     loadEditData()
   }

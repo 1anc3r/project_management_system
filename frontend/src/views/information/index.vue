@@ -182,7 +182,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Search, List, Timer } from '@element-plus/icons-vue'
-import { getInformationList, deleteInformation, getInformationTypes } from '@/api/information'
+import { getInformations, deleteInformation, getInformationTypes } from '@/api/information'
 import { getAllPartners } from '@/api/partners'
 import { getProjects } from '@/api/projects'
 import { formatDate, formatDateTime, getInfoTypeTag } from '@/utils/format'
@@ -246,7 +246,7 @@ const fetchData = async () => {
       sortField: searchForm.sortField || undefined,
       sortOrder: searchForm.sortOrder
     }
-    const res = await getInformationList(params)
+    const res = await getInformations(params)
     informationList.value = res.data.list || []
     pagination.total = res.data.pagination?.total || 0
   } catch (error) {

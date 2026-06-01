@@ -1,12 +1,12 @@
 import request from './request'
 
 // 获取知识库列表
-export const getKnowledgeList = (params) => {
+export const getKnowledges = (params) => {
   return request.get('/api/knowledge', { params })
 }
 
 // 获取知识详情
-export const getKnowledgeDetail = (id) => {
+export const getKnowledgeById = (id) => {
   return request.get(`/api/knowledge/${id}`)
 }
 
@@ -31,7 +31,7 @@ export const batchDeleteKnowledge = (ids) => {
 }
 
 // 获取筛选选项
-export const getKnowledgeFilters = () => {
+export const getFilterOptions = () => {
   return request.get('/api/knowledge/filters')
 }
 

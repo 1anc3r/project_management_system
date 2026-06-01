@@ -5,6 +5,7 @@
 const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
+const { PARTNER_TYPES } = require('../config/const');
 
 // 从字典表获取合作方类型
 const getPartnerTypesFromDB = async () => {
@@ -19,7 +20,7 @@ const getPartnerTypesFromDB = async () => {
     return items.map(item => item.item_name);
   } catch (error) {
     console.error('获取合作方类型失败:', error);
-    return ['甲方', '乙方', '丙方', '其他'];
+    return PARTNER_TYPES;
   }
 };
 

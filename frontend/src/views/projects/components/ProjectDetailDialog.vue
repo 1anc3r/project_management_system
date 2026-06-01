@@ -253,7 +253,7 @@ const fetchProjectDetail = async () => {
 }
 
 // 获取资讯列表
-const fetchInformationList = async () => {
+const fetchInformationData = async () => {
   if (!props.project?.id) return
   try {
     const res = await getInformationByProject(props.project.id, { limit: 50 })
@@ -271,7 +271,7 @@ watch(() => props.project?.id, (newId) => {
     informationList.value = []
     activeCollapse.value = ['information']
     fetchProjectDetail()
-    fetchInformationList()
+    fetchInformationData()
   }
 })
 
@@ -282,7 +282,7 @@ watch(() => visible.value, (val) => {
     informationList.value = []
     activeCollapse.value = ['information']
     fetchProjectDetail()
-    fetchInformationList()
+    fetchInformationData()
   }
 })
 
