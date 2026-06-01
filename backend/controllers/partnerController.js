@@ -844,6 +844,5 @@ module.exports = {
   addPartnerContact,
   updatePartnerContact,
   deletePartnerContact,
-  sortPartnerContacts,
-  getPartnerTypesFromDB
+  sortPartnerContacts
 };

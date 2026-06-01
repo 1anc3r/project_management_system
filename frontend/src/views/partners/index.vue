@@ -36,6 +36,24 @@
           </el-radio-group>
         </div>
       </div>
+
+      <!-- 筛选条件 -->
+      <div class="filter-bar">
+        <el-select v-model="searchForm.type" placeholder="合作方类型" clearable style="width: 100px">
+          <el-option v-for="item in filterOptions.types" :key="item" :label="item" :value="item" />
+        </el-select>
+        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">
+          <el-option label="项目数量" value="total_count" />
+          <el-option label="合同金额" value="total_amount" />
+          <el-option label="创建时间" value="created_at" />
+        </el-select>
+        <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 75px">
+          <el-option label="降序" value="desc" />
+          <el-option label="升序" value="asc" />
+        </el-select>
+        <el-button type="primary" plain @click="handleSearch">查询</el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
     </el-card>
 
     <!-- 列表视图 -->
@@ -177,7 +195,15 @@ const pagination = reactive({
 
 // 搜索表单
 const searchForm = reactive({
-  keyword: ''
+  keyword: '',
+  type: '',
+  sortField: '',
+  sortOrder: 'desc'
+})
+
+// 筛选选项
+const filterOptions = reactive({
+  types: []
 })
 
 // 表单对话框
@@ -212,6 +238,14 @@ const fetchData = async () => {
 const handleSearch = () => {
   pagination.page = 1
   fetchData()
+}
+
+// 重置
+const handleReset = () => {
+  Object.keys(searchForm).forEach(key => {
+    searchForm[key] = key === 'sortOrder' ? 'desc' : ''
+  })
+  handleSearch()
 }
 
 // 选择变化
@@ -328,6 +362,7 @@ onMounted(() => {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 15px;
       flex-wrap: wrap;
       gap: 10px;
 
@@ -339,6 +374,13 @@ onMounted(() => {
           }
         }
       }
+    }
+
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
   }
 

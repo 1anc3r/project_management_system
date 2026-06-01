@@ -61,7 +61,7 @@ const editorOptions = ref({
         // 文本样式
         ['bold', 'italic', 'underline', 'strike'],
         // 标题
-        [{ header: 1 }, { header: 2 }, { header: 3 }, { header: 4 }],
+        [{ header: 1 }, { header: 2 }],
         // 字体大小
         [{ size: ['small', false, 'large', 'huge'] }],
         // 颜色

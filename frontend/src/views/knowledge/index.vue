@@ -82,14 +82,14 @@
             <el-tag size="small" type="primary">{{ row.category }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="tags" label="标签" width="150">
+        <el-table-column prop="tags" label="标签" width="200">
           <template #default="{ row }">
             <el-tag v-for="tag in formatTags(row.tags)" :key="tag" size="small" class="tag-item">
               {{ tag }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="view_count" label="浏览量" width="90" align="center">
+        <!-- <el-table-column prop="view_count" label="浏览量" width="90" align="center">
           <template #default="{ row }">
             <span class="view-count">
               <el-icon>
@@ -97,7 +97,7 @@
               </el-icon> {{ row.view_count || 0 }}
             </span>
           </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column prop="created_by_name" label="创建人" width="100" align="center" />
         <el-table-column prop="created_at" label="创建时间" width="160" align="center">
           <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>

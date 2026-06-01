@@ -117,7 +117,7 @@
             <el-collapse-item name="information">
               <template #title>
                 <div class="collapse-header">
-                  <span class="collapse-title">全部资讯</span>
+                  <span class="collapse-title">最新资讯</span>
                   <el-tag type="info" size="small" class="count-tag">{{ informationList.length }} 条</el-tag>
                 </div>
               </template>
@@ -396,7 +396,7 @@ const fetchData = async () => {
 // 获取资讯列表
 const fetchInformationData = async () => {
   try {
-    const res = await getAllInformation()
+    const res = await getAllInformation({ limit: 20 })
     informationList.value = res.data || []
   } catch (error) {
     console.error('获取资讯列表失败:', error)
