@@ -39,7 +39,7 @@
 
       <!-- 筛选条件 -->
       <div class="filter-bar">
-        <el-select v-model="searchForm.type" placeholder="合作方类型" clearable style="width: 100px">
+        <el-select v-model="searchForm.type" placeholder="合作方类型" clearable style="width: 150px">
           <el-option v-for="item in filterOptions.types" :key="item" :label="item" :value="item" />
         </el-select>
         <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">

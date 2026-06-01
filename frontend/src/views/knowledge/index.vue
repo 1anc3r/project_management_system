@@ -617,7 +617,7 @@ onMounted(() => {
         line-height: 1.4;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
       }
 
@@ -629,7 +629,7 @@ onMounted(() => {
         line-height: 1.6;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 4;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
       }
 
