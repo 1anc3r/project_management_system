@@ -1,8 +1,10 @@
 /**
  * 资讯控制器
- * 处理资讯的CRUD操作
+ * 处理资讯的CRUD操作及导出
  */
 const { query, transaction } = require('../config/db');
+const xlsx = require('xlsx');
+const moment = require('moment');
 
 /**
  * 将各种日期格式统一转换为 YYYY-MM-DD 字符串
@@ -464,6 +466,129 @@ const getAllInformation = async (req, res) => {
   }
 };
 
+/**
+ * 导出资讯
+ * GET /api/information/export
+ */
+const exportInformations = async (req, res) => {
+  try {
+    const {
+      format = 'xlsx',
+      keyword,
+      informationType,
+      partnerId,
+      projectId,
+      startDate,
+      endDate
+    } = req.query;
+
+    // 构建查询条件
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+
+    if (keyword) {
+      whereClause += ` AND (i.information_title LIKE ? OR i.information_content LIKE ?)`;
+      const keywordPattern = `%${keyword}%`;
+      params.push(keywordPattern, keywordPattern);
+    }
+
+    if (informationType) {
+      whereClause += ' AND i.information_type = ?';
+      params.push(informationType);
+    }
+
+    if (partnerId) {
+      whereClause += ' AND i.partner_id = ?';
+      params.push(partnerId);
+    }
+
+    if (projectId) {
+      whereClause += ' AND i.project_id = ?';
+      params.push(projectId);
+    }
+
+    if (startDate) {
+      whereClause += ' AND i.information_date >= ?';
+      params.push(startDate);
+    }
+
+    if (endDate) {
+      whereClause += ' AND i.information_date <= ?';
+      params.push(endDate);
+    }
+
+    // 查询数据
+    const data = await query(
+      `SELECT
+        i.information_date AS '资讯日期',
+        i.information_type AS '资讯类型',
+        i.information_title AS '资讯标题',
+        i.information_content AS '资讯内容',
+        par.name AS '关联合作方',
+        proj.name AS '关联项目'
+      FROM information i
+      LEFT JOIN partners par ON i.partner_id = par.id
+      LEFT JOIN projects proj ON i.project_id = proj.id
+      ${whereClause}
+      ORDER BY i.information_date DESC, i.created_at DESC`,
+      params
+    );
+
+    if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=information_${moment().format('YYYYMMDD')}.json`);
+      return res.send(JSON.stringify(data, null, 2));
+    }
+
+    if (format === 'csv') {
+      const csv = convertToCSV(data);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=information_${moment().format('YYYYMMDD')}.csv`);
+      return res.send('\uFEFF' + csv);
+    }
+
+    // 默认导出Excel
+    const ws = xlsx.utils.json_to_sheet(data);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '资讯列表');
+
+    const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=information_${moment().format('YYYYMMDD')}.xlsx`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('导出资讯错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '导出资讯失败'
+    });
+  }
+};
+
+// 辅助函数：转换为CSV
+function convertToCSV(data) {
+  if (data.length === 0) return '';
+
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row =>
+      headers.map(header => {
+        const value = row[header];
+        if (value === null || value === undefined) return '';
+        const str = String(value);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      }).join(',')
+    )
+  ].join('\n');
+
+  return csvContent;
+}
+
 module.exports = {
   getInformations,
   getInformationById,
@@ -473,5 +598,6 @@ module.exports = {
   getInformationTypes,
   getInformationByPartner,
   getInformationByProject,
-  getAllInformation
+  getAllInformation,
+  exportInformations
 };

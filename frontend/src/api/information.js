@@ -44,3 +44,11 @@ export const getInformationByProject = (projectId, params) => {
 export const getAllInformation = (params) => {
   return request.get('/api/information/all', { params })
 }
+
+// 导出资讯
+export const exportInformations = (params) => {
+  return request.get('/api/information/export', {
+    params,
+    responseType: 'blob'
+  })
+}

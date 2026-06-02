@@ -8,6 +8,7 @@
           <el-button :icon="Edit" :disabled="!selectedRows.length" @click="handleBatchEdit">编辑</el-button>
           <el-button type="danger" :icon="Delete" :disabled="!selectedRows.length"
             @click="handleBatchDelete">删除</el-button>
+          <el-button :icon="Download" @click="handleExport">导出</el-button>
         </div>
 
         <div class="center-search">
@@ -181,11 +182,11 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Search, List, Timer } from '@element-plus/icons-vue'
-import { getInformations, deleteInformation, getInformationTypes } from '@/api/information'
+import { Plus, Edit, Delete, Search, Download, List, Timer } from '@element-plus/icons-vue'
+import { getInformations, deleteInformation, getInformationTypes, exportInformations } from '@/api/information'
 import { getAllPartners } from '@/api/partners'
 import { getProjects } from '@/api/projects'
-import { formatDate, formatDateTime, getInfoTypeTag } from '@/utils/format'
+import { formatDate, formatDateTime, getInfoTypeTag, downloadBlob } from '@/utils/format'
 import InformationFormDialog from './components/InformationFormDialog.vue'
 
 // 加载状态
@@ -358,6 +359,25 @@ const handleBatchDelete = () => {
     ElMessage.success('批量删除成功')
     fetchData()
   })
+}
+
+// 导出
+const handleExport = async () => {
+  try {
+    const response = await exportInformations({
+      format: 'xlsx',
+      keyword: searchForm.keyword || undefined,
+      informationType: searchForm.informationType || undefined,
+      partnerId: searchForm.partnerId || undefined,
+      projectId: searchForm.projectId || undefined,
+      startDate: searchForm.startDate || undefined,
+      endDate: searchForm.endDate || undefined
+    })
+    downloadBlob(response.data, `information_${new Date().getTime()}.xlsx`)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+  }
 }
 
 // 表单提交成功后的处理

@@ -37,6 +37,13 @@ router.get('/by-project/:projectId', authenticate, informationController.getInfo
 router.get('/all', authenticate, informationController.getAllInformation);
 
 /**
+ * @route   GET /api/information/export
+ * @desc    导出资讯
+ * @access  Private
+ */
+router.get('/export', authenticate, informationController.exportInformations);
+
+/**
  * @route   GET /api/information
  * @desc    获取资讯列表
  * @access  Private
