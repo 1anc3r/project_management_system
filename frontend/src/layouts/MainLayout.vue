@@ -82,17 +82,40 @@
       <!-- 顶部栏 -->
       <el-header class="header">
         <div class="header-left">
-          <el-icon 
-            class="collapse-btn"
-            @click="toggleCollapse"
-          >
+          <el-icon class="collapse-btn" @click="toggleCollapse">
             <Fold v-if="!isCollapse" />
             <Expand v-else />
           </el-icon>
         </div>
-        
-        <div class="header-left">
-          <el-input v-model="searchKeyword" placeholder="搜索项目、合作方、地点、联系人..." class="search-input" clearable
+
+        <!-- 标签页 -->
+        <div class="tabs-container">
+          <div class="tabs-wrapper" ref="tabsWrapper">
+            <div v-for="(tab, index) in tabStore.visitedViews" :key="tab.path" class="tab-item"
+              :class="{ active: tabStore.activeTab === tab.path }" @click="handleTabClick(tab)"
+              @contextmenu.prevent="handleContextMenu($event, tab, index)">
+              <span class="tab-title">{{ tab.title }}</span>
+              <el-icon v-if="tab.name !== 'Dashboard'" class="tab-close" @click.stop="handleCloseTab(tab)">
+                <Close />
+              </el-icon>
+            </div>
+          </div>
+
+          <el-dropdown @command="handleTabsCommand">
+            <el-icon class="tabs-more" size="28">
+              <ArrowDown />
+            </el-icon>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="closeOthers">关闭其他</el-dropdown-item>
+                <el-dropdown-item command="closeAll">关闭全部</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+
+        <!-- <div class="header-left">
+          <el-input v-model="searchKeyword" placeholder="搜索项目名称、合作方、履约地点、联系人……" class="search-input" clearable style="width: 600px"
             @keyup.enter="handleSearch">
             <template #prefix>
               <el-icon>
@@ -100,7 +123,7 @@
               </el-icon>
             </template>
           </el-input>
-        </div>
+        </div> -->
 
         <div class="header-right">
           <el-dropdown @command="handleCommand">
@@ -120,32 +143,6 @@
           </el-dropdown>
         </div>
       </el-header>
-
-      <!-- 标签页 -->
-      <div class="tabs-container">
-        <div class="tabs-wrapper" ref="tabsWrapper">
-          <div v-for="(tab, index) in tabStore.visitedViews" :key="tab.path" class="tab-item"
-            :class="{ active: tabStore.activeTab === tab.path }" @click="handleTabClick(tab)"
-            @contextmenu.prevent="handleContextMenu($event, tab, index)">
-            <span class="tab-title">{{ tab.title }}</span>
-            <el-icon v-if="tab.name !== 'Dashboard'" class="tab-close" @click.stop="handleCloseTab(tab)">
-              <Close />
-            </el-icon>
-          </div>
-        </div>
-
-        <el-dropdown @command="handleTabsCommand">
-          <el-icon class="tabs-more">
-            <ArrowDown />
-          </el-icon>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="closeOthers">关闭其他</el-dropdown-item>
-              <el-dropdown-item command="closeAll">关闭全部</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
 
       <!-- 主体内容 -->
       <el-main class="main-content">
@@ -462,6 +459,77 @@ const handleChangePassword = async () => {
   justify-content: space-between;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
 
+  .tabs-container {
+    background-color: #fff;
+    padding: 6px 10px;
+    // border-bottom: 1px solid #d8dce5;
+    display: flex;
+    align-items: center;
+    // box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    .tabs-wrapper {
+      flex: 1;
+      display: flex;
+      overflow-x: auto;
+
+      &::-webkit-scrollbar {
+        height: 0;
+      }
+    }
+
+    .tab-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      margin-right: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid #d8dce5;
+      background-color: #fff;
+      color: #495060;
+      border-radius: 3px;
+      transition: all 0.3s;
+      user-select: none;
+
+      &:hover {
+        background-color: #f0f0f0;
+      }
+
+      &.active {
+        background-color: #409EFF;
+        color: #fff;
+        border-color: #409EFF;
+      }
+
+      .tab-title {
+        margin-right: 6px;
+      }
+
+      .tab-close {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+
+    .tabs-more {
+      margin-left: 10px;
+      cursor: pointer;
+      padding: 5px;
+
+      &:hover {
+        color: #409EFF;
+      }
+    }
+  }
+
   .search-input {
     width: 350px;
   }
@@ -477,77 +545,6 @@ const handleChangePassword = async () => {
         margin: 0 8px;
         font-size: 14px;
       }
-    }
-  }
-}
-
-.tabs-container {
-  background-color: #fff;
-  padding: 6px 10px;
-  border-bottom: 1px solid #d8dce5;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-
-  .tabs-wrapper {
-    flex: 1;
-    display: flex;
-    overflow-x: auto;
-
-    &::-webkit-scrollbar {
-      height: 0;
-    }
-  }
-
-  .tab-item {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 14px;
-    margin-right: 5px;
-    font-size: 12px;
-    cursor: pointer;
-    border: 1px solid #d8dce5;
-    background-color: #fff;
-    color: #495060;
-    border-radius: 3px;
-    transition: all 0.3s;
-    user-select: none;
-
-    &:hover {
-      background-color: #f0f0f0;
-    }
-
-    &.active {
-      background-color: #409EFF;
-      color: #fff;
-      border-color: #409EFF;
-    }
-
-    .tab-title {
-      margin-right: 6px;
-    }
-
-    .tab-close {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.1);
-      }
-    }
-  }
-
-  .tabs-more {
-    margin-left: 10px;
-    cursor: pointer;
-    padding: 5px;
-
-    &:hover {
-      color: #409EFF;
     }
   }
 }
