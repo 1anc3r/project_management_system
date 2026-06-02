@@ -6,6 +6,7 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const { PARTNER_TYPES } = require('../config/const');
+const { convertToCSV } = require('../utils/csvHelper');
 
 // 从字典表获取合作方类型
 const getPartnerTypesFromDB = async () => {
@@ -639,29 +640,6 @@ const getAllPartners = async (req, res) => {
     });
   }
 };
-
-// 辅助函数：转换为CSV
-function convertToCSV(data) {
-  if (data.length === 0) return '';
-
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row =>
-      headers.map(header => {
-        const value = row[header];
-        if (value === null || value === undefined) return '';
-        const str = String(value);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
-    )
-  ].join('\n');
-
-  return csvContent;
-}
 
 /**
  * 获取合作方类型选项

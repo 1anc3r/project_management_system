@@ -275,6 +275,7 @@ const fetchData = async () => {
     pagination.total = res.data.pagination?.total || 0
   } catch (error) {
     console.error('获取项目列表失败:', error)
+    ElMessage.error('获取项目列表失败')
   } finally {
     loading.value = false
   }
@@ -407,6 +408,7 @@ const handleExport = async () => {
     ElMessage.success('导出成功')
   } catch (error) {
     console.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
   }
 }
 

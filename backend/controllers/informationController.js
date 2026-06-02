@@ -5,6 +5,7 @@
 const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
+const { convertToCSV } = require('../utils/csvHelper');
 
 /**
  * 将各种日期格式统一转换为 YYYY-MM-DD 字符串
@@ -565,29 +566,6 @@ const exportInformations = async (req, res) => {
     });
   }
 };
-
-// 辅助函数：转换为CSV
-function convertToCSV(data) {
-  if (data.length === 0) return '';
-
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row =>
-      headers.map(header => {
-        const value = row[header];
-        if (value === null || value === undefined) return '';
-        const str = String(value);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
-    )
-  ].join('\n');
-
-  return csvContent;
-}
 
 module.exports = {
   getInformations,

@@ -5,6 +5,7 @@
 const { query } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
+const { convertToCSV } = require('../utils/csvHelper');
 
 /**
  * 获取操作日志列表
@@ -221,29 +222,6 @@ const getFilterOptions = async (req, res) => {
     });
   }
 };
-
-// 辅助函数：转换为CSV
-function convertToCSV(data) {
-  if (data.length === 0) return '';
-  
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        if (value === null || value === undefined) return '';
-        const str = String(value);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
-    )
-  ].join('\n');
-  
-  return csvContent;
-}
 
 module.exports = {
   getLogs,

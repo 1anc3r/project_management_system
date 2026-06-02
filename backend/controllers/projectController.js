@@ -6,6 +6,8 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const fs = require('fs');
+const { convertToCSV, parseCSV } = require('../utils/csvHelper');
+const { formatDate } = require('../utils/dateHelper');
 const { PROJECT_STAGES, PROJECT_TYPES, PROJECT_EXPANSION_METHODS, PROJECT_CONTENTS, SICHUAN_CITIES } = require('../config/const');
 
 // 从字典表获取项目类型
@@ -121,22 +123,6 @@ const getProjectCitysFromDB = async () => {
 const validateProjectCity = async (type) => {
   const types = await getProjectContentsFromDB();
   return types.includes(type);
-};
-
-// 辅助函数：格式化日期为 YYYY-MM-DD
-const formatDate = (dateValue) => {
-  if (!dateValue) return null;
-  // 处理 ISO 8601 格式 (2025-08-06T16:00:00.000Z)
-  if (typeof dateValue === 'string' && dateValue.includes('T')) {
-    return dateValue.split('T')[0];
-  }
-  // 如果已经是 YYYY-MM-DD 格式，直接返回
-  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-    return dateValue;
-  }
-  // 使用 moment 格式化
-  const formatted = moment(dateValue).format('YYYY-MM-DD');
-  return formatted === 'Invalid date' ? null : formatted;
 };
 
 /**
@@ -1088,80 +1074,6 @@ const getFilterOptions = async (req, res) => {
     });
   }
 };
-
-// 辅助函数：解析CSV
-function parseCSV(content) {
-  const lines = content.trim().split('\n');
-  if (lines.length === 0) return [];
-  
-  const headers = lines[0].split(',').map(h => h.trim());
-  const result = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const values = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (const char of lines[i]) {
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.trim());
-    
-    const row = {};
-    headers.forEach((header, index) => {
-      row[header] = values[index] || '';
-    });
-    result.push(row);
-  }
-  
-  return result;
-}
-
-// 辅助函数：转换为CSV
-function convertToCSV(data) {
-  if (data.length === 0) return '';
-  
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        if (value === null || value === undefined) return '';
-        const str = String(value);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
-    )
-  ].join('\n');
-  
-  return csvContent;
-}
-
-// 辅助函数：解析CSV
-function parseCSV(content) {
-  const lines = content.split('\n').filter(line => line.trim());
-  if (lines.length < 2) return [];
-  
-  const headers = lines[0].split(',').map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const values = line.split(',').map(v => v.trim());
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = values[index] || '';
-    });
-    return obj;
-  });
-}
 
 module.exports = {
   getProjects,

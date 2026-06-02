@@ -7,6 +7,7 @@ const xlsx = require('xlsx');
 const moment = require('moment');
 const fs = require('fs');
 const path = require('path');
+const { convertToCSV, parseCSV } = require('../utils/csvHelper');
 
 /**
  * 去除HTML标签，获取纯文本
@@ -892,66 +893,6 @@ const recordView = async (req, res) => {
     });
   }
 };
-
-// 辅助函数：转换为CSV
-function convertToCSV(data) {
-  if (data.length === 0) return '';
-  
-  const headers = Object.keys(data[0]);
-  const rows = data.map(row => {
-    return headers.map(header => {
-      const value = row[header];
-      if (value === null || value === undefined) return '';
-      const str = String(value);
-      // 如果包含逗号、引号或换行符，用引号包裹
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }).join(',');
-  });
-  
-  return [headers.join(','), ...rows].join('\n');
-}
-
-// 辅助函数：解析CSV
-function parseCSV(content) {
-  const lines = content.trim().split('\n');
-  if (lines.length === 0) return [];
-  
-  const headers = lines[0].split(',').map(h => h.trim());
-  const result = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const values = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (const char of lines[i]) {
-      if (char === '"') {
-        if (inQuotes && lines[i][lines[i].indexOf(char) + 1] === '"') {
-          current += '"';
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.trim());
-    
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = values[index] || '';
-    });
-    result.push(obj);
-  }
-  
-  return result;
-}
 
 module.exports = {
   getKnowledges,

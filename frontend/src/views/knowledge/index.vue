@@ -454,6 +454,7 @@ const handleExport = async () => {
     ElMessage.success('导出成功')
   } catch (error) {
     console.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
   }
 }
 
