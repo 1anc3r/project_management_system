@@ -92,7 +92,7 @@
               <el-tag type="info" size="small">点击饼图查看详情</el-tag>
             </div>
           </template>
-          <v-chart class="chart" :option="projStageChartOption" autoresize @click="handleStageClick" />
+          <v-chart class="chart" :option="projStageChartOption" autoresize @click="handleProjStageClick" />
         </el-card>
       </el-col>
 
@@ -104,7 +104,7 @@
               <el-tag type="info" size="small">点击饼图查看详情</el-tag>
             </div>
           </template>
-          <v-chart class="chart" :option="projTypeChartOption" autoresize @click="handleTypeClick" />
+          <v-chart class="chart" :option="projTypeChartOption" autoresize @click="handleProjTypeClick" />
         </el-card>
       </el-col>
     </el-row>
@@ -130,7 +130,10 @@
           <template #header>
             <div class="card-header">
               <span>资讯时间线热力图</span>
-              <el-tag type="info" size="small">近一年</el-tag>
+              <el-radio-group v-model="infoTimeingType" size="small">
+                <el-radio-button label="three_month">近三个月</el-radio-button>
+                <el-radio-button label="one_year">近一年</el-radio-button>
+              </el-radio-group>
             </div>
           </template>
           <v-chart class="chart heatmap-chart" :option="infoHeatmapChartOption" autoresize />
@@ -257,6 +260,7 @@ const infoHeatmap = ref([])
 const partnerRanking = ref([])
 const projectRanking = ref([])
 const infoRankingType = ref('partner')
+const infoTimeingType = ref('three_month')
 
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
@@ -494,10 +498,12 @@ const infoTypeChartOption = computed(() => ({
 
 // 资讯时间线热力图配置
 const infoHeatmapChartOption = computed(() => {
+  const day = (infoTimeingType.value === 'three_month' ? 90 : 365)
+
   // 计算日期范围
   const endDate = new Date()
   const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 365)
+  startDate.setDate(startDate.getDate() - day)
 
   const startStr = startDate.toISOString().split('T')[0]
   const endStr = endDate.toISOString().split('T')[0]
@@ -653,7 +659,7 @@ const fetchInformationList = async () => {
 }
 
 // 点击饼图
-const handleStageClick = (params) => {
+const handleProjStageClick = (params) => {
   router.push({
     path: '/projects',
     query: { stage: params.name }
@@ -661,7 +667,7 @@ const handleStageClick = (params) => {
 }
 
 // 点击项目类型图表
-const handleTypeClick = (params) => {
+const handleProjTypeClick = (params) => {
   router.push({
     path: '/projects',
     query: { type: params.name }
