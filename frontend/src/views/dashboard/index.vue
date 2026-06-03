@@ -84,7 +84,7 @@
 
     <!-- 图表区域 -->
     <el-row :gutter="20" class="proj-stats-row">
-      <el-col :xs="24" :lg="12">
+      <el-col :xs="24" :lg="8">
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
@@ -96,7 +96,7 @@
         </el-card>
       </el-col>
 
-      <el-col :xs="24" :lg="12">
+      <el-col :xs="24" :lg="8">
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
@@ -105,6 +105,17 @@
             </div>
           </template>
           <v-chart class="chart" :option="projTypeChartOption" autoresize @click="handleProjTypeClick" />
+        </el-card>
+      </el-col>
+
+      <el-col :xs="24" :lg="8">
+        <el-card class="chart-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <span>合同金额趋势</span>
+            </div>
+          </template>
+          <v-chart class="chart" :option="projTrendChartOption" autoresize />
         </el-card>
       </el-col>
     </el-row>
@@ -826,7 +837,6 @@ onMounted(() => {
         align-items: center;
         justify-content: space-between;
         font-weight: 600;
-        font-size: 14px;
       }
 
       .chart {
