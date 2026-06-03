@@ -256,8 +256,9 @@
               {{ formatFileSize(row.file_size) }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100" align="center">
+          <el-table-column label="操作" width="150" align="center">
             <template #default="{ row, $index }">
+              <el-button link type="primary" size="small" @click="openPreview(row)">预览</el-button>
               <el-button link type="primary" size="small" @click="handleDownload(row)">下载</el-button>
               <el-button link type="danger" size="small" @click="handleDeleteAttachment(row)">删除</el-button>
             </template>
@@ -276,6 +277,9 @@
   <!-- 编辑合作方对话框 -->
   <PartnerFormDialog v-model:visible="partnerDialogVisible" :type="partnerDialogType" :data="partnerDialogData"
     @success="handlePartnerDialogSuccess" />
+
+  <!-- 附件预览对话框 -->
+  <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
 </template>
 
 <script setup>
@@ -288,6 +292,7 @@ import { downloadAttachment, uploadAttachment, deleteAttachment, updateAttachmen
 import { getDictionaryByCode } from '@/api/dictionaries'
 import { formatFileSize, downloadBlob } from '@/utils/format'
 import PartnerFormDialog from '../../partners/components/PartnerFormDialog.vue'
+import AttachmentPreviewDialog from '@/components/AttachmentPreviewDialog.vue'
 
 const props = defineProps({
   visible: Boolean,
@@ -359,6 +364,10 @@ const fileList = ref([])
 const existingAttachments = ref([])
 const newFiles = ref([])
 const attachmentTypeOptions = ref([])
+
+// 附件预览状态
+const previewVisible = ref(false)
+const previewAttachment = ref(null)
 
 // 选项（从字典获取）
 const stages = ref([])
@@ -487,6 +496,14 @@ const handleDeletePayment = (index) => {
 // 文件上传（同步维护 newFiles 列表）
 const handleFileChange = (file) => {
   newFiles.value.push(file.raw)
+}
+
+/**
+ * 打开附件预览对话框
+ */
+const openPreview = (att) => {
+  previewAttachment.value = att
+  previewVisible.value = true
 }
 
 // 文件下载

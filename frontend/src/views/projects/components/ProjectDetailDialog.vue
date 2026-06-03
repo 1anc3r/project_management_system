@@ -188,8 +188,8 @@
       </div>
     </div>
 
-      <!-- 附件预览对话框 -->
-      <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
+    <!-- 附件预览对话框 -->
+    <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
 
     <template #footer>
       <el-button @click="handleClose">

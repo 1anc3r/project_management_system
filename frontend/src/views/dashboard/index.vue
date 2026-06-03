@@ -230,7 +230,7 @@ import {
   TooltipComponent,
   LegendComponent,
   GridComponent,
-  ToolboxComponent,  
+  ToolboxComponent,
   CalendarComponent,
   VisualMapComponent
 } from 'echarts/components'
@@ -252,7 +252,7 @@ use([
   TooltipComponent,
   LegendComponent,
   GridComponent,
-  ToolboxComponent,  
+  ToolboxComponent,
   CalendarComponent,
   VisualMapComponent
 ])
