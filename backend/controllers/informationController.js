@@ -567,6 +567,94 @@ const exportInformations = async (req, res) => {
   }
 };
 
+/**
+ * 获取资讯统计数据
+ * GET /api/information/stats
+ */
+const getInformationStats = async (req, res) => {
+  try {
+    // 1. 资讯类型分布
+    const typeDistribution = await query(
+      `SELECT
+        information_type as type,
+        COUNT(*) as count
+      FROM information
+      GROUP BY information_type
+      ORDER BY count DESC`
+    );
+
+    // 2. 日期热力图数据（最近365天）
+    const dateHeatmap = await query(
+      `SELECT
+        information_date as date,
+        COUNT(*) as count
+      FROM information
+      WHERE information_date >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)
+      GROUP BY information_date
+      ORDER BY information_date ASC`
+    );
+
+    // 3. 合作方活跃度排名 Top 10
+    const partnerRanking = await query(
+      `SELECT
+        par.id,
+        par.name,
+        COUNT(*) as count
+      FROM information i
+      LEFT JOIN partners par ON i.partner_id = par.id
+      WHERE i.partner_id IS NOT NULL
+      GROUP BY i.partner_id, par.id, par.name
+      ORDER BY count DESC
+      LIMIT 10`
+    );
+
+    // 4. 项目活跃度排名 Top 10
+    const projectRanking = await query(
+      `SELECT
+        proj.id,
+        proj.name,
+        COUNT(*) as count
+      FROM information i
+      LEFT JOIN projects proj ON i.project_id = proj.id
+      WHERE i.project_id IS NOT NULL
+      GROUP BY i.project_id, proj.id, proj.name
+      ORDER BY count DESC
+      LIMIT 10`
+    );
+
+    // 5. 资讯总数
+    const totalResult = await query(
+      `SELECT COUNT(*) as total FROM information`
+    );
+
+    // 6. 时间范围
+    const dateRangeResult = await query(
+      `SELECT
+        MIN(information_date) as earliest_date,
+        MAX(information_date) as latest_date
+      FROM information`
+    );
+
+    res.json({
+      code: 200,
+      data: {
+        total: totalResult[0].total,
+        dateRange: dateRangeResult[0],
+        typeDistribution,
+        dateHeatmap,
+        partnerRanking,
+        projectRanking
+      }
+    });
+  } catch (error) {
+    console.error('获取资讯统计错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取资讯统计失败'
+    });
+  }
+};
+
 module.exports = {
   getInformations,
   getInformationById,
@@ -577,5 +665,6 @@ module.exports = {
   getInformationByPartner,
   getInformationByProject,
   getAllInformation,
-  exportInformations
+  exportInformations,
+  getInformationStats
 };

@@ -44,6 +44,13 @@ router.get('/all', authenticate, informationController.getAllInformation);
 router.get('/export', authenticate, informationController.exportInformations);
 
 /**
+ * @route   GET /api/information/stats
+ * @desc    获取资讯统计数据
+ * @access  Private
+ */
+router.get('/stats', authenticate, informationController.getInformationStats);
+
+/**
  * @route   GET /api/information
  * @desc    获取资讯列表
  * @access  Private

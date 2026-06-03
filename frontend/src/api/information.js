@@ -52,3 +52,8 @@ export const exportInformations = (params) => {
     responseType: 'blob'
   })
 }
+
+// 获取资讯统计数据
+export const getInformationStats = () => {
+  return request.get('/api/information/stats')
+}
