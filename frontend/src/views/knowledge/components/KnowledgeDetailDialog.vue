@@ -39,28 +39,21 @@
           附件 ({{ detailData.attachments.length }})
         </el-divider>
 
-        <!-- 普通附件列表 -->
-        <div class="attachment-list" v-if="attachments.length > 0">
-          <div v-for="att in attachments" :key="att.id" class="attachment-item">
-            <el-icon class="att-icon">
-              <Document />
-            </el-icon>
-            <span class="att-name" :title="att.file_name">{{ att.file_name }}</span>
-            <span class="att-size">{{ att.fileSizeText || formatFileSize(att.file_size) }}</span>
-            <div class="att-actions">
-              <el-button v-if="isPreviewable(att.file_name)" link type="primary" size="small"
-                @click="openPreview(att)">
-                <el-icon>
-                  <View />
-                </el-icon> 预览
-              </el-button>
-              <el-button link type="primary" size="small" @click="downloadAttachment(att.id)">
-                <el-icon>
-                  <Download />
-                </el-icon> 下载
-              </el-button>
-            </div>
-          </div>
+        <!-- 附件列表 -->
+        <div class="section">
+          <el-table v-if="attachments?.length" :data="attachments" border size="small">
+            <el-table-column prop="file_name" label="文件名" min-width="250" show-overflow-tooltip />
+            <el-table-column prop="file_size" label="大小" width="100">
+              <template #default="{ row }">{{ formatFileSize(row.file_size) }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" align="center">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small" @click="openPreview(row)">预览</el-button>
+                <el-button link type="primary" size="small" @click="handleDownload(row)">下载</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-else description="暂无附件" />
         </div>
       </div>
 
@@ -160,7 +153,6 @@ const attachments = computed(() => {
 const openPreview = (att) => {
   previewAttachment.value = att
   previewVisible.value = true
-  console.error('openPreview:'+att.type)
 }
 
 // 获取详情

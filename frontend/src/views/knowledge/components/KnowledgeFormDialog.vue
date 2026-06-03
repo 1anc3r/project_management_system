@@ -29,7 +29,7 @@
       <el-form-item label="附件">
         <el-upload ref="uploadRef" action="/api/attachments" :headers="uploadHeaders" :data="uploadData"
           :on-success="handleUploadSuccess" :on-error="handleUploadError" :on-remove="handleRemoveFile"
-          :before-upload="beforeUpload" :file-list="fileList" multiple drag>
+          :before-upload="beforeUpload" :file-list="fileList" multiple drag class="uploader">
           <el-icon class="el-icon--upload">
             <Upload />
           </el-icon>
@@ -321,6 +321,10 @@ watch(() => props.visible, (val) => {
       font-size: 12px;
       color: #909399;
       margin-left: 8px;
+    }
+
+    .uploader {
+      width: 100vw;
     }
 
     .attachment-list {

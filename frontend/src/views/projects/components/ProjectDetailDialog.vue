@@ -129,7 +129,7 @@
         </div>
         <el-table v-if="projectData.attachments?.length" :data="projectData.attachments" border size="small">
           <el-table-column prop="file_name" label="文件名" min-width="250" show-overflow-tooltip />
-          <el-table-column prop="attachment_type" label="类型" width="160">
+          <el-table-column prop="attachment_type" label="类型" width="120">
             <template #default="{ row }">
               <el-tag size="small" type="info">{{ row.attachment_type || '其他' }}</el-tag>
             </template>
@@ -137,11 +137,12 @@
           <el-table-column prop="file_size" label="大小" width="100">
             <template #default="{ row }">{{ formatFileSize(row.file_size) }}</template>
           </el-table-column>
-          <el-table-column prop="created_at" label="上传时间" width="160">
+          <el-table-column prop="created_at" label="上传时间" width="120">
             <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="80" align="center">
+          <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
+              <el-button link type="primary" size="small" @click="openPreview(row)">预览</el-button>
               <el-button link type="primary" size="small" @click="handleDownload(row)">下载</el-button>
             </template>
           </el-table-column>
@@ -187,6 +188,9 @@
       </div>
     </div>
 
+      <!-- 附件预览对话框 -->
+      <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
+
     <template #footer>
       <el-button @click="handleClose">
         <el-icon>
@@ -206,6 +210,7 @@ import { getProjectById } from '@/api/projects'
 import { getInformationByProject } from '@/api/information'
 import { downloadAttachment } from '@/api/attachments'
 import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob, getProjectTypeTag, getProjectStageTag, getInfoTypeTag } from '@/utils/format'
+import AttachmentPreviewDialog from '@/components/AttachmentPreviewDialog.vue'
 
 const props = defineProps({
   modelValue: {
@@ -236,6 +241,10 @@ const informationList = ref([])
 
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
+
+// 附件预览状态
+const previewVisible = ref(false)
+const previewAttachment = ref(null)
 
 // 获取项目详情
 const fetchProjectDetail = async () => {
@@ -285,6 +294,14 @@ watch(() => visible.value, (val) => {
     fetchInformationData()
   }
 })
+
+/**
+ * 打开附件预览对话框
+ */
+const openPreview = (att) => {
+  previewAttachment.value = att
+  previewVisible.value = true
+}
 
 // 下载附件
 const handleDownload = async (row) => {
