@@ -1,7 +1,7 @@
 import request from './request'
 
 // 获取数据概览
-export const getDashboard = () => {
+export const getProjectStats = () => {
   return request.get('/api/projects/dashboard')
 }
 

@@ -14,7 +14,7 @@ const { createLogMiddleware } = require('../middleware/logger');
  * @desc    获取数据概览
  * @access  Private
  */
-router.get('/dashboard', authenticate, projectController.getDashboard);
+router.get('/dashboard', authenticate, projectController.getProjectStats);
 
 /**
  * @route   GET /api/projects/city-distribution

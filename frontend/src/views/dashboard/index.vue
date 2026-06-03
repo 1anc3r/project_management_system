@@ -175,7 +175,7 @@ import {
 } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { Folder, Money, DocumentChecked, Document, User } from '@element-plus/icons-vue'
-import { getDashboard } from '@/api/projects'
+import { getProjectStats } from '@/api/projects'
 import { getAllInformation } from '@/api/information'
 import { formatAmount, formatDate, getInfoTypeTag, getProjectStageColor, getProjectTypeColor } from '@/utils/format'
 import TiandituMap from './components/TiandituMap.vue'
@@ -380,10 +380,10 @@ const typeChartOption = computed(() => ({
 }))
 
 // 获取数据
-const fetchData = async () => {
+const fetchProjectStats = async () => {
   try {
     const params = {}
-    const res = await getDashboard(params)
+    const res = await getProjectStats(params)
     stats.value = res.data.stats || {}
     stageDistribution.value = res.data.stageDistribution || []
     receiptTrend.value = res.data.receiptTrend || []
@@ -394,7 +394,7 @@ const fetchData = async () => {
 }
 
 // 获取资讯列表
-const fetchInformationData = async () => {
+const fetchInformationList = async () => {
   try {
     const res = await getAllInformation({ limit: 20 })
     informationList.value = res.data || []
@@ -421,8 +421,8 @@ const handleTypeClick = (params) => {
 }
 
 onMounted(() => {
-  fetchData()
-  fetchInformationData()
+  fetchProjectStats()
+  fetchInformationList()
 })
 </script>
 

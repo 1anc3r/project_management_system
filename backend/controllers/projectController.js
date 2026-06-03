@@ -851,7 +851,7 @@ const importProjects = async (req, res) => {
  * 获取数据概览
  * GET /api/projects/dashboard
  */
-const getDashboard = async (req, res) => {
+const getProjectStats = async (req, res) => {
   try {
     const user = req.user;
     const { type } = req.query;
@@ -1083,7 +1083,7 @@ module.exports = {
   deleteProject,
   exportProjects,
   importProjects,
-  getDashboard,
+  getProjectStats,
   getFilterOptions,
   getCityDistribution
 };
