@@ -38,6 +38,16 @@ export const deleteAttachment = (id) => {
   return request.delete(`/api/attachments/${id}`)
 }
 
+// 获取通用文件预览 URL
+export const getFileViewUrl = (id) => {
+  return `/api/attachments/${id}/view`
+}
+
+// 获取文本文件内容
+export const getFileContent = (id) => {
+  return request.get(`/api/attachments/${id}/content`)
+}
+
 // 下载附件
 export const downloadAttachment = (id) => {
   return request.get(`/api/attachments/${id}/download`, {
@@ -48,4 +58,33 @@ export const downloadAttachment = (id) => {
 // 更新附件类型
 export const updateAttachment = (id, data) => {
   return request.put(`/api/attachments/${id}`, data)
+}
+
+/**
+ * 获取附件预览类型
+ * @param {string} filename - 文件名
+ * @returns {string|null} image | pdf | text | office | null
+ */
+export const getPreviewType = (filename) => {
+  if (!filename) return null
+  const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase()
+  const previewMap = {
+    image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
+    pdf: ['.pdf'],
+    text: ['.txt', '.csv', '.json', '.md', '.log', '.xml', '.css', '.js', '.html', '.htm', '.yaml', '.yml', '.sql'],
+    office: ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx']
+  }
+  for (const [type, exts] of Object.entries(previewMap)) {
+    if (exts.includes(ext)) return type
+  }
+  return null
+}
+
+/**
+ * 判断附件是否可预览
+ * @param {string} filename - 文件名
+ * @returns {boolean}
+ */
+export const isPreviewable = (filename) => {
+  return getPreviewType(filename) !== null
 }

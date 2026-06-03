@@ -18,6 +18,48 @@ const isImageFile = (filename) => {
   return IMAGE_EXTENSIONS.includes(ext);
 };
 
+/**
+ * 可预览的文件扩展名分类
+ */
+const PREVIEWABLE_EXTENSIONS = {
+  image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
+  pdf: ['.pdf'],
+  text: ['.txt', '.csv', '.json', '.md', '.log', '.xml', '.css', '.js', '.html', '.htm', '.yaml', '.yml', '.sql'],
+  office: ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx']
+};
+
+/**
+ * 判断文件预览类型
+ * @param {string} filename - 文件名
+ * @returns {string|null} 预览类型或null
+ */
+const getPreviewType = (filename) => {
+  const ext = path.extname(filename).toLowerCase();
+  for (const [type, exts] of Object.entries(PREVIEWABLE_EXTENSIONS)) {
+    if (exts.includes(ext)) return type;
+  }
+  return null;
+};
+
+/**
+ * 文本文件 MIME 类型映射
+ */
+const TEXT_MIME_TYPES = {
+  '.txt': 'text/plain; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
+  '.log': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.htm': 'text/html; charset=utf-8',
+  '.yaml': 'text/yaml; charset=utf-8',
+  '.yml': 'text/yaml; charset=utf-8',
+  '.sql': 'text/plain; charset=utf-8'
+};
+
 // 从字典表获取附件类型
 const getAttachmentTypesFromDB = async () => {
   try {
@@ -334,6 +376,158 @@ const getAttachmentsByKnowledge = async (req, res) => {
 };
 
 /**
+ * 通用文件预览
+ * GET /api/attachments/:id/view
+ * 根据文件类型设置正确的 Content-Type，让浏览器内联显示
+ */
+const previewFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const attachments = await query(
+      'SELECT file_path, file_name FROM attachments WHERE id = ?',
+      [id]
+    );
+
+    if (attachments.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: '附件不存在'
+      });
+    }
+
+    const attachment = attachments[0];
+    const filePath = path.join(__dirname, '..', 'uploads', attachment.file_path);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        code: 404,
+        message: '文件不存在'
+      });
+    }
+
+    const previewType = getPreviewType(attachment.file_name);
+    const ext = path.extname(attachment.file_name).toLowerCase();
+
+    if (!previewType) {
+      return res.status(400).json({
+        code: 400,
+        message: '该文件类型暂不支持预览'
+      });
+    }
+
+    // 根据不同类型设置 Content-Type
+    let contentType = 'application/octet-stream';
+    if (previewType === 'image') {
+      const mimeTypes = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.bmp': 'image/bmp',
+        '.webp': 'image/webp'
+      };
+      contentType = mimeTypes[ext] || 'image/jpeg';
+    } else if (previewType === 'pdf') {
+      contentType = 'application/pdf';
+    } else if (previewType === 'text') {
+      contentType = TEXT_MIME_TYPES[ext] || 'text/plain; charset=utf-8';
+    } else if (previewType === 'office') {
+      const officeMimeTypes = {
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.ppt': 'application/vnd.ms-powerpoint',
+        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      };
+      contentType = officeMimeTypes[ext] || 'application/octet-stream';
+    }
+
+    // 设置内联显示头（inline 表示浏览器尝试内联展示，而非下载）
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.file_name)}"`);
+
+    // 发送文件
+    res.sendFile(path.resolve(filePath));
+  } catch (error) {
+    console.error('文件预览错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '文件预览失败'
+    });
+  }
+};
+
+/**
+ * 获取文本文件内容
+ * GET /api/attachments/:id/content
+ */
+const getFileContent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const attachments = await query(
+      'SELECT file_path, file_name FROM attachments WHERE id = ?',
+      [id]
+    );
+
+    if (attachments.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: '附件不存在'
+      });
+    }
+
+    const attachment = attachments[0];
+    const previewType = getPreviewType(attachment.file_name);
+
+    if (previewType !== 'text') {
+      return res.status(400).json({
+        code: 400,
+        message: '仅文本文件支持读取内容'
+      });
+    }
+
+    const filePath = path.join(__dirname, '..', 'uploads', attachment.file_path);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        code: 404,
+        message: '文件不存在'
+      });
+    }
+
+    // 读取文件内容（限制最大 2MB）
+    const stats = fs.statSync(filePath);
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (stats.size > maxSize) {
+      return res.status(400).json({
+        code: 400,
+        message: '文件过大，仅支持预览 2MB 以内的文本文件'
+      });
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    res.json({
+      code: 200,
+      data: {
+        file_name: attachment.file_name,
+        file_size: stats.size,
+        content: content
+      }
+    });
+  } catch (error) {
+    console.error('获取文件内容错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取文件内容失败'
+    });
+  }
+};
+
+/**
  * 下载附件
  * GET /api/attachments/:id/download
  */
@@ -499,6 +693,8 @@ module.exports = {
   uploadAttachment,
   uploadImage,
   previewImage,
+  previewFile,
+  getFileContent,
   getAttachmentsByProject,
   getAttachmentsByKnowledge,
   downloadAttachment,

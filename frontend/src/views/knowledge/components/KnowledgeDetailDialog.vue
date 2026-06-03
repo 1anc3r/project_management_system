@@ -37,50 +37,35 @@
       <div class="detail-attachments" v-if="detailData?.attachments?.length > 0">
         <el-divider content-position="left">
           附件 ({{ detailData.attachments.length }})
-          <span v-if="imageAttachments.length > 0" class="attachment-stat">
-            含 {{ imageAttachments.length }} 个图片
-          </span>
         </el-divider>
 
-        <!-- 图片附件预览区域 -->
-        <div class="image-gallery" v-if="imageAttachments.length > 0">
-          <div v-for="img in imageAttachments" :key="img.id" class="image-preview-item" @click="openImagePreview(img)">
-            <el-image :src="getAttachmentImageUrl(img)" :preview-src-list="imagePreviewList"
-              :initial-index="getImagePreviewIndex(img)" fit="cover" class="gallery-thumbnail" @click.stop>
-              <template #error>
-                <div class="image-error">
-                  <el-icon>
-                    <Picture />
-                  </el-icon>
-                  <span>加载失败</span>
-                </div>
-              </template>
-            </el-image>
-            <div class="image-overlay">
-              <el-icon>
-                <ZoomIn />
-              </el-icon>
-            </div>
-            <span class="image-name" :title="img.file_name">{{ img.file_name }}</span>
-          </div>
-        </div>
-
         <!-- 普通附件列表 -->
-        <div class="attachment-list">
-          <div v-for="att in nonImageAttachments" :key="att.id" class="attachment-item">
+        <div class="attachment-list" v-if="attachments.length > 0">
+          <div v-for="att in attachments" :key="att.id" class="attachment-item">
             <el-icon class="att-icon">
               <Document />
             </el-icon>
             <span class="att-name" :title="att.file_name">{{ att.file_name }}</span>
             <span class="att-size">{{ att.fileSizeText || formatFileSize(att.file_size) }}</span>
-            <el-button link type="primary" size="small" @click="downloadAttachment(att.id)">
-              <el-icon>
-                <Download />
-              </el-icon> 下载
-            </el-button>
+            <div class="att-actions">
+              <el-button v-if="isPreviewable(att.file_name)" link type="primary" size="small"
+                @click="openPreview(att)">
+                <el-icon>
+                  <View />
+                </el-icon> 预览
+              </el-button>
+              <el-button link type="primary" size="small" @click="downloadAttachment(att.id)">
+                <el-icon>
+                  <Download />
+                </el-icon> 下载
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- 附件预览对话框 -->
+      <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
 
       <!-- 底部操作 -->
       <div class="detail-footer" v-if="detailData">
@@ -111,7 +96,9 @@ import {
 import { useUserStore } from '@/stores/user'
 import { getKnowledgeById, deleteKnowledge, recordView } from '@/api/knowledge'
 import { formatDateTime, injectImageToken } from '@/utils/format'
+import { isPreviewable } from '@/api/attachments'
 import RichTextEditor from '@/components/RichTextEditor.vue'
+import AttachmentPreviewDialog from '@/components/AttachmentPreviewDialog.vue'
 
 const props = defineProps({
   visible: Boolean,
@@ -132,6 +119,10 @@ const loading = ref(false)
 
 // 详情数据
 const detailData = ref(null)
+
+// 附件预览状态
+const previewVisible = ref(false)
+const previewAttachment = ref(null)
 
 // 对话框标题
 const dialogTitle = computed(() => {
@@ -157,57 +148,19 @@ const canEdit = computed(() => {
   return detailData.value.created_by === userInfo.id
 })
 
-// 图片文件扩展名
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
-
-/**
- * 判断附件是否为图片
- */
-const isImageAttachment = (att) => {
-  if (!att.file_name) return false
-  const ext = att.file_name.slice(att.file_name.lastIndexOf('.')).toLowerCase()
-  return IMAGE_EXTENSIONS.includes(ext)
-}
-
-// 图片附件列表
-const imageAttachments = computed(() => {
-  if (!detailData.value?.attachments) return []
-  return detailData.value.attachments.filter(isImageAttachment)
-})
-
 // 非图片附件列表
-const nonImageAttachments = computed(() => {
+const attachments = computed(() => {
   if (!detailData.value?.attachments) return []
-  return detailData.value.attachments.filter(att => !isImageAttachment(att))
-})
-
-// 图片预览列表（用于 el-image 的 preview-src-list）
-const imagePreviewList = computed(() => {
-  return imageAttachments.value.map(img => getAttachmentImageUrl(img))
+  return detailData.value.attachments.filter(att => att)
 })
 
 /**
- * 获取附件图片的完整URL
+ * 打开附件预览对话框
  */
-const getAttachmentImageUrl = (att) => {
-  const token = userStore.token
-  // 使用附件ID获取预览URL
-  return `/api/attachments/${att.id}/preview?token=${token}`
-}
-
-/**
- * 获取图片在预览列表中的索引
- */
-const getImagePreviewIndex = (img) => {
-  return imageAttachments.value.findIndex(item => item.id === img.id)
-}
-
-/**
- * 打开图片预览（通过 el-image 的点击事件自动处理）
- */
-const openImagePreview = (img) => {
-  // el-image 组件内置了预览功能，点击后自动打开
-  // 此方法保留用于可能的扩展
+const openPreview = (att) => {
+  previewAttachment.value = att
+  previewVisible.value = true
+  console.error('openPreview:'+att.type)
 }
 
 // 获取详情
@@ -472,6 +425,13 @@ watch(() => props.visible, (val) => {
             flex-shrink: 0;
             min-width: 60px;
             text-align: right;
+          }
+
+          .att-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
           }
         }
       }

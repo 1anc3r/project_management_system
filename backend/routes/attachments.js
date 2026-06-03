@@ -49,6 +49,20 @@ router.post('/image',
 router.get('/:id/preview', authenticate, attachmentController.previewImage);
 
 /**
+ * @route   GET /api/attachments/:id/view
+ * @desc    通用文件预览（设置正确 Content-Type 供浏览器内联显示）
+ * @access  Private
+ */
+router.get('/:id/view', authenticate, attachmentController.previewFile);
+
+/**
+ * @route   GET /api/attachments/:id/content
+ * @desc    获取文本文件内容
+ * @access  Private
+ */
+router.get('/:id/content', authenticate, attachmentController.getFileContent);
+
+/**
  * @route   POST /api/attachments
  * @desc    上传附件
  * @access  Private
