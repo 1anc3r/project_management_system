@@ -284,7 +284,7 @@ const PROJ_TYPE_COLORS = {
 // 资讯类型颜色映射
 const INFO_TYPE_COLORS = {
   '项目实施': '#409EFF',
-  '拜访客户': '#E6A23C',
+  '客户交流': '#E6A23C',
   '会议活动': '#F56C6C',
   '其他': '#909399'
 }

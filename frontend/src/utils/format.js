@@ -164,7 +164,7 @@ export const getPartnerTypeTag = (type) => {
 export const getInfoTypeTag = (type) => {
   const typeMap = {
     '项目实施': 'primary',
-    '拜访客户': 'warning',
+    '客户交流': 'warning',
     '会议活动': 'danger'
   }
   return typeMap[type] || 'info'
