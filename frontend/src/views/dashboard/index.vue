@@ -143,7 +143,7 @@
           <template #header>
             <div class="card-header">
               <span>资讯活跃度排名</span>
-              <el-radio-group v-model="rankingType" size="small">
+              <el-radio-group v-model="infoRankingType" size="small">
                 <el-radio-button label="partner">合作方</el-radio-button>
                 <el-radio-button label="project">项目</el-radio-button>
               </el-radio-group>
@@ -256,7 +256,7 @@ const infoTypeDistribution = ref([])
 const infoHeatmap = ref([])
 const partnerRanking = ref([])
 const projectRanking = ref([])
-const rankingType = ref('partner')
+const infoRankingType = ref('partner')
 
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
@@ -561,8 +561,8 @@ const infoHeatmapChartOption = computed(() => {
 
 // 活跃度排名图表配置
 const infoRankingChartOption = computed(() => {
-  const data = rankingType.value === 'partner' ? partnerRanking.value : projectRanking.value
-  const labelName = rankingType.value === 'partner' ? '合作方' : '项目'
+  const data = infoRankingType.value === 'partner' ? partnerRanking.value : projectRanking.value
+  const labelName = infoRankingType.value === 'partner' ? '合作方' : '项目'
 
   return {
     tooltip: {
@@ -599,7 +599,7 @@ const infoRankingChartOption = computed(() => {
         type: 'bar',
         data: data.map(item => item.count).reverse(),
         itemStyle: {
-          color: rankingType.value === 'partner' ? '#409EFF' : '#67C23A',
+          color: infoRankingType.value === 'partner' ? '#409EFF' : '#67C23A',
           borderRadius: [0, 4, 4, 0]
         },
         label: {
