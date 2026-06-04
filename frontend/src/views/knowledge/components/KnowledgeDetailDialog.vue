@@ -67,13 +67,11 @@
             <ArrowLeft />
           </el-icon> 返回列表
         </el-button>
-        <div class="footer-actions">
-          <el-button type="primary" @click="handleEdit" v-if="canEdit">
-            <el-icon>
-              <Edit />
-            </el-icon> 编辑
-          </el-button>
-        </div>
+        <el-button type="primary" @click="handleEdit" v-if="canEdit">
+          <el-icon>
+            <Edit />
+          </el-icon> 编辑
+        </el-button>
       </div>
     </div>
   </el-dialog>
@@ -432,15 +430,10 @@ watch(() => props.visible, (val) => {
     .detail-footer {
       margin-top: 24px;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       padding-top: 16px;
       border-top: 1px solid #ebeef5;
-
-      .footer-actions {
-        display: flex;
-        gap: 12px;
-      }
     }
   }
 }
