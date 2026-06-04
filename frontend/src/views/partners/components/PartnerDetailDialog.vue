@@ -1,5 +1,20 @@
 <template>
-  <el-dialog v-model="visible" title="合作方详情" width="900px" destroy-on-close>
+  <el-dialog v-model="visible" title="合作方详情" width="900px" destroy-on-close :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">合作方详情</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <!-- 头部信息 -->
     <div class="detail-header" v-if="partner">
       <div class="detail-title">
@@ -135,6 +150,13 @@ const informationList = ref([])
 // 联系人列表
 const contactsList = ref([])
 
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
+
 // 获取合作方详情（包括联系人）
 const fetchPartnerDetail = async () => {
   if (!props.partner?.id) return
@@ -182,6 +204,25 @@ const handleEdit = () => {
 </script>
 
 <style scoped lang="scss">
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 16px;
+
+  .title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #303133;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
 .detail-header {
   margin-bottom: 20px;
 

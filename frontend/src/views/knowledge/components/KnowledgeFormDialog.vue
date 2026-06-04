@@ -1,6 +1,21 @@
 <template>
   <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose"
-    class="knowledge-form-dialog" destroy-on-close>
+    class="knowledge-form-dialog" destroy-on-close :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">{{ dialogTitle }}</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" class="knowledge-form">
       <!-- 标题 -->
       <el-form-item label="标题" prop="question">
@@ -22,7 +37,7 @@
 
       <!-- 内容 -->
       <el-form-item label="内容" prop="answer">
-        <RichTextEditor v-model="editorAnswer" placeholder="请输入内容..." />
+        <RichTextEditor class="rich-text-editor" v-model="editorAnswer" placeholder="请输入内容..." />
       </el-form-item>
 
       <!-- 附件上传 -->
@@ -83,6 +98,13 @@ const visible = computed({
 const dialogTitle = computed(() => props.type === 'add' ? '新增知识条目' : '编辑知识条目')
 
 const userStore = useUserStore()
+
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
 
 // 表单引用
 const formRef = ref(null)
@@ -314,6 +336,25 @@ watch(() => props.visible, (val) => {
 
 <style scoped lang="scss">
 .knowledge-form-dialog {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 16px;
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #303133;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
   .knowledge-form {
     padding-right: 10px;
 
@@ -321,6 +362,10 @@ watch(() => props.visible, (val) => {
       font-size: 12px;
       color: #909399;
       margin-left: 8px;
+    }
+
+    .rich-text-editor {
+      width: 100vw;
     }
 
     .uploader {

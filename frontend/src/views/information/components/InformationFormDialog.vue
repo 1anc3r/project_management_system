@@ -1,6 +1,21 @@
 <template>
   <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose"
-    class="information-form-dialog">
+    class="information-form-dialog" :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">{{ dialogTitle }}</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="20">
         <el-col :span="12">
@@ -72,6 +87,13 @@ const visible = computed({
 })
 
 const dialogTitle = computed(() => props.type === 'add' ? '新增资讯' : '编辑资讯')
+
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
 
 // 表单引用
 const formRef = ref(null)
@@ -194,6 +216,25 @@ watch(() => props.visible, (val) => {
 
 <style scoped lang="scss">
 .information-form-dialog {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 16px;
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #303133;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
   .el-form {
     padding: 10px 0;
   }

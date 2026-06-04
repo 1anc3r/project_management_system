@@ -1,6 +1,21 @@
 <template>
   <el-dialog v-model="visible" title="项目详情" width="900px" :close-on-click-modal="false" class="project-detail-dialog"
-    destroy-on-close>
+    destroy-on-close :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">项目详情</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <div v-loading="loading" class="detail-content">
       <!-- 头部信息 -->
       <div class="detail-header" v-if="projectData">
@@ -246,6 +261,13 @@ const activeCollapse = ref(['information'])
 const previewVisible = ref(false)
 const previewAttachment = ref(null)
 
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
+
 // 获取项目详情
 const fetchProjectDetail = async () => {
   if (!props.project?.id) return
@@ -330,6 +352,25 @@ const handleClose = () => {
 
 <style scoped lang="scss">
 .project-detail-dialog {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 16px;
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #303133;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
   .detail-content {
     .detail-header {
       margin-bottom: 20px;

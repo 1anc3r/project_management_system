@@ -1,6 +1,21 @@
 <template>
-  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false"
-    class="knowledge-detail-dialog" destroy-on-close>
+  <el-dialog :title="知识详情" v-model="visible" width="900px" :close-on-click-modal="false" class="knowledge-detail-dialog"
+    destroy-on-close :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">知识详情</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <div v-loading="loading" class="detail-content">
       <!-- 头部信息 -->
       <div class="detail-header" v-if="detailData">
@@ -115,15 +130,12 @@ const detailData = ref(null)
 const previewVisible = ref(false)
 const previewAttachment = ref(null)
 
-// 对话框标题
-const dialogTitle = computed(() => {
-  if (detailData.value) {
-    return detailData.value.question?.length > 30
-      ? detailData.value.question.substring(0, 30) + '...'
-      : detailData.value.question
-  }
-  return '知识详情'
-})
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
 
 // 处理后的内容（为图片 URL 添加认证 token）
 const processedAnswer = computed(() => {
@@ -234,6 +246,25 @@ watch(() => props.visible, (val) => {
 
 <style scoped lang="scss">
 .knowledge-detail-dialog {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 16px;
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #303133;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
   .detail-content {
     .detail-header {
       margin-bottom: 16px;

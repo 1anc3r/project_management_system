@@ -1,5 +1,21 @@
 <template>
-  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose">
+  <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose"
+    :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">{{ dialogTitle }}</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
       <el-form-item label="合作方名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入合作方名称" />
@@ -151,6 +167,13 @@ const DEFAULT_FORM = {
 
 // 联系人列表
 const contacts = ref([])
+
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
 
 // 获取字典选项
 const fetchDictOptions = async () => {
@@ -392,6 +415,25 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 16px;
+
+  .title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #303133;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
 .contacts-section {
   margin-top: 5px;
 

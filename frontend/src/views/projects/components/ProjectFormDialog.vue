@@ -1,6 +1,21 @@
 <template>
   <el-dialog :title="dialogTitle" v-model="visible" width="900px" :close-on-click-modal="false" @close="handleClose"
-    class="project-form-dialog">
+    class="project-form-dialog" destroy-on-close :fullscreen="isFullscreen">
+    <template #header>
+      <div class="header">
+        <span class="title">{{ dialogTitle }}</span>
+        <div class="header-actions">
+          <el-button link size="small" @click="toggleFullscreen">
+            <el-icon>
+              <FullScreen v-if="!isFullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ isFullscreen ? '退出全屏' : '全屏' }}
+          </el-button>
+        </div>
+      </div>
+    </template>
+
     <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="project-form">
       <!-- 项目基本信息 -->
       <div class="form-section">
@@ -316,6 +331,13 @@ const uploadRef = ref(null)
 // 加载状态
 const submitLoading = ref(false)
 const partnerLoading = ref(false)
+
+// 全屏切换
+const isFullscreen = ref(false)
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
 
 // 数字转换辅助函数 - 确保所有金额字段为 number 类型，避免 ElInputNumber 类型警告
 const toNum = (val) => {
@@ -665,6 +687,25 @@ watch(() => props.visible, (val) => {
 
 <style scoped lang="scss">
 .project-form-dialog {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 16px;
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #303133;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
   .form-section {
     margin-bottom: 25px;
 
