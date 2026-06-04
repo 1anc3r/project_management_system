@@ -19,6 +19,9 @@
     <div v-loading="loading" class="detail-content">
       <!-- 头部信息 -->
       <div class="detail-header" v-if="detailData">
+        <div class="detail-title">
+          <span class="title-text">{{ detailData.question }}</span>
+        </div>
         <div class="detail-meta">
           分类：<el-tag type="primary" size="small" class="meta-tag">{{ detailData.category }}</el-tag>
           标签：<el-tag v-for="tag in formatTags(detailData.tags)" :key="tag" size="small" class="meta-tag">
@@ -268,6 +271,21 @@ watch(() => props.visible, (val) => {
   .detail-content {
     .detail-header {
       margin-bottom: 16px;
+
+      .detail-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+
+        .title-text {
+          font-size: 18px;
+          font-weight: 600;
+          color: #303133;
+        }
+      }
 
       .detail-meta {
         display: flex;
