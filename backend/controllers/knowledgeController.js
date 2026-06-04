@@ -274,10 +274,10 @@ const createKnowledge = async (req, res) => {
       });
     }
 
-    if (!answer || stripHtml(answer).length < 10) {
+    if (!answer || stripHtml(answer).length < 2) {
       return res.status(400).json({
         code: 400,
-        message: '内容必填，最少10个字符'
+        message: '内容必填，最少2个字符'
       });
     }
 
@@ -399,10 +399,10 @@ const updateKnowledge = async (req, res) => {
       });
     }
 
-    if (!answer || stripHtml(answer).length < 10) {
+    if (!answer || stripHtml(answer).length < 2) {
       return res.status(400).json({
         code: 400,
-        message: '内容必填，最少10个字符'
+        message: '内容必填，最少2个字符'
       });
     }
 
@@ -800,9 +800,9 @@ const importKnowledge = async (req, res) => {
             continue;
           }
 
-          if (stripHtml(answer).length < 10) {
+          if (stripHtml(answer).length < 2) {
             failCount++;
-            errors.push(`第 ${successCount + failCount} 条：内容最少10个字符`);
+            errors.push(`第 ${successCount + failCount} 条：内容最少2个字符`);
             continue;
           }
 

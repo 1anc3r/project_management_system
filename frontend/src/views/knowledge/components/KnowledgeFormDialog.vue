@@ -150,8 +150,8 @@ const rules = {
     {
       validator: (rule, value, callback) => {
         const textLength = value ? value.replace(/<[^>]*>/g, '').length : 0
-        if (textLength < 10) {
-          callback(new Error('内容最少10个字符'))
+        if (textLength < 2) {
+          callback(new Error('内容最少2个字符'))
         } else {
           callback()
         }
