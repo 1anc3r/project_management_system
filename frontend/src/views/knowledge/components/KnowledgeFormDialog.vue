@@ -335,7 +335,12 @@ watch(() => props.visible, (val) => {
 </script>
 
 <style scoped lang="scss">
-.knowledge-form-dialog {
+.knowledge-form-dialog {  
+  --ql-toolbar-top: 0px;
+  &.is-fullscreen {
+    --ql-toolbar-top: -16px;
+  }
+
   .header {
     display: flex;
     justify-content: space-between;

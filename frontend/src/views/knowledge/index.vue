@@ -509,10 +509,6 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .knowledge-container {
-  .breadcrumb {
-    margin-bottom: 15px;
-  }
-
   .operation-card {
     margin-bottom: 15px;
 

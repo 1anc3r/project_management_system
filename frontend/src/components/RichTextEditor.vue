@@ -1,23 +1,9 @@
 <template>
   <div class="rich-text-editor">
-    <QuillEditor
-      ref="quillEditorRef"
-      v-model:content="content"
-      :options="editorOptions"
-      contentType="html"
-      theme="snow"
-      @ready="onEditorReady"
-      @textChange="onTextChange"
-      @selectionChange="onSelectionChange"
-    />
+    <QuillEditor ref="quillEditorRef" v-model:content="content" :options="editorOptions" contentType="html" theme="snow"
+      @ready="onEditorReady" @textChange="onTextChange" @selectionChange="onSelectionChange" />
     <!-- 隐藏的文件输入框，用于图片上传 -->
-    <input
-      ref="imageInputRef"
-      type="file"
-      accept="image/*"
-      style="display: none"
-      @change="handleImageFileChange"
-    />
+    <input ref="imageInputRef" type="file" accept="image/*" style="display: none" @change="handleImageFileChange" />
   </div>
 </template>
 
@@ -81,7 +67,7 @@ const editorOptions = ref({
       ],
       handlers: {
         // 自定义图片上传处理
-        image: function() {
+        image: function () {
           // 触发隐藏的文件选择框
           if (imageInputRef.value) {
             imageInputRef.value.click()
@@ -346,7 +332,7 @@ defineExpose({
     border-radius: 4px 4px 0 0;
     background-color: #f5f7fa;
     position: sticky;
-    top: 0;
+    top: var(--ql-toolbar-top, 0);
     z-index: 100;
     padding: 8px;
     border-bottom: 1px solid #e4e7ed;
