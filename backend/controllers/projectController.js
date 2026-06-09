@@ -208,7 +208,7 @@ const getProjects = async (req, res) => {
     }
     
     // 排序
-    let orderClause = 'ORDER BY p.created_at DESC';
+    let orderClause = 'ORDER BY p.start_date DESC';
     const allowedSortFields = ['stage', 'total_amount', 'receipt_amount', 'cost', 'profit', 'created_at'];
     if (sortField && allowedSortFields.includes(sortField)) {
       const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
