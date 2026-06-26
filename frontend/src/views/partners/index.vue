@@ -8,7 +8,17 @@
           <el-button :icon="Edit" :disabled=!selectedRows.length @click="handleBatchEdit">编辑</el-button>
           <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length
             @click="handleBatchDelete">删除</el-button>
-          <el-button :icon="Download" @click="handleExport">导出</el-button>
+          <el-dropdown class="left-export-btn" @command="handleExportCommand">
+            <el-button :icon="Download">
+              导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="partners">导出合作方</el-dropdown-item>
+                <el-dropdown-item command="contacts">导出联系人</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
 
         <div class="center-search">
@@ -167,9 +177,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Plus, Edit, Delete, Search, Download, View, More, User, Phone
+  Plus, Edit, Delete, Search, Download, View, More, User, Phone, ArrowDown
 } from '@element-plus/icons-vue'
-import { getPartners, deletePartner, exportPartners, getFilterOptions } from '@/api/partners'
+import { getPartners, deletePartner, exportPartners, exportPartnerContacts, getFilterOptions } from '@/api/partners'
 import { formatAmount, downloadBlob, getPartnerTypeTag } from '@/utils/format'
 import PartnerFormDialog from './components/PartnerFormDialog.vue'
 import PartnerDetailDialog from './components/PartnerDetailDialog.vue'
@@ -339,18 +349,42 @@ const handleBatchDelete = () => {
   })
 }
 
-// 导出
-const handleExport = async () => {
+// 导出命令处理
+const handleExportCommand = (command) => {
+  if (command === 'partners') {
+    handleExportPartners()
+  } else if (command === 'contacts') {
+    handleExportContacts()
+  }
+}
+
+// 导出合作方
+const handleExportPartners = async () => {
   try {
     const response = await exportPartners({
       format: 'xlsx',
       keyword: searchForm.keyword
     })
     downloadBlob(response.data, `partners_${new Date().getTime()}.xlsx`)
-    ElMessage.success('导出成功')
+    ElMessage.success('导出合作方成功')
   } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败，请稍后重试')
+    console.error('导出合作方失败:', error)
+    ElMessage.error('导出合作方失败，请稍后重试')
+  }
+}
+
+// 导出联系人
+const handleExportContacts = async () => {
+  try {
+    const response = await exportPartnerContacts({
+      format: 'xlsx',
+      keyword: searchForm.keyword
+    })
+    downloadBlob(response.data, `partner_contacts_${new Date().getTime()}.xlsx`)
+    ElMessage.success('导出联系人成功')
+  } catch (error) {
+    console.error('导出联系人失败:', error)
+    ElMessage.error('导出联系人失败，请稍后重试')
   }
 }
 
@@ -384,6 +418,10 @@ onMounted(() => {
       margin-bottom: 15px;
       flex-wrap: wrap;
       gap: 10px;
+
+      .left-export-btn {
+        margin-left: 12px;
+      }
 
       .view-toggle {
         .el-radio-group {

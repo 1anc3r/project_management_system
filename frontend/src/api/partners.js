@@ -37,7 +37,15 @@ export const deletePartner = (id) => {
 
 // 导出合作方
 export const exportPartners = (params) => {
-  return request.get('/api/partners/export', { 
+  return request.get('/api/partners/export', {
+    params,
+    responseType: 'blob'
+  })
+}
+
+// 导出合作方联系人
+export const exportPartnerContacts = (params) => {
+  return request.get('/api/partners/export-contacts', {
     params,
     responseType: 'blob'
   })

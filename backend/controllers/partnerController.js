@@ -497,6 +497,70 @@ const getFilterOptions = async (req, res) => {
 };
 
 /**
+ * 导出合作方联系人
+ * GET /api/partners/export-contacts
+ */
+const exportPartnerContacts = async (req, res) => {
+  try {
+    const { format = 'xlsx', keyword } = req.query;
+
+    // 构建查询条件
+    let whereClause = '';
+    const params = [];
+
+    if (keyword) {
+      whereClause = `WHERE p.name LIKE ? OR pc.name LIKE ? OR pc.phone LIKE ?`;
+      const keywordPattern = `%${keyword}%`;
+      params.push(keywordPattern, keywordPattern, keywordPattern);
+    }
+
+    // 查询所有联系人数据（按合作方名称排序）
+    const contacts = await query(
+      `SELECT
+        p.name as '合作方名称',
+        pc.name as '联系人姓名',
+        pc.position as '职务',
+        pc.phone as '电话'
+      FROM partner_contacts pc
+      JOIN partners p ON pc.partner_id = p.id
+      ${whereClause}
+      ORDER BY p.name ASC, pc.sort_order ASC, pc.id ASC`,
+      params
+    );
+
+    if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=partner_contacts_${moment().format('YYYYMMDD')}.json`);
+      return res.send(JSON.stringify(contacts, null, 2));
+    }
+
+    if (format === 'csv') {
+      const csv = convertToCSV(contacts);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=partner_contacts_${moment().format('YYYYMMDD')}.csv`);
+      return res.send('\uFEFF' + csv);
+    }
+
+    // 默认导出Excel
+    const ws = xlsx.utils.json_to_sheet(contacts);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '联系人列表');
+
+    const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=partner_contacts_${moment().format('YYYYMMDD')}.xlsx`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('导出联系人错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '导出联系人失败'
+    });
+  }
+};
+
+/**
  * 导出合作方
  * GET /api/partners/export
  */
@@ -870,6 +934,7 @@ module.exports = {
   updatePartner,
   deletePartner,
   exportPartners,
+  exportPartnerContacts,
   searchPartners,
   getAllPartners,
   getPartnerTypes,

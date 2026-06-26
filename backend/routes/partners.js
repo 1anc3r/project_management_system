@@ -44,6 +44,13 @@ router.get('/filters', authenticate, partnerController.getFilterOptions);
 router.get('/export', authenticate, partnerController.exportPartners);
 
 /**
+ * @route   GET /api/partners/export-contacts
+ * @desc    导出合作方联系人
+ * @access  Private
+ */
+router.get('/export-contacts', authenticate, partnerController.exportPartnerContacts);
+
+/**
  * @route   GET /api/partners/:id/contacts
  * @desc    获取合作方联系人列表
  * @access  Private
