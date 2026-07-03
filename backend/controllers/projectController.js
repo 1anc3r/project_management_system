@@ -329,7 +329,6 @@ const getProjectById = async (req, res) => {
 
     project.payments = payments;
     project.attachments = sortAttachmentsByType(attachments);
-    console.log(project.attachments);
 
     res.json({
       code: 200,
