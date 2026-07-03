@@ -12,7 +12,7 @@
         </div>
 
         <div class="center-search">
-          <el-input v-model="searchForm.keyword" placeholder="搜索项目名称、合作方、履约地点、联系人……" clearable style="width: 600px"
+          <el-input v-model="searchForm.keyword" placeholder="搜索项目名称、合作方、履约地点、联系人……" clearable style="width: 400px"
             @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
@@ -45,16 +45,16 @@
         <el-select v-model="searchForm.stage" placeholder="项目阶段" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.stages" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.city" placeholder="履约地点" clearable style="width: 150px">
+        <el-select v-model="searchForm.city" placeholder="履约地点" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.cities" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.expansionMethod" placeholder="签约方式" clearable style="width: 150px">
+        <el-select v-model="searchForm.expansionMethod" placeholder="签约方式" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.expansionMethods" :key="item" :label="item" :value="item" />
         </el-select>
         <el-select v-model="searchForm.content" placeholder="项目内容" clearable style="width: 100px">
           <el-option v-for="item in filterOptions.contents" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">
+        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 100px">
           <el-option label="项目阶段" value="stage" />
           <el-option label="合同金额" value="total_amount" />
           <el-option label="已开票金额" value="receipt_amount" />

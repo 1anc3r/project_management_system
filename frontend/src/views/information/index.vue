@@ -12,7 +12,7 @@
         </div>
 
         <div class="center-search">
-          <el-input v-model="searchForm.keyword" placeholder="搜索资讯标题、资讯内容、地点、人员……" clearable style="width: 600px"
+          <el-input v-model="searchForm.keyword" placeholder="搜索资讯标题、资讯内容、地点、人员……" clearable style="width: 400px"
             @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
@@ -42,17 +42,17 @@
         <el-select v-model="searchForm.informationType" placeholder="资讯类型" clearable style="width: 100px">
           <el-option v-for="item in informationTypes" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.partnerId" placeholder="关联合作方" clearable filterable style="width: 150px">
+        <el-select v-model="searchForm.partnerId" placeholder="关联合作方" clearable filterable style="width: 100px">
           <el-option v-for="item in partnerOptions" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
-        <el-select v-model="searchForm.projectId" placeholder="关联项目" clearable filterable style="width: 150px">
+        <el-select v-model="searchForm.projectId" placeholder="关联项目" clearable filterable style="width: 100px">
           <el-option v-for="item in projectOptions" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
         <el-date-picker v-model="searchForm.startDate" type="date" placeholder="开始日期" value-format="YYYY-MM-DD"
-          style="width: 150px" />
+          style="width: 100px" />
         <el-date-picker v-model="searchForm.endDate" type="date" placeholder="结束日期" value-format="YYYY-MM-DD"
-          style="width: 150px" />
-        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">
+          style="width: 100px" />
+        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 100px">
           <el-option label="资讯日期" value="information_date" />
           <el-option label="资讯类型" value="information_type" />
           <el-option label="创建时间" value="created_at" />

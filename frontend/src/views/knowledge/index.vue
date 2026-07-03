@@ -13,7 +13,7 @@
         </div>
 
         <div class="center-search">
-          <el-input v-model="searchForm.keyword" placeholder="搜索问题、答案关键词……" clearable style="width: 600px"
+          <el-input v-model="searchForm.keyword" placeholder="搜索问题、答案关键词……" clearable style="width: 400px"
             @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />

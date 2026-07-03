@@ -164,12 +164,12 @@
                 :disabled=true />
             </template>
           </el-table-column>
-          <el-table-column label="是否支付" width="80" align="center">
+          <el-table-column label="是否开票" width="80" align="center">
             <template #default="{ row, $index }">
               <el-checkbox v-model="row.is_paid" :true-value="1" :false-label="0" @change="calculateAmounts()" />
             </template>
           </el-table-column>
-          <el-table-column label="支付日期" width="140">
+          <el-table-column label="开票日期" width="140">
             <template #default="{ row, $index }">
               <el-date-picker v-model="row.payment_date" type="date" size="small" style="width: 100%"
                 value-format="YYYY-MM-DD" placeholder="选择日期" />

@@ -109,14 +109,14 @@
           <el-table-column prop="payment_amount" label="款项金额" width="120" align="right">
             <template #default="{ row }">{{ formatAmount(row.payment_amount) }} 万元</template>
           </el-table-column>
-          <el-table-column prop="is_paid" label="是否支付" width="90" align="center">
+          <el-table-column prop="is_paid" label="是否开票" width="90" align="center">
             <template #default="{ row }">
               <el-tag :type="row.is_paid ? 'success' : 'info'" size="small">
-                {{ row.is_paid ? '已支付' : '未支付' }}
+                {{ row.is_paid ? '已开票' : '未开票' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="payment_date" label="支付日期" width="120">
+          <el-table-column prop="payment_date" label="开票日期" width="120">
             <template #default="{ row }">{{ formatDate(row.payment_date) }}</template>
           </el-table-column>
         </el-table>

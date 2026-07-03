@@ -323,7 +323,7 @@ const getProjectById = async (req, res) => {
     // 查询附件信息
     const attachments = await query(
       `SELECT id, attachment_type, file_path, file_name, file_size, created_at 
-       FROM attachments WHERE project_id = ? ORDER BY created_at DESC`,
+       FROM attachments WHERE project_id = ? ORDER BY attachment_type DESC`,
       [id]
     );
 
