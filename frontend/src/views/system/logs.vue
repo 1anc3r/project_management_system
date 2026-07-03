@@ -14,7 +14,7 @@
         <el-date-picker v-model="searchForm.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
           end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 260px" />
         <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-        <el-button @click="handleReset">重置</el-button>
+        <el-button class="reset-btn" @click="handleReset">重置</el-button>
         <el-button type="success" :icon="Download" @click="handleExport">导出</el-button>
       </div>
     </el-card>
@@ -179,6 +179,10 @@ onMounted(() => {
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+
+      .reset-btn {
+        margin-left: 0px;
+      }
     }
   }
 

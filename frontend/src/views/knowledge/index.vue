@@ -56,7 +56,7 @@
           <el-option label="升序" value="asc" />
         </el-select>
         <el-button type="primary" plain @click="handleSearch">查询</el-button>
-        <el-button @click="handleReset">重置</el-button>
+        <el-button class="reset-btn" @click="handleReset">重置</el-button>
       </div>
     </el-card>
 
@@ -535,6 +535,10 @@ onMounted(() => {
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+
+      .reset-btn {
+        margin-left: 0px;
+      }
     }
   }
 
