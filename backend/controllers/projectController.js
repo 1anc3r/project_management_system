@@ -7,7 +7,7 @@ const xlsx = require('xlsx');
 const moment = require('moment');
 const fs = require('fs');
 const { convertToCSV, parseCSV } = require('../utils/csvHelper');
-const { formatDate } = require('../utils/dateHelper');
+const { formatDate, sortAttachmentsByType } = require('../utils/dateHelper');
 const { PROJECT_STAGES, PROJECT_TYPES, PROJECT_EXPANSION_METHODS, PROJECT_CONTENTS, SICHUAN_CITIES } = require('../config/const');
 
 // 从字典表获取项目类型
@@ -328,7 +328,8 @@ const getProjectById = async (req, res) => {
     );
 
     project.payments = payments;
-    project.attachments = attachments;
+    project.attachments = sortAttachmentsByType(attachments);
+    console.log(project.attachments);
 
     res.json({
       code: 200,

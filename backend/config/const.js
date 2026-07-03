@@ -22,7 +22,7 @@ const SICHUAN_CITIES = [
 const PARTNER_TYPES = ['甲方', '乙方', '丙方', '其他'];
 
 // 附件类型枚举
-const ATTACHMENT_TYPES = ['测算表', '报价函', '合同/协议', '补充合同/协议', '法律审查意见书', '营业执照', '验收报告', '其他'];
+const ATTACHMENT_TYPES = ['测算表', '报价函', '合同/协议', '补充合同/协议', '法律审查意见书', '营业执照', '验收报告', '发票', '其他'];
 
 // 图片文件扩展名
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
