@@ -72,14 +72,14 @@
         stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="合作方名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="type" label="类型" width="80" align="center">
+        <el-table-column prop="type" label="类型" width="70" align="center">
           <template #default="{ row }">
             <el-tag :type="getPartnerTypeTag(row.type)" size="small">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="tax_id" label="纳税人识别号" width="160" />
-        <el-table-column prop="address" label="地址" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="primary_contact_name" label="联系人" width="100" />
+        <el-table-column prop="address" label="地址" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="primary_contact_name" label="联系人" width="80" />
         <el-table-column prop="primary_contact_phone" label="联系电话" width="120" />
         <el-table-column prop="project_count" label="项目数" width="80" align="center" />
         <el-table-column prop="total_contract_amount" label="合同总金额" width="100" align="right">

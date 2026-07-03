@@ -75,18 +75,18 @@
       <el-table ref="tableRef" :data="projectList" style="width: 100%" @selection-change="handleSelectionChange"
         @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="name" label="项目名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="type" label="项目类型" width="100" align="center">
+        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="type" label="项目类型" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="getProjectTypeTag(row.type)" size="small">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="stage" label="项目阶段" width="100" align="center">
+        <el-table-column prop="stage" label="项目阶段" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="getProjectStageTag(row.stage)" size="small">{{ row.stage }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="expansion_method" label="签约方式" width="120" />
+        <el-table-column prop="expansion_method" label="签约方式" width="100" />
         <el-table-column prop="total_amount" label="合同总金额" width="100" align="right">
           <template #default="{ row }">
             {{ formatAmount(row.total_amount) }}
@@ -117,6 +117,8 @@
             {{ formatPercent(row.profit_rate) }}
           </template>
         </el-table-column>
+        <el-table-column prop="start_date" label="起始日期" width="100" />
+        <el-table-column prop="end_date" label="终止日期" width="100" />
         <el-table-column prop="partner_name" label="合作方" min-width="150" show-overflow-tooltip />
         <el-table-column prop="partner_contact" label="联系人" width="100" />
         <el-table-column prop="partner_contact_phone" label="联系电话" width="120" />

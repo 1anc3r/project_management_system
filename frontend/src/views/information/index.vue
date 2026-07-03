@@ -73,24 +73,21 @@
           @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" border stripe
           highlight-current-row>
           <el-table-column type="selection" width="50" align="center" />
-          <el-table-column prop="information_date" label="资讯日期" width="110" align="center">
+          <el-table-column prop="information_date" label="资讯日期" width="100" align="center">
             <template #default="{ row }">{{ formatDate(row.information_date) }}</template>
           </el-table-column>
-          <el-table-column prop="information_type" label="资讯类型" width="100" align="center">
+          <el-table-column prop="information_type" label="资讯类型" width="90" align="center">
             <template #default="{ row }">
               <el-tag :type="getInfoTypeTag(row.information_type)" size="small">{{ row.information_type }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="information_title" label="资讯标题" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="information_content" label="资讯内容" min-width="250" show-overflow-tooltip />
-          <el-table-column prop="partner_name" label="关联合作方" min-width="150" show-overflow-tooltip>
+          <el-table-column prop="information_content" label="资讯内容" min-width="200" show-overflow-tooltip />
+          <el-table-column prop="partner_name" label="关联合作方" min-width="200" show-overflow-tooltip>
             <template #default="{ row }">{{ row.partner_name || '-' }}</template>
           </el-table-column>
           <el-table-column prop="project_name" label="关联项目" min-width="150" show-overflow-tooltip>
             <template #default="{ row }">{{ row.project_name || '-' }}</template>
-          </el-table-column>
-          <el-table-column prop="created_at" label="创建时间" width="160" align="center">
-            <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
           </el-table-column>
           <el-table-column label="操作" width="150" fixed="right">
             <template #default="{ row }">

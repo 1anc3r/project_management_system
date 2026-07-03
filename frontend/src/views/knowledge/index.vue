@@ -65,7 +65,7 @@
       <el-table :data="knowledgeList" style="width: 100%" @selection-change="handleSelectionChange"
         @row-click="handleRowClick" highlight-current-row stripe border>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="question" label="标题" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="question" label="标题" min-width="300" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="question-cell">
               <span class="question-text">{{ row.question }}</span>
@@ -89,7 +89,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="view_count" label="浏览量" width="90" align="center">
+        <el-table-column prop="view_count" label="浏览量" width="80" align="center">
           <template #default="{ row }">
             <span class="view-count">
               <el-icon>
