@@ -5,7 +5,7 @@ const PROJECT_STAGES = ['意向', '签约', '建设', '运营', '交付', '验�
 const PROJECT_TYPES = ['收入合同', '支出合同'];
 
 // 签约方式枚举
-const PROJECT_EXPANSION_METHODS = ['投标', '比选', '比价', '直接谈判', '单一来源采购', '其他'];
+const PROJECT_EXPANSION_METHODS = ['投标', '比选', '比价', '直接谈判', '单一来源', '其他'];
 
 // 项目内容枚举
 const PROJECT_CONTENTS = ['系统建设', '数据服务', '技术服务', '业务运营', '业务咨询', '其他'];

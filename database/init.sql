@@ -57,7 +57,7 @@ CREATE TABLE projects (
     city VARCHAR(100) NOT NULL COMMENT '履约地点',
     type varchar(50) DEFAULT NULL COMMENT '项目类型（收入合同、支出合同）',
     stage VARCHAR(50) NOT NULL COMMENT '项目阶段(意向/建设/运营/完结)',
-    expansion_method VARCHAR(50) NOT NULL COMMENT '签约方式(投标/比选/比价/直接谈判/单一来源采购/其他)',
+    expansion_method VARCHAR(50) NOT NULL COMMENT '签约方式(投标/比选/比价/直接谈判/单一来源/其他)',
     content VARCHAR(50) NOT NULL COMMENT '项目主要内容(系统建设/数据服务/技术服务/业务运营/业务咨询/其他)',
     total_amount DECIMAL(16,2) NOT NULL DEFAULT 0.00 COMMENT '合同总金额(万元)',
     receipt_amount DECIMAL(16,2) NOT NULL DEFAULT 0.00 COMMENT '已开票金额(万元)',
@@ -187,7 +187,7 @@ INSERT INTO projects (name, city, type, stage, expansion_method, content, total_
 ('数据治理平台开发项目', '绵阳市', '收入合同', '运营', '比选', '数据服务', 300.00, 200.00, 150.00, '2023-06-01', '2024-06-01', 2, 1),
 ('政务云运维服务项目', '成都市', '收入合同', '完结', '直接谈判', '技术服务', 800.00, 800.00, 500.00, '2023-01-01', '2023-12-31', 1, 1),
 ('智慧城市大数据分析平台', '德阳市', '支出合同', '意向', '比价', '系统建设', 1200.00, 0.00, 0.00, '2024-07-01', '2025-06-30', 3, 1),
-('企业数字化转型咨询项目', '成都市', '支出合同', '建设', '单一来源采购', '业务咨询', 150.00, 50.00, 80.00, '2024-03-01', '2024-09-30', 2, 1);
+('企业数字化转型咨询项目', '成都市', '支出合同', '建设', '单一来源', '业务咨询', 150.00, 50.00, 80.00, '2024-03-01', '2024-09-30', 2, 1);
 
 -- 插入示例款项数据
 INSERT INTO payments (project_id, payment_type, payment_condition, payment_ratio, payment_amount, is_paid, payment_date) VALUES
@@ -340,7 +340,7 @@ SELECT id, '比价', '比价', '比价', 3 FROM dictionaries WHERE dict_code = '
 UNION ALL
 SELECT id, '直接谈判', '直接谈判', '直接谈判', 4 FROM dictionaries WHERE dict_code = 'expansion_method'
 UNION ALL
-SELECT id, '单一来源采购', '单一来源采购', '单一来源采购', 5 FROM dictionaries WHERE dict_code = 'expansion_method'
+SELECT id, '单一来源', '单一来源', '单一来源', 5 FROM dictionaries WHERE dict_code = 'expansion_method'
 UNION ALL
 SELECT id, '其他', '其他', '其他', 6 FROM dictionaries WHERE dict_code = 'expansion_method';
 
