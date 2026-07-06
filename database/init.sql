@@ -104,7 +104,7 @@ CREATE TABLE attachments (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID（与知识条目二选一）',
     knowledge_id BIGINT UNSIGNED DEFAULT NULL COMMENT '知识条目ID（与项目二选一）',
-    attachment_type VARCHAR(50) NOT NULL COMMENT '附件类型(测算表/报价函/合同/协议/补充合同/协议/法律审查意见书/营业执照/验收报告/图片/其他)',
+    attachment_type VARCHAR(50) NOT NULL COMMENT '附件类型(测算表/招投标文件/合同/协议/补充合同/协议/法律审查意见书/营业执照/验收报告/图片/其他)',
     file_path VARCHAR(512) NOT NULL COMMENT '文件路径',
     file_name VARCHAR(255) DEFAULT NULL COMMENT '原文件名',
     file_size BIGINT DEFAULT NULL COMMENT '文件大小(字节)',

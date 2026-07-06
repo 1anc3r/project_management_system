@@ -102,7 +102,6 @@ import {
   User, Calendar, View, Document, Download,
   ArrowLeft, Edit, Delete, Picture, ZoomIn
 } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
 import { getKnowledgeById, deleteKnowledge, recordView } from '@/api/knowledge'
 import { formatDateTime, injectImageToken } from '@/utils/format'
 import { isPreviewable } from '@/api/attachments'
@@ -120,8 +119,6 @@ const visible = computed({
   get: () => props.visible,
   set: (val) => emit('update:visible', val)
 })
-
-const userStore = useUserStore()
 
 // 加载状态
 const loading = ref(false)
@@ -144,14 +141,6 @@ const toggleFullscreen = () => {
 const processedAnswer = computed(() => {
   if (!knowledgeData.value?.answer) return ''
   return injectImageToken(knowledgeData.value.answer, userStore.token)
-})
-
-// 权限检查
-const canEdit = computed(() => {
-  if (!knowledgeData.value) return false
-  const userInfo = userStore.userInfo
-  if (userInfo.role === 'admin') return true
-  return knowledgeData.value.created_by === userInfo.id
 })
 
 // 非图片附件列表
@@ -209,35 +198,8 @@ const downloadAttachment = (attId) => {
 
 // 编辑
 const handleEdit = () => {
-  if (canEdit()) {
-    if (knowledgeData.value) {
-      emit('edit', knowledgeData.value)
-    }
-  } else {
-    ElMessage.warning('您没有权限编辑该知识条目')
-  }
-}
-
-// 删除
-const handleDelete = () => {
-  if (!knowledgeData.value) return
-  if (canEdit()) {
-    ElMessageBox.confirm(
-      `确定要删除知识条目 "${knowledgeData.value.question}" 吗？此操作不可恢复。`,
-      '确认删除',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    ).then(async () => {
-      await deleteKnowledge(knowledgeData.value.id)
-      ElMessage.success('删除成功')
-      visible.value = false
-      emit('delete')
-    }).catch(() => { })
-  } else {
-    ElMessage.warning('您没有权限删除该知识条目')
+  if (knowledgeData.value) {
+    emit('edit', knowledgeData.value)
   }
 }
 

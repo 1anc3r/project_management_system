@@ -184,7 +184,7 @@
                     <div class="info-header">
                       <span class="info-title">{{ item.information_title }}</span>
                       <el-tag :type="getInfoTypeTag(item.information_type)" size="small">{{ item.information_type
-                      }}</el-tag>
+                        }}</el-tag>
                     </div>
                   </template>
                   <p class="info-content">{{ item.information_content || '暂无内容' }}</p>
@@ -221,7 +221,6 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Link, ArrowLeft } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
 import { getProjectById } from '@/api/projects'
 import { getInformationByProject } from '@/api/information'
 import { downloadAttachment } from '@/api/attachments'
@@ -238,8 +237,6 @@ const props = defineProps({
     default: null
   }
 })
-
-const userStore = useUserStore()
 
 const emit = defineEmits(['update:modelValue', 'edit'])
 
@@ -270,14 +267,6 @@ const isFullscreen = ref(false)
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
-
-// 权限检查
-const canEdit = computed(() => {
-  if (!projectData.value) return false
-  const userInfo = userStore.userInfo
-  if (userInfo.role === 'admin') return true
-  return projectData.value.created_by === userInfo.id
-})
 
 // 获取项目详情
 const fetchProjectDetail = async () => {
@@ -349,12 +338,8 @@ const handleDownload = async (row) => {
 
 // 编辑
 const handleEdit = () => {
-  if (canEdit()) {
-    visible.value = false
-    emit('edit', props.project)
-  } else {
-    ElMessage.warning('您没有权限编辑该项目')
-  }
+  visible.value = false
+  emit('edit', props.project)
 }
 
 // 关闭
