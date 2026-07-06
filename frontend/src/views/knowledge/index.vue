@@ -104,10 +104,9 @@
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click.stop="handleEdit(row)" v-if="canEdit(row)">编辑</el-button>
+            <el-button link type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
             <el-button link type="primary" size="small" @click.stop="handleView(row)">查看</el-button>
-            <el-button link type="danger" size="small" @click.stop="handleDelete(row)"
-              v-if="canEdit(row)">删除</el-button>
+            <el-button link type="danger" size="small" @click.stop="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -373,9 +372,13 @@ const handleAdd = () => {
 
 // 编辑
 const handleEdit = (row) => {
-  formType.value = 'edit'
-  currentRow.value = row
-  formDialogVisible.value = true
+  if (canEdit(row)) {
+    formType.value = 'edit'
+    currentRow.value = row
+    formDialogVisible.value = true
+  } else {
+    ElMessage.warning('您没有权限编辑该知识条目')
+  }
 }
 
 // 批量编辑
@@ -406,19 +409,23 @@ const handleRowClick = (row) => {
 
 // 删除
 const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    `确定要删除知识条目 "${row.question}" 吗？此操作不可恢复。`,
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    await deleteKnowledge(row.id)
-    ElMessage.success('删除成功')
-    fetchData()
-  }).catch(() => { })
+  if (canEdit(row)) {
+    ElMessageBox.confirm(
+      `确定要删除知识条目 "${row.question}" 吗？此操作不可恢复。`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await deleteKnowledge(row.id)
+      ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => { })
+  } else {
+    ElMessage.warning('您没有权限删除该知识条目')
+  }
 }
 
 // 批量删除
@@ -434,9 +441,13 @@ const handleBatchDelete = () => {
       type: 'warning'
     }
   ).then(async () => {
-    await batchDeleteKnowledge(ids)
+    // await batchDeleteKnowledge(ids)
+    for (const row of selectedRows.value) {
+      if (canEdit(row)) {
+        await deleteKnowledge(row.id)
+      }
+    }
     ElMessage.success('批量删除成功')
-    selectedRows.value = []
     fetchData()
   }).catch(() => { })
 }

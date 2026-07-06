@@ -221,6 +221,7 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Link, ArrowLeft } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import { getProjectById } from '@/api/projects'
 import { getInformationByProject } from '@/api/information'
 import { downloadAttachment } from '@/api/attachments'
@@ -237,6 +238,8 @@ const props = defineProps({
     default: null
   }
 })
+
+const userStore = useUserStore()
 
 const emit = defineEmits(['update:modelValue', 'edit'])
 
@@ -267,6 +270,14 @@ const isFullscreen = ref(false)
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
+
+// 权限检查
+const canEdit = computed(() => {
+  if (!projectData.value) return false
+  const userInfo = userStore.userInfo
+  if (userInfo.role === 'admin') return true
+  return projectData.value.created_by === userInfo.id
+})
 
 // 获取项目详情
 const fetchProjectDetail = async () => {
@@ -338,8 +349,12 @@ const handleDownload = async (row) => {
 
 // 编辑
 const handleEdit = () => {
-  visible.value = false
-  emit('edit', props.project)
+  if (canEdit()) {
+    visible.value = false
+    emit('edit', props.project)
+  } else {
+    ElMessage.warning('您没有权限编辑该项目')
+  }
 }
 
 // 关闭

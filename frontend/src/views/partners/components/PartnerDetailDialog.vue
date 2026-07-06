@@ -121,6 +121,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Link } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import { formatDate, formatAmount, getPartnerTypeTag, getInfoTypeTag } from '@/utils/format'
 import { getPartnerById } from '@/api/partners'
 import { getInformationByPartner } from '@/api/information'
@@ -135,6 +136,8 @@ const props = defineProps({
     default: null
   }
 })
+
+const userStore = useUserStore()
 
 const emit = defineEmits(['update:modelValue', 'edit'])
 
@@ -156,6 +159,14 @@ const isFullscreen = ref(false)
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
+
+// 权限检查
+const canEdit = computed(() => {
+  if (!partner) return false
+  const userInfo = userStore.userInfo
+  if (userInfo.role === 'admin') return true
+  return partner.created_by === userInfo.id
+})
 
 // 获取合作方详情（包括联系人）
 const fetchPartnerDetail = async () => {
@@ -198,8 +209,12 @@ watch(() => visible.value, (val) => {
 
 // 编辑
 const handleEdit = () => {
-  visible.value = false
-  emit('edit', props.partner)
+  if (canEdit()) {
+    visible.value = false
+    emit('edit', props.partner)
+  } else {
+    ElMessage.warning('您没有权限编辑该合作方')
+  }
 }
 </script>
 

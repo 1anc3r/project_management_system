@@ -103,7 +103,8 @@ const getPartners = async (req, res) => {
         COUNT(DISTINCT proj.id) as project_count,
         COALESCE(SUM(proj.total_amount), 0) as total_contract_amount,
         (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_name,
-        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_phone
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_phone,
+        p.created_by
       FROM partners p
       LEFT JOIN projects proj ON p.id = proj.partner_id
       ${whereClause}
@@ -245,15 +246,16 @@ const createPartner = async (req, res) => {
       // 创建合作方
       const [result] = await connection.execute(
         `INSERT INTO partners 
-         (name, type, tax_id, address, bank, bank_account) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         (name, type, tax_id, address, bank, bank_account, created_by) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           name,
           type || '其他',
           tax_id || null,
           address || null,
           bank || null,
-          bank_account || null
+          bank_account || null,
+          req.user.userId
         ]
       );
 
@@ -356,7 +358,7 @@ const updatePartner = async (req, res) => {
       await connection.execute(
         `UPDATE partners SET 
           name = ?, type = ?, tax_id = ?, address = ?, 
-          bank = ?, bank_account = ?
+          bank = ?, bank_account = ?, created_by = ?
          WHERE id = ?`,
         [
           name,
@@ -365,6 +367,7 @@ const updatePartner = async (req, res) => {
           address || null,
           bank || null,
           bank_account || null,
+          req.user.userId,
           id
         ]
       );

@@ -10,7 +10,9 @@
             @click="handleBatchDelete">删除</el-button>
           <el-dropdown class="left-export-btn" @command="handleExportCommand">
             <el-button :icon="Download">
-              导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              导出<el-icon class="el-icon--right">
+                <ArrowDown />
+              </el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
@@ -175,6 +177,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, Edit, Delete, Search, Download, View, More, User, Phone, ArrowDown
@@ -185,6 +188,7 @@ import PartnerFormDialog from './components/PartnerFormDialog.vue'
 import PartnerDetailDialog from './components/PartnerDetailDialog.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 视图模式
 const viewMode = ref('list')
@@ -224,6 +228,14 @@ const currentRow = ref(null)
 // 详情对话框
 const detailDialogVisible = ref(false)
 const detailRow = ref(null)
+
+// 权限检查
+const canEdit = (row) => {
+  if (!row) return false
+  const userInfo = userStore.userInfo
+  if (userInfo.role === 'admin') return true
+  return row.created_by === userInfo.id
+}
 
 // 获取数据
 const fetchData = async () => {
@@ -300,9 +312,13 @@ const handleAdd = () => {
 
 // 编辑
 const handleEdit = (row) => {
-  formType.value = 'edit'
-  currentRow.value = row
-  formDialogVisible.value = true
+  if (canEdit(row)) {
+    formType.value = 'edit'
+    currentRow.value = row
+    formDialogVisible.value = true
+  } else {
+    ElMessage.warning('您没有权限编辑此合作方')
+  }
 }
 
 // 批量编辑
@@ -322,15 +338,19 @@ const handleView = (row) => {
 
 // 删除
 const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定要删除合作方 "${row.name}" 吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    await deletePartner(row.id)
-    ElMessage.success('删除成功')
-    fetchData()
-  })
+  if (canEdit(row)) {
+    ElMessageBox.confirm(`确定要删除合作方 "${row.name}" 吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(async () => {
+      await deletePartner(row.id)
+      ElMessage.success('删除成功')
+      fetchData()
+    })
+  } else {
+    ElMessage.warning('您没有权限删除此合作方')
+  }
 }
 
 // 批量删除
@@ -342,7 +362,9 @@ const handleBatchDelete = () => {
     type: 'warning'
   }).then(async () => {
     for (const row of selectedRows.value) {
-      await deletePartner(row.id)
+      if (canEdit(row)) {
+        await deletePartner(row.id)
+      }
     }
     ElMessage.success('批量删除成功')
     fetchData()

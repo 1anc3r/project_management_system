@@ -238,7 +238,7 @@ const getProjects = async (req, res) => {
         p.partner_id, par.name as partner_name,
         (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact,
         (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact_phone,
-        u.nickname as creator_name
+        p.created_by, u.nickname as creator_name
       FROM projects p
       LEFT JOIN partners par ON p.partner_id = par.id
       LEFT JOIN users u ON p.created_by = u.id
@@ -289,7 +289,7 @@ const getProjectById = async (req, res) => {
         par.address as partner_address, par.bank as partner_bank, par.bank_account as partner_bank_account,
         (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact,
         (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) as partner_contact_phone,
-        u.nickname as creator_name
+        p.created_by, u.nickname as creator_name
       FROM projects p
       LEFT JOIN partners par ON p.partner_id = par.id
       LEFT JOIN users u ON p.created_by = u.id

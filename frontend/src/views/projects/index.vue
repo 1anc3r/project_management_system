@@ -204,6 +204,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, Edit, Delete, Search, Upload, Download, View, More
@@ -215,6 +216,7 @@ import ProjectDetailDialog from './components/ProjectDetailDialog.vue'
 
 // 路由
 const route = useRoute()
+const userStore = useUserStore()
 
 // 视图模式，默认列表
 const viewMode = ref('list')
@@ -262,6 +264,14 @@ const formType = ref('add')
 // 详情对话框
 const detailDialogVisible = ref(false)
 const detailRow = ref(null)
+
+// 权限检查
+const canEdit = (row) => {
+  if (!row) return false
+  const userInfo = userStore.userInfo
+  if (userInfo.role === 'admin') return true
+  return row.created_by === userInfo.id
+}
 
 // 获取数据
 const fetchData = async () => {
@@ -337,9 +347,13 @@ const handleAdd = () => {
 
 // 编辑
 const handleEdit = (row) => {
-  formType.value = 'edit'
-  currentRow.value = row
-  formDialogVisible.value = true
+  if (canEdit(row)) {
+    formType.value = 'edit'
+    currentRow.value = row
+    formDialogVisible.value = true
+  } else {
+    ElMessage.warning('您没有权限编辑此项目')
+  }
 }
 
 // 批量编辑
@@ -370,15 +384,19 @@ const handleEditFromDetail = (row) => {
 
 // 删除
 const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定要删除项目 "${row.name}" 吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    await deleteProject(row.id)
-    ElMessage.success('删除成功')
-    fetchData()
-  })
+  if (canEdit(row)) {
+    ElMessageBox.confirm(`确定要删除项目 "${row.name}" 吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(async () => {
+      await deleteProject(row.id)
+      ElMessage.success('删除成功')
+      fetchData()
+    })
+  } else {
+    ElMessage.warning('您没有权限删除此项目')
+  }
 }
 
 // 批量删除
@@ -390,7 +408,9 @@ const handleBatchDelete = () => {
     type: 'warning'
   }).then(async () => {
     for (const row of selectedRows.value) {
-      await deleteProject(row.id)
+      if (canEdit(row)) {
+        await deleteProject(row.id)
+      }
     }
     ElMessage.success('批量删除成功')
     fetchData()

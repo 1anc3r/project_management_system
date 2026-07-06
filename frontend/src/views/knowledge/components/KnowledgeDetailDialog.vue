@@ -18,43 +18,43 @@
 
     <div v-loading="loading" class="detail-content">
       <!-- 头部信息 -->
-      <div class="detail-header" v-if="detailData">
+      <div class="detail-header" v-if="knowledgeData">
         <div class="detail-title">
-          <span class="title-text">{{ detailData.question }}</span>
+          <span class="title-text">{{ knowledgeData.question }}</span>
         </div>
         <div class="detail-meta">
-          分类：<el-tag type="primary" size="small" class="meta-tag">{{ detailData.category }}</el-tag>
-          标签：<el-tag v-for="tag in formatTags(detailData.tags)" :key="tag" size="small" class="meta-tag">
+          分类：<el-tag type="primary" size="small" class="meta-tag">{{ knowledgeData.category }}</el-tag>
+          标签：<el-tag v-for="tag in formatTags(knowledgeData.tags)" :key="tag" size="small" class="meta-tag">
             {{ tag }}
           </el-tag>
           <span class="meta-item">
             <el-icon>
               <User />
-            </el-icon> {{ detailData.created_by_name }}
+            </el-icon> {{ knowledgeData.created_by_name }}
           </span>
           <span class="meta-item">
             <el-icon>
               <Calendar />
-            </el-icon> {{ formatDateTime(detailData.created_at) }}
+            </el-icon> {{ formatDateTime(knowledgeData.created_at) }}
           </span>
           <span class="meta-item">
             <el-icon>
               <View />
-            </el-icon> {{ detailData.view_count || 0 }} 次浏览
+            </el-icon> {{ knowledgeData.view_count || 0 }} 次浏览
           </span>
         </div>
       </div>
 
       <!-- 内容 -->
-      <div class="detail-body" v-if="detailData">
+      <div class="detail-body" v-if="knowledgeData">
         <el-divider content-position="left">内容</el-divider>
         <RichTextEditor v-model="processedAnswer" :readOnly="true" placeholder=" " />
       </div>
 
       <!-- 附件列表 -->
-      <div class="detail-attachments" v-if="detailData?.attachments?.length > 0">
+      <div class="detail-attachments" v-if="knowledgeData?.attachments?.length > 0">
         <el-divider content-position="left">
-          附件 ({{ detailData.attachments.length }})
+          附件 ({{ knowledgeData.attachments.length }})
         </el-divider>
 
         <!-- 附件列表 -->
@@ -79,13 +79,13 @@
       <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
 
       <!-- 底部操作 -->
-      <div class="detail-footer" v-if="detailData">
+      <div class="detail-footer" v-if="knowledgeData">
         <el-button @click="handleClose">
           <el-icon>
             <ArrowLeft />
           </el-icon> 返回列表
         </el-button>
-        <el-button type="primary" @click="handleEdit" v-if="canEdit">
+        <el-button type="primary" @click="handleEdit">
           <el-icon>
             <Edit />
           </el-icon> 编辑
@@ -127,7 +127,7 @@ const userStore = useUserStore()
 const loading = ref(false)
 
 // 详情数据
-const detailData = ref(null)
+const knowledgeData = ref(null)
 
 // 附件预览状态
 const previewVisible = ref(false)
@@ -142,22 +142,22 @@ const toggleFullscreen = () => {
 
 // 处理后的内容（为图片 URL 添加认证 token）
 const processedAnswer = computed(() => {
-  if (!detailData.value?.answer) return ''
-  return injectImageToken(detailData.value.answer, userStore.token)
+  if (!knowledgeData.value?.answer) return ''
+  return injectImageToken(knowledgeData.value.answer, userStore.token)
 })
 
 // 权限检查
 const canEdit = computed(() => {
-  if (!detailData.value) return false
+  if (!knowledgeData.value) return false
   const userInfo = userStore.userInfo
   if (userInfo.role === 'admin') return true
-  return detailData.value.created_by === userInfo.id
+  return knowledgeData.value.created_by === userInfo.id
 })
 
 // 非图片附件列表
 const attachments = computed(() => {
-  if (!detailData.value?.attachments) return []
-  return detailData.value.attachments.filter(att => att)
+  if (!knowledgeData.value?.attachments) return []
+  return knowledgeData.value.attachments.filter(att => att)
 })
 
 /**
@@ -177,7 +177,7 @@ const fetchDetail = async () => {
     await recordView(props.data.id)
     // 再获取详情
     const res = await getKnowledgeById(props.data.id)
-    detailData.value = res.data
+    knowledgeData.value = res.data
   } catch (error) {
     console.error('获取知识详情失败:', error)
     ElMessage.error('获取知识详情失败')
@@ -209,33 +209,41 @@ const downloadAttachment = (attId) => {
 
 // 编辑
 const handleEdit = () => {
-  if (detailData.value) {
-    emit('edit', detailData.value)
+  if (canEdit()) {
+    if (knowledgeData.value) {
+      emit('edit', knowledgeData.value)
+    }
+  } else {
+    ElMessage.warning('您没有权限编辑该知识条目')
   }
 }
 
 // 删除
 const handleDelete = () => {
-  if (!detailData.value) return
-  ElMessageBox.confirm(
-    `确定要删除知识条目 "${detailData.value.question}" 吗？此操作不可恢复。`,
-    '确认删除',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    await deleteKnowledge(detailData.value.id)
-    ElMessage.success('删除成功')
-    visible.value = false
-    emit('delete')
-  }).catch(() => { })
+  if (!knowledgeData.value) return
+  if (canEdit()) {
+    ElMessageBox.confirm(
+      `确定要删除知识条目 "${knowledgeData.value.question}" 吗？此操作不可恢复。`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await deleteKnowledge(knowledgeData.value.id)
+      ElMessage.success('删除成功')
+      visible.value = false
+      emit('delete')
+    }).catch(() => { })
+  } else {
+    ElMessage.warning('您没有权限删除该知识条目')
+  }
 }
 
 // 关闭
 const handleClose = () => {
-  detailData.value = null
+  knowledgeData.value = null
   visible.value = false
 }
 
