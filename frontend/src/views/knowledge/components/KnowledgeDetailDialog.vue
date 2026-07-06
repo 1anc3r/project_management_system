@@ -102,11 +102,14 @@ import {
   User, Calendar, View, Document, Download,
   ArrowLeft, Edit, Delete, Picture, ZoomIn
 } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import { getKnowledgeById, deleteKnowledge, recordView } from '@/api/knowledge'
 import { formatDateTime, injectImageToken } from '@/utils/format'
 import { isPreviewable } from '@/api/attachments'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 import AttachmentPreviewDialog from '@/components/AttachmentPreviewDialog.vue'
+
+const userStore = useUserStore()
 
 const props = defineProps({
   visible: Boolean,
