@@ -6,6 +6,7 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const { PARTNER_TYPES } = require('../config/const');
+const { sortPartnersByType } = require('../utils/dateHelper');
 const { convertToCSV } = require('../utils/csvHelper');
 
 // 从字典表获取合作方类型
@@ -79,7 +80,7 @@ const getPartners = async (req, res) => {
     };
 
     // 排序
-    let orderClause = 'ORDER BY p.created_at DESC';
+    let orderClause = 'ORDER BY p.tax_id DESC';
     const allowedSortFields = ['project_count', 'total_contract_amount', 'created_at'];
     if (sortField && allowedSortFields.includes(sortField)) {
       const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
@@ -114,10 +115,12 @@ const getPartners = async (req, res) => {
       params
     );
 
+    sortedPartners = sortPartnersByType(partners);
+
     res.json({
       code: 200,
       data: {
-        list: partners,
+        list: sortedPartners,
         pagination: {
           page: pageNum,
           pageSize: limit,
