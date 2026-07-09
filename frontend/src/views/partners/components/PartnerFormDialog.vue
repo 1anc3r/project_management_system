@@ -122,6 +122,8 @@ import { Plus, Rank } from '@element-plus/icons-vue'
 import Sortable from 'sortablejs'
 import { createPartner, updatePartner, getPartnerById, getPartnerTypes } from '@/api/partners'
 
+const TDT_KEY = import.meta.env.VITE_TDT_KEY || 'your_tianditu_api_token';
+
 const props = defineProps({
   visible: Boolean,
   type: {
@@ -152,7 +154,9 @@ const form = ref({
   tax_id: '',
   address: '',
   bank: '',
-  bank_account: ''
+  bank_account: '',
+  longitude: null,
+  latitude: null
 })
 
 // 表单默认值
@@ -162,7 +166,9 @@ const DEFAULT_FORM = {
   tax_id: '',
   address: '',
   bank: '',
-  bank_account: ''
+  bank_account: '',
+  longitude: null,
+  latitude: null
 }
 
 // 联系人列表
@@ -292,6 +298,34 @@ const initSortable = () => {
 }
 
 /**
+ * 根据地址获取经纬度（调用天地图地理编码API）
+ */
+const geocodeAddress = async (address) => {
+  const ds = JSON.stringify({ keyWord: address })
+  const url = `http://api.tianditu.gov.cn/geocoder?ds=${encodeURIComponent(ds)}&tk=${TDT_KEY}`
+
+  try {
+    const resp = await fetch(url, { method: 'GET' })
+    const data = await resp.json()
+
+    if (data.status === '0' && data.location) {
+      return {
+        success: true,
+        lon: data.location.lon,
+        lat: data.location.lat,
+        level: data.location.level || '',
+        score: data.location.score || 0,
+        msg: '成功'
+      }
+    } else {
+      return { success: false, lon: null, lat: null, level: '', score: 0, msg: data.msg || '未找到结果' }
+    }
+  } catch (err) {
+    return { success: false, lon: null, lat: null, level: '', score: 0, msg: '请求异常: ' + err.message }
+  }
+}
+
+/**
  * 提交表单
  */
 const handleSubmit = async () => {
@@ -321,6 +355,17 @@ const handleSubmit = async () => {
         position: c.position || null,
         sort_order: index
       }))
+      
+    if (form.value.longitude === null || form.value.latitude === null) {
+      // 如果经纬度为空，尝试根据地址获取
+      const geoResult = await geocodeAddress(form.value.address)
+      if (geoResult.success) {
+        form.value.longitude = geoResult.lon
+        form.value.latitude = geoResult.lat
+      } else {
+        ElMessage.warning(`无法获取经纬度: ${geoResult.msg}`)
+      }
+    }
 
     const submitData = {
       ...form.value,
@@ -372,7 +417,9 @@ const loadEditData = async () => {
         tax_id: data.tax_id || '',
         address: data.address || '',
         bank: data.bank || '',
-        bank_account: data.bank_account || ''
+        bank_account: data.bank_account || '',
+        longitude: data.longitude || null,
+        latitude: data.latitude || null,
       }
       // 加载联系人列表（保留排序序号）
       contacts.value = (data.contacts || []).map(c => ({

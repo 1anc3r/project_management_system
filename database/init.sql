@@ -18,6 +18,8 @@ CREATE TABLE partners (
     type VARCHAR(50) DEFAULT '其他' COMMENT '合作方类型(甲方/乙方/丙方/其他)',
     tax_id VARCHAR(50) DEFAULT NULL COMMENT '纳税人识别号',
     address VARCHAR(255) DEFAULT NULL COMMENT '地址',
+    longitude DECIMAL(11, 8) DEFAULT NULL COMMENT '经度，范围 -180 ~ 180',
+    latitude DECIMAL(11, 8) DEFAULT NULL COMMENT '纬度，范围 -90 ~ 90',
     bank VARCHAR(255) DEFAULT NULL COMMENT '开户银行',
     bank_account VARCHAR(100) DEFAULT NULL COMMENT '银行账号',
     created_by BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人ID',
@@ -29,7 +31,7 @@ CREATE TABLE partners (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合作方信息表';
 
 -- =====================================================
--- 1.1 合作方联系人表 partner_contacts
+-- 2. 合作方联系人表 partner_contacts
 -- 一个合作方可有多个联系人，支持拖拽排序
 -- =====================================================
 DROP TABLE IF EXISTS partner_contacts;
@@ -49,7 +51,7 @@ CREATE TABLE partner_contacts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合作方联系人表';
 
 -- =====================================================
--- 2. 项目表 projects
+-- 3. 项目表 projects
 -- =====================================================
 DROP TABLE IF EXISTS projects;
 CREATE TABLE projects (
@@ -77,7 +79,7 @@ CREATE TABLE projects (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目信息表';
 
 -- =====================================================
--- 3. 项目款项表 payments
+-- 4. 项目款项表 payments
 -- =====================================================
 DROP TABLE IF EXISTS payments;
 CREATE TABLE payments (
@@ -97,7 +99,7 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目款项表';
 
 -- =====================================================
--- 4. 项目附件表 attachments
+-- 5. 项目附件表 attachments
 -- =====================================================
 DROP TABLE IF EXISTS attachments;
 CREATE TABLE attachments (
@@ -117,7 +119,7 @@ CREATE TABLE attachments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目附件表（支持项目和知识库）';
 
 -- =====================================================
--- 5. 用户表 users
+-- 6. 用户表 users
 -- =====================================================
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
@@ -135,7 +137,7 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- =====================================================
--- 6. 操作日志表 operation_logs
+-- 7. 操作日志表 operation_logs
 -- =====================================================
 DROP TABLE IF EXISTS operation_logs;
 CREATE TABLE operation_logs (
@@ -155,6 +157,109 @@ CREATE TABLE operation_logs (
     KEY idx_operation (operation),
     KEY idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
+
+-- =====================================================
+-- 8. 字典表 dictionaries
+-- =====================================================
+DROP TABLE IF EXISTS dictionaries;
+CREATE TABLE dictionaries (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    dict_code VARCHAR(50) NOT NULL COMMENT '字典编码',
+    dict_name VARCHAR(100) NOT NULL COMMENT '字典名称',
+    dict_type VARCHAR(20) NOT NULL DEFAULT 'string' COMMENT '字典类型(string/int/boolean)',
+    description VARCHAR(255) DEFAULT NULL COMMENT '字典描述',
+    sort_order INT DEFAULT 0 COMMENT '排序序号',
+    status TINYINT(1) DEFAULT 1 COMMENT '状态(0禁用1启用)',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_dict_code (dict_code),
+    KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典表';
+
+-- =====================================================
+-- 9. 字典项表 dictionary_items
+-- =====================================================
+DROP TABLE IF EXISTS dictionary_items;
+CREATE TABLE dictionary_items (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    dict_id BIGINT UNSIGNED NOT NULL COMMENT '字典ID',
+    item_code VARCHAR(50) NOT NULL COMMENT '字典项编码',
+    item_name VARCHAR(100) NOT NULL COMMENT '字典项名称',
+    item_value VARCHAR(255) DEFAULT NULL COMMENT '字典项值',
+    parent_id BIGINT UNSIGNED DEFAULT NULL COMMENT '父级ID（用于级联字典）',
+    sort_order INT DEFAULT 0 COMMENT '排序序号',
+    status TINYINT(1) DEFAULT 1 COMMENT '状态(0禁用1启用)',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_dict_item (dict_id, item_code),
+    KEY idx_dict_id (dict_id),
+    KEY idx_status (status),
+    CONSTRAINT fk_dict_item_dict FOREIGN KEY (dict_id) REFERENCES dictionaries(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典项表';
+
+-- =====================================================
+-- 10. 资讯表 information
+-- =====================================================
+DROP TABLE IF EXISTS information;
+CREATE TABLE information (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    partner_id BIGINT UNSIGNED DEFAULT NULL COMMENT '合作方ID（外键）',
+    project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID（外键）',
+    information_date DATE NOT NULL COMMENT '资讯日期',
+    information_type VARCHAR(50) NOT NULL COMMENT '资讯类型(项目推进/会议活动)',
+    information_title VARCHAR(255) NOT NULL COMMENT '资讯标题',
+    information_content TEXT DEFAULT NULL COMMENT '资讯内容',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    KEY idx_partner_id (partner_id),
+    KEY idx_project_id (project_id),
+    KEY idx_information_date (information_date),
+    KEY idx_information_type (information_type),
+    CONSTRAINT fk_info_partner FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_info_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资讯信息表';
+
+-- =====================================================
+-- 11. 知识库模块表结构
+-- =====================================================
+
+-- 知识条目表
+CREATE TABLE IF NOT EXISTS `knowledge` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '知识条目ID',
+  `question` VARCHAR(500) NOT NULL COMMENT '标题',
+  `answer` TEXT NOT NULL COMMENT '内容（支持富文本/HTML）',
+  `category` VARCHAR(50) DEFAULT NULL COMMENT '分类（如：内控流程/文件模板/操作手册/优秀案例/常见业务问题/常见技术问题/其他）',
+  `tags` VARCHAR(255) DEFAULT NULL COMMENT '标签，多个以逗号分隔',
+  `view_count` INT UNSIGNED DEFAULT '0' COMMENT '浏览次数',
+  `created_by` BIGINT UNSIGNED NOT NULL COMMENT '创建人ID（关联users.id）',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_category` (`category`),
+  KEY `idx_created_by` (`created_by`),
+  KEY `idx_created_at` (`created_at`),
+  FULLTEXT KEY `ft_question` (`question`) WITH PARSER ngram,
+  FULLTEXT KEY `ft_answer` (`answer`) WITH PARSER ngram,
+  FULLTEXT KEY `ft_question_answer` (`question`, `answer`) WITH PARSER ngram,
+  CONSTRAINT `fk_knowledge_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库条目表';
+
+-- 知识浏览记录表（可选，P2）
+CREATE TABLE IF NOT EXISTS `knowledge_views` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `knowledge_id` BIGINT UNSIGNED NOT NULL COMMENT '知识条目ID',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '浏览用户ID',
+  `viewed_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_knowledge_id` (`knowledge_id`),
+  KEY `idx_user_id` (`user_id`),
+  CONSTRAINT `fk_views_knowledge` FOREIGN KEY (`knowledge_id`) REFERENCES `knowledge` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_views_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库浏览记录';
 
 -- =====================================================
 -- 初始化数据
@@ -207,100 +312,23 @@ INSERT INTO operation_logs (user_id, username, module, operation, target_id, tar
 (1, 'admin', '项目', '新增', 1, '智慧园区管理系统建设项目', '{"name": "智慧园区管理系统建设项目", "total_amount": 500}', '127.0.0.1'),
 (1, 'admin', '合作方', '新增', 1, '四川科技有限公司', '{"name": "四川科技有限公司", "tax_id": "91510000MA61R00001"}', '127.0.0.1');
 
--- =====================================================
--- 创建视图（方便查询）
--- =====================================================
+-- 插入示例资讯数据
+INSERT INTO information (partner_id, project_id, information_date, information_type, information_title, information_content) VALUES
+(1, 1, '2024-02-15', '项目推进', '智慧园区项目启动会', '项目正式启动，双方确认了项目范围和里程碑计划'),
+(1, 1, '2024-03-20', '项目推进', '智慧园区项目中期验收', '完成了系统核心模块开发，通过中期验收'),
+(1, NULL, '2024-04-10', '会议活动', '与四川科技季度沟通会', '就后续合作方向进行了深入交流，达成多项共识'),
+(2, 2, '2023-07-01', '项目推进', '数据治理平台需求评审', '完成了需求规格说明书的评审和确认'),
+(2, 2, '2024-01-15', '会议活动', '数据治理项目年终总结会', '总结项目运营情况，制定下一年度工作计划'),
+(1, 3, '2023-02-01', '项目推进', '政务云运维服务启动', '运维团队进场，开始提供7x24小时运维服务'),
+(3, 4, '2024-08-05', '项目推进', '智慧城市大数据平台立项', '项目正式立项，进入需求调研阶段'),
+(2, 5, '2024-04-20', '会议活动', '企业数字化转型咨询启动会', '咨询服务正式启动，确定了咨询范围和交付物');
 
--- 项目完整信息视图
-CREATE OR REPLACE VIEW v_project_full AS
-SELECT 
-    p.id,
-    p.name AS project_name,
-    p.city,
-    p.stage,
-    p.expansion_method,
-    p.content,
-    p.total_amount,
-    p.receipt_amount,
-    (p.total_amount - p.receipt_amount) AS pending_amount,
-    p.cost,
-    (p.total_amount - p.cost) AS profit,
-    CASE 
-        WHEN p.total_amount > 0 THEN ROUND((p.total_amount - p.cost) / p.total_amount * 100, 2)
-        ELSE 0 
-    END AS profit_rate,
-    p.start_date,
-    p.end_date,
-    p.created_at,
-    p.updated_at,
-    par.id AS partner_id,
-    par.name AS partner_name,
-    par.tax_id AS partner_tax_id,
-    u.nickname AS creator_name
-FROM projects p
-LEFT JOIN partners par ON p.partner_id = par.id
-LEFT JOIN users u ON p.created_by = u.id;
-
--- 合作方项目统计视图
-CREATE OR REPLACE VIEW v_partner_projects AS
-SELECT 
-    par.id,
-    par.name,
-    par.type,
-    par.tax_id,
-    par.address,
-    COUNT(p.id) AS project_count,
-    SUM(p.total_amount) AS total_contract_amount,
-    SUM(p.receipt_amount) AS total_receipt_amount
-FROM partners par
-LEFT JOIN projects p ON par.id = p.partner_id
-GROUP BY par.id, par.name, par.type, par.tax_id, par.address;
-
--- =====================================================
--- 7. 字典表 dictionaries
--- =====================================================
-DROP TABLE IF EXISTS dictionaries;
-CREATE TABLE dictionaries (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    dict_code VARCHAR(50) NOT NULL COMMENT '字典编码',
-    dict_name VARCHAR(100) NOT NULL COMMENT '字典名称',
-    dict_type VARCHAR(20) NOT NULL DEFAULT 'string' COMMENT '字典类型(string/int/boolean)',
-    description VARCHAR(255) DEFAULT NULL COMMENT '字典描述',
-    sort_order INT DEFAULT 0 COMMENT '排序序号',
-    status TINYINT(1) DEFAULT 1 COMMENT '状态(0禁用1启用)',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_dict_code (dict_code),
-    KEY idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典表';
-
--- =====================================================
--- 8. 字典项表 dictionary_items
--- =====================================================
-DROP TABLE IF EXISTS dictionary_items;
-CREATE TABLE dictionary_items (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    dict_id BIGINT UNSIGNED NOT NULL COMMENT '字典ID',
-    item_code VARCHAR(50) NOT NULL COMMENT '字典项编码',
-    item_name VARCHAR(100) NOT NULL COMMENT '字典项名称',
-    item_value VARCHAR(255) DEFAULT NULL COMMENT '字典项值',
-    parent_id BIGINT UNSIGNED DEFAULT NULL COMMENT '父级ID（用于级联字典）',
-    sort_order INT DEFAULT 0 COMMENT '排序序号',
-    status TINYINT(1) DEFAULT 1 COMMENT '状态(0禁用1启用)',
-    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_dict_item (dict_id, item_code),
-    KEY idx_dict_id (dict_id),
-    KEY idx_status (status),
-    CONSTRAINT fk_dict_item_dict FOREIGN KEY (dict_id) REFERENCES dictionaries(id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典项表';
-
--- =====================================================
--- 初始化字典数据
--- =====================================================
+-- 插入示例知识条目数据
+INSERT INTO `knowledge` (`question`, `answer`, `category`, `tags`, `created_by`) VALUES
+('如何编写项目验收报告？', '<p><strong>一、验收报告结构</strong></p><p>1. 封面：项目名称、验收日期、甲乙双方</p><p>2. 正文：项目概述、验收依据、验收结论</p><p>3. 附件：验收清单、测试报告</p><p><strong>二、注意事项</strong></p><p>- 验收需甲乙双方签字盖章</p><p>- 验收报告需附验收清单</p><p>- 验收结论需明确是否通过</p>', '文件模板', '模板,验收,项目', 1),
+('项目款项比例如何分配？', '<p>一般按照以下比例分配：</p><p>1. 首款：30%（合同签订后支付）</p><p>2. 第二笔款：40%（系统上线验收后支付）</p><p>3. 尾款：30%（质保期满后支付）</p><p><strong>特殊情况</strong>可根据项目实际情况调整比例，但需双方协商一致。</p>', '常见业务问题', '款项,比例,合同', 1),
+('如何配置MySQL数据库连接池？', '<p><strong>一、连接池配置参数</strong></p><pre><code>const pool = mysql.createPool({\n  host: ''localhost'',\n  port: 3306,\n  user: ''root'',\n  password: ''password'',\n  database: ''project_management'',\n  waitForConnections: true,\n  connectionLimit: 10,\n  queueLimit: 0,\n  enableKeepAlive: true,\n  keepAliveInitialDelay: 0\n});</code></pre><p><strong>二、关键参数说明</strong></p><p>- connectionLimit: 最大连接数</p><p>- waitForConnections: 连接耗尽时是否等待</p><p>- queueLimit: 最大等待队列长度（0表示无限制）</p>', '常见技术问题', 'MySQL,数据库,配置', 1)
+ON DUPLICATE KEY UPDATE `question` = VALUES(`question`), `answer` = VALUES(`answer`);
 
 -- 合作方类型
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
@@ -439,29 +467,6 @@ SELECT id, '发票', '发票', '发票', 8 FROM dictionaries WHERE dict_code = '
 UNION ALL
 SELECT id, '其他', '其他', '其他', 9 FROM dictionaries WHERE dict_code = 'attachment_type';
 
--- =====================================================
--- 9. 资讯表 information
--- =====================================================
-DROP TABLE IF EXISTS information;
-CREATE TABLE information (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    partner_id BIGINT UNSIGNED DEFAULT NULL COMMENT '合作方ID（外键）',
-    project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID（外键）',
-    information_date DATE NOT NULL COMMENT '资讯日期',
-    information_type VARCHAR(50) NOT NULL COMMENT '资讯类型(项目推进/会议活动)',
-    information_title VARCHAR(255) NOT NULL COMMENT '资讯标题',
-    information_content TEXT DEFAULT NULL COMMENT '资讯内容',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id),
-    KEY idx_partner_id (partner_id),
-    KEY idx_project_id (project_id),
-    KEY idx_information_date (information_date),
-    KEY idx_information_type (information_type),
-    CONSTRAINT fk_info_partner FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_info_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资讯信息表';
-
 -- 资讯类型字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('information_type', '资讯类型', 'string', '资讯类型字典', 8);
@@ -470,56 +475,6 @@ INSERT INTO dictionary_items (dict_id, item_code, item_name, item_value, sort_or
 SELECT id, '项目推进', '项目推进', '项目推进', 1 FROM dictionaries WHERE dict_code = 'information_type'
 UNION ALL
 SELECT id, '会议活动', '会议活动', '会议活动', 2 FROM dictionaries WHERE dict_code = 'information_type';
-
--- 插入示例资讯数据
-INSERT INTO information (partner_id, project_id, information_date, information_type, information_title, information_content) VALUES
-(1, 1, '2024-02-15', '项目推进', '智慧园区项目启动会', '项目正式启动，双方确认了项目范围和里程碑计划'),
-(1, 1, '2024-03-20', '项目推进', '智慧园区项目中期验收', '完成了系统核心模块开发，通过中期验收'),
-(1, NULL, '2024-04-10', '会议活动', '与四川科技季度沟通会', '就后续合作方向进行了深入交流，达成多项共识'),
-(2, 2, '2023-07-01', '项目推进', '数据治理平台需求评审', '完成了需求规格说明书的评审和确认'),
-(2, 2, '2024-01-15', '会议活动', '数据治理项目年终总结会', '总结项目运营情况，制定下一年度工作计划'),
-(1, 3, '2023-02-01', '项目推进', '政务云运维服务启动', '运维团队进场，开始提供7x24小时运维服务'),
-(3, 4, '2024-08-05', '项目推进', '智慧城市大数据平台立项', '项目正式立项，进入需求调研阶段'),
-(2, 5, '2024-04-20', '会议活动', '企业数字化转型咨询启动会', '咨询服务正式启动，确定了咨询范围和交付物');
-
--- =====================================================
--- 10. 知识库模块表结构
--- =====================================================
-
--- 知识条目表
-CREATE TABLE IF NOT EXISTS `knowledge` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '知识条目ID',
-  `question` VARCHAR(500) NOT NULL COMMENT '标题',
-  `answer` TEXT NOT NULL COMMENT '内容（支持富文本/HTML）',
-  `category` VARCHAR(50) DEFAULT NULL COMMENT '分类（如：内控流程/文件模板/操作手册/优秀案例/常见业务问题/常见技术问题/其他）',
-  `tags` VARCHAR(255) DEFAULT NULL COMMENT '标签，多个以逗号分隔',
-  `view_count` INT UNSIGNED DEFAULT '0' COMMENT '浏览次数',
-  `created_by` BIGINT UNSIGNED NOT NULL COMMENT '创建人ID（关联users.id）',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_category` (`category`),
-  KEY `idx_created_by` (`created_by`),
-  KEY `idx_created_at` (`created_at`),
-  FULLTEXT KEY `ft_question` (`question`) WITH PARSER ngram,
-  FULLTEXT KEY `ft_answer` (`answer`) WITH PARSER ngram,
-  FULLTEXT KEY `ft_question_answer` (`question`, `answer`) WITH PARSER ngram,
-  CONSTRAINT `fk_knowledge_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库条目表';
-
--- 知识浏览记录表（可选，P2）
-CREATE TABLE IF NOT EXISTS `knowledge_views` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `knowledge_id` BIGINT UNSIGNED NOT NULL COMMENT '知识条目ID',
-  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '浏览用户ID',
-  `viewed_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_knowledge_id` (`knowledge_id`),
-  KEY `idx_user_id` (`user_id`),
-  CONSTRAINT `fk_views_knowledge` FOREIGN KEY (`knowledge_id`) REFERENCES `knowledge` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_views_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库浏览记录';
-
 -- 知识库字典数据
 -- 知识分类字典
 INSERT INTO `dictionaries` (`dict_code`, `dict_name`, `dict_type`, `description`, `sort_order`, `status`) 
@@ -554,12 +509,54 @@ INSERT INTO `dictionary_items` (`dict_id`, `item_code`, `item_name`, `item_value
 (@knowledge_tag_dict_id, 'data', '数据', '数据', 5, 1)
 ON DUPLICATE KEY UPDATE `item_name` = VALUES(`item_name`), `status` = 1;
 
--- 示例数据
-INSERT INTO `knowledge` (`question`, `answer`, `category`, `tags`, `created_by`) VALUES
-('如何编写项目验收报告？', '<p><strong>一、验收报告结构</strong></p><p>1. 封面：项目名称、验收日期、甲乙双方</p><p>2. 正文：项目概述、验收依据、验收结论</p><p>3. 附件：验收清单、测试报告</p><p><strong>二、注意事项</strong></p><p>- 验收需甲乙双方签字盖章</p><p>- 验收报告需附验收清单</p><p>- 验收结论需明确是否通过</p>', '文件模板', '模板,验收,项目', 1),
-('项目款项比例如何分配？', '<p>一般按照以下比例分配：</p><p>1. 首款：30%（合同签订后支付）</p><p>2. 第二笔款：40%（系统上线验收后支付）</p><p>3. 尾款：30%（质保期满后支付）</p><p><strong>特殊情况</strong>可根据项目实际情况调整比例，但需双方协商一致。</p>', '常见业务问题', '款项,比例,合同', 1),
-('如何配置MySQL数据库连接池？', '<p><strong>一、连接池配置参数</strong></p><pre><code>const pool = mysql.createPool({\n  host: ''localhost'',\n  port: 3306,\n  user: ''root'',\n  password: ''password'',\n  database: ''project_management'',\n  waitForConnections: true,\n  connectionLimit: 10,\n  queueLimit: 0,\n  enableKeepAlive: true,\n  keepAliveInitialDelay: 0\n});</code></pre><p><strong>二、关键参数说明</strong></p><p>- connectionLimit: 最大连接数</p><p>- waitForConnections: 连接耗尽时是否等待</p><p>- queueLimit: 最大等待队列长度（0表示无限制）</p>', '常见技术问题', 'MySQL,数据库,配置', 1)
-ON DUPLICATE KEY UPDATE `question` = VALUES(`question`), `answer` = VALUES(`answer`);
+-- =====================================================
+-- 创建视图（方便查询）
+-- =====================================================
+
+-- 项目完整信息视图
+CREATE OR REPLACE VIEW v_project_full AS
+SELECT 
+    p.id,
+    p.name AS project_name,
+    p.city,
+    p.stage,
+    p.expansion_method,
+    p.content,
+    p.total_amount,
+    p.receipt_amount,
+    (p.total_amount - p.receipt_amount) AS pending_amount,
+    p.cost,
+    (p.total_amount - p.cost) AS profit,
+    CASE 
+        WHEN p.total_amount > 0 THEN ROUND((p.total_amount - p.cost) / p.total_amount * 100, 2)
+        ELSE 0 
+    END AS profit_rate,
+    p.start_date,
+    p.end_date,
+    p.created_at,
+    p.updated_at,
+    par.id AS partner_id,
+    par.name AS partner_name,
+    par.tax_id AS partner_tax_id,
+    u.nickname AS creator_name
+FROM projects p
+LEFT JOIN partners par ON p.partner_id = par.id
+LEFT JOIN users u ON p.created_by = u.id;
+
+-- 合作方项目统计视图
+CREATE OR REPLACE VIEW v_partner_projects AS
+SELECT 
+    par.id,
+    par.name,
+    par.type,
+    par.tax_id,
+    par.address,
+    COUNT(p.id) AS project_count,
+    SUM(p.total_amount) AS total_contract_amount,
+    SUM(p.receipt_amount) AS total_receipt_amount
+FROM partners par
+LEFT JOIN projects p ON par.id = p.partner_id
+GROUP BY par.id, par.name, par.type, par.tax_id, par.address;
 
 -- 创建知识库视图
 CREATE OR REPLACE VIEW v_knowledge_full AS

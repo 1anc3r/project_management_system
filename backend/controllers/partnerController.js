@@ -98,7 +98,7 @@ const getPartners = async (req, res) => {
     // 查询数据
     const partners = await query(
       `SELECT 
-        p.id, p.name, p.type, p.tax_id, p.address, 
+        p.id, p.name, p.type, p.tax_id, p.address, p.longitude, p.latitude,
         p.bank, p.bank_account,
         p.created_at, p.updated_at,
         COUNT(DISTINCT proj.id) as project_count,
@@ -209,6 +209,8 @@ const createPartner = async (req, res) => {
       address,
       bank,
       bank_account,
+      longitude,
+      latitude,
       contacts: partnerContacts
     } = req.body;
 
@@ -249,8 +251,8 @@ const createPartner = async (req, res) => {
       // 创建合作方
       const [result] = await connection.execute(
         `INSERT INTO partners 
-         (name, type, tax_id, address, bank, bank_account, created_by) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (name, type, tax_id, address, bank, bank_account, longitude, latitude, created_by) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           name,
           type || '其他',
@@ -258,6 +260,8 @@ const createPartner = async (req, res) => {
           address || null,
           bank || null,
           bank_account || null,
+          longitude || null,
+          latitude || null,
           req.user.userId
         ]
       );
@@ -315,6 +319,8 @@ const updatePartner = async (req, res) => {
       address,
       bank,
       bank_account,
+      longitude,
+      latitude,
       contacts: partnerContacts
     } = req.body;
 
@@ -361,7 +367,7 @@ const updatePartner = async (req, res) => {
       await connection.execute(
         `UPDATE partners SET 
           name = ?, type = ?, tax_id = ?, address = ?, 
-          bank = ?, bank_account = ?, created_by = ?
+          bank = ?, bank_account = ?, longitude = ?, latitude = ?, created_by = ?
          WHERE id = ?`,
         [
           name,
@@ -370,6 +376,8 @@ const updatePartner = async (req, res) => {
           address || null,
           bank || null,
           bank_account || null,
+          longitude || null,
+          latitude || null,
           req.user.userId,
           id
         ]
