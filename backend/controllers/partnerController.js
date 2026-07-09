@@ -740,6 +740,34 @@ const getPartnerTypes = async (req, res) => {
 };
 
 /**
+ * 获取所有合作方地址及经纬度坐标
+ * GET /api/partners/addresses
+ */
+const getPartnerLocations = async (req, res) => {
+  try {
+    const locations = await query(
+      `SELECT 
+        p.id, p.name, p.address, p.longitude, p.latitude,
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as contact,
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as contact_phone
+      FROM partners p
+      ORDER BY p.name ASC`
+    );
+
+    res.json({
+      code: 200,
+      data: locations
+    });
+  } catch (error) {
+    console.error('获取合作方地址错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取合作方地址失败'
+    });
+  }
+};
+
+/**
  * 获取合作方联系人列表（按排序序号排序）
  * GET /api/partners/:id/contacts
  */
@@ -952,6 +980,7 @@ module.exports = {
   searchPartners,
   getAllPartners,
   getPartnerTypes,
+  getPartnerLocations,
   getPartnerContacts,
   addPartnerContact,
   updatePartnerContact,

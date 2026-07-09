@@ -51,6 +51,13 @@ router.get('/export', authenticate, partnerController.exportPartners);
 router.get('/export-contacts', authenticate, partnerController.exportPartnerContacts);
 
 /**
+ * @route   GET /api/partners/:id/addresses
+ * @desc    获取合作方地址及经纬度坐标
+ * @access  Private
+ */
+router.get('/:id/addresses', authenticate, partnerController.getPartnerLocations);
+
+/**
  * @route   GET /api/partners/:id/contacts
  * @desc    获取合作方联系人列表
  * @access  Private

@@ -56,7 +56,7 @@ router.get('/', authenticate, knowledgeController.getKnowledges);
  */
 router.post('/', 
   authenticate, 
-  createLogMiddleware('knowledge', 'create'),
+  createLogMiddleware('知识条目', '新增'),
   knowledgeController.createKnowledge
 );
 
@@ -74,7 +74,7 @@ router.get('/:id', authenticate, knowledgeController.getKnowledgeById);
  */
 router.put('/:id', 
   authenticate, 
-  createLogMiddleware('knowledge', 'update'),
+  createLogMiddleware('知识条目', '更新'),
   knowledgeController.updateKnowledge
 );
 
@@ -85,7 +85,7 @@ router.put('/:id',
  */
 router.delete('/:id', 
   authenticate, 
-  createLogMiddleware('knowledge', 'delete'),
+  createLogMiddleware('知识条目', '删除'),
   knowledgeController.deleteKnowledge
 );
 

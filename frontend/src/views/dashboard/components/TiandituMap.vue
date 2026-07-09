@@ -101,6 +101,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Loading, Warning, MapLocation, ArrowRight } from '@element-plus/icons-vue';
 import { getCityDistribution } from '@/api/projects';
+import { getPartnerLocations } from '@/api/partners';
 import { formatAmount, getProjectStageColor, getProjectStageTag } from '@/utils/format';
 
 // ===================== Props =====================
@@ -148,8 +149,10 @@ const router = useRouter();
 const mapRef = ref(null);
 const cityListRef = ref(null);
 const map = ref(null);
-const geoJsonLayer = ref(null);
+const cityGeoJsonLayer = ref(null);
+const partnerMarkerLayer = ref(null);
 const cityDistribution = ref([]);
+const partnerLocations = ref([]);
 const isLoading = ref(true);
 const hasError = ref(false);
 const errorMsg = ref('');
@@ -178,10 +181,13 @@ onMounted(async () => {
     // 并行加载数据和初始化地图
     await Promise.all([
       fetchCityDistribution(),
+      fetchPartnerLocations(),
       initMap()
     ]);
     // 加载GeoJSON并渲染
     await loadGeoJSON();
+    // 在地图初始化完成后，渲染合作方标注
+    renderPartnerMarkers();
   } catch (error) {
     handleError('地图初始化失败', error);
   } finally {
@@ -236,9 +242,60 @@ async function initMap() {
       vecLayer.addTo(map.value);
       cvaLayer.addTo(map.value);
 
+      // 初始化合作方标注图层组
+      partnerMarkerLayer.value = L.layerGroup().addTo(map.value);
+
       resolve();
     } catch (error) {
       reject(error);
+    }
+  });
+}
+
+/**
+ * 渲染合作方标注到地图
+ * 在 initMap() 中初始化图层组后调用，或在 fetchPartnerLocations() 数据更新后调用
+ */
+function renderPartnerMarkers() {
+  if (!map.value || !partnerMarkerLayer.value) return;
+
+  // 清除旧标注
+  partnerMarkerLayer.value.clearLayers();
+
+  partnerLocations.value.forEach(location => {
+    // 注意：Leaflet使用 [lat, lng] 格式，需确认后端返回的是 [lng, lat] 还是 [lat, lng]
+    // 根据原代码推断后端返回的是 { longitude: 经度, latitude: 纬度 }
+    const lat = parseFloat(location.latitude);
+    const lng = parseFloat(location.longitude);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+      // 创建自定义图标
+      const customIcon = L.divIcon({
+        className: 'partner-marker',
+        html: `<div class="marker-pin">
+                <div class="marker-icon"></div>
+               </div>`,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -42]
+      });
+
+      // 创建标注
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .bindPopup(`
+          <div style="min-width:200px;">
+            <h4 style="margin:0 0 8px 0;color:#303133;">${location.name || '合作方'}</h4>
+            <p style="margin:4px 0;color:#606266;font-size:13px;">
+              <b>地址：</b>${location.address || '暂无地址'}
+            </p>
+          </div>
+        `, {
+          maxWidth: 300,
+          className: 'partner-popup'
+        });
+
+      // 添加到图层组
+      partnerMarkerLayer.value.addLayer(marker);
     }
   });
 }
@@ -261,8 +318,8 @@ async function fetchCityDistribution() {
     }));
 
     // 如果地图已初始化，重新渲染图层
-    if (geoJsonLayer.value) {
-      geoJsonLayer.value.eachLayer((layer) => {
+    if (cityGeoJsonLayer.value) {
+      cityGeoJsonLayer.value.eachLayer((layer) => {
         const cityName = layer.feature.properties.name;
         const cityData = getCityData(cityName);
         layer.setStyle(getCityStyle(cityData));
@@ -272,6 +329,28 @@ async function fetchCityDistribution() {
     console.error('获取城市分布数据失败:', error);
     // 使用空数据，不影响地图显示
     cityDistribution.value = [];
+  }
+}
+
+/**
+ * 获取合作方地址及经纬度坐标数据
+ * 修改点：数据获取成功后调用 renderPartnerMarkers() 渲染标注
+ */
+async function fetchPartnerLocations() {
+  try {
+    const res = await getPartnerLocations();
+    // 处理数据
+    const locations = res.data || [];
+    partnerLocations.value = locations;
+
+    // 如果地图已初始化，立即渲染合作方标注
+    if (map.value && partnerMarkerLayer.value) {
+      renderPartnerMarkers();
+    }
+  } catch (error) {
+    console.error('获取合作方地址及经纬度坐标数据失败:', error);
+    // 使用空数据，不影响地图显示
+    partnerLocations.value = [];
   }
 }
 
@@ -298,7 +377,7 @@ function renderGeoJSON(geoJsonData) {
   if (!map.value || !geoJsonData) return;
 
   // 创建GeoJSON图层
-  geoJsonLayer.value = L.geoJSON(geoJsonData, {
+  cityGeoJsonLayer.value = L.geoJSON(geoJsonData, {
     style: (feature) => {
       const cityName = feature.properties.name;
       const cityData = getCityData(cityName);
@@ -345,7 +424,7 @@ function renderGeoJSON(geoJsonData) {
   }).addTo(map.value);
 
   // 调整地图视野以适应所有区域
-  map.value.fitBounds(geoJsonLayer.value.getBounds(), {
+  map.value.fitBounds(cityGeoJsonLayer.value.getBounds(), {
     padding: [20, 20]
   });
 }
@@ -441,8 +520,8 @@ function handleCityHover(city) {
   hoveredCity.value = city.city;
 
   // 高亮地图上的对应区域
-  if (geoJsonLayer.value) {
-    geoJsonLayer.value.eachLayer((layer) => {
+  if (cityGeoJsonLayer.value) {
+    cityGeoJsonLayer.value.eachLayer((layer) => {
       if (layer.feature.properties.name === city.city) {
         layer.setStyle({
           fillOpacity: 0.8,
@@ -480,8 +559,8 @@ function handleCityLeave() {
   hoveredCity.value = '';
 
   // 恢复地图样式
-  if (geoJsonLayer.value) {
-    geoJsonLayer.value.eachLayer((layer) => {
+  if (cityGeoJsonLayer.value) {
+    cityGeoJsonLayer.value.eachLayer((layer) => {
       const cityName = layer.feature.properties.name;
       const cityData = getCityData(cityName);
       layer.setStyle(getCityStyle(cityData));
@@ -523,6 +602,7 @@ function handleError(msg, error) {
 // 监听 type 变化，重新获取数据
 watch(() => props.type, () => {
   fetchCityDistribution();
+  fetchPartnerLocations();
 });
 </script>
 
@@ -927,5 +1007,65 @@ watch(() => props.type, () => {
 .tianditu-map *:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* ===================== 合作方标注样式 ===================== */
+.partner-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.marker-pin {
+  width: 30px;
+  height: 42px;
+  position: relative;
+}
+
+.marker-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 0;
+  background: #409EFF;
+  position: absolute;
+  transform: rotate(-45deg);
+  left: 50%;
+  top: 50%;
+  margin: -15px 0 0 -15px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  animation: marker-bounce 0.6s ease-out;
+}
+
+.marker-icon::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+}
+
+@keyframes marker-bounce {
+  0% { transform: rotate(-45deg) translateY(-20px); opacity: 0; }
+  60% { transform: rotate(-45deg) translateY(5px); opacity: 1; }
+  100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
+}
+
+/* 合作方弹窗样式 */
+.partner-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.partner-popup .leaflet-popup-content {
+  margin: 12px 16px;
+  line-height: 1.6;
+}
+
+.partner-popup .leaflet-popup-tip {
+  background: white;
 }
 </style>

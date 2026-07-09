@@ -56,6 +56,11 @@ export const searchPartners = (keyword) => {
   return request.get('/api/partners/search', { params: { keyword } })
 }
 
+// 获取合作方地址及经纬度坐标
+export const getPartnerLocations = (id) => {
+  return request.get(`/api/partners/${id}/addresses`)
+}
+
 // 获取合作方联系人列表
 export const getPartnerContacts = (id) => {
   return request.get(`/api/partners/${id}/contacts`)
