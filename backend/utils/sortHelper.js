@@ -1,3 +1,5 @@
+const { ATTACHMENT_TYPES, PARTNER_TYPES } = require('../config/const');
+
 // 辅助函数：对附件列表进行排序
 const sortAttachmentsByType = (attachments) => {
     return attachments.sort((a, b) => {
