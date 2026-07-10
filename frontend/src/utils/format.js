@@ -107,7 +107,8 @@ export const injectImageToken = (html, token) => {
 export const getProjectTypeColor = (type) => {
   const typeMap = {
     '收入合同': '#67C23A',
-    '支出合同': '#F56C6C'
+    '支出合同': '#F56C6C',
+    '框架合同': '#409EFF'
   }
   return typeMap[type] || '#909399' 
 }
@@ -130,7 +131,8 @@ export const getProjectStageColor = (type) => {
 export const getProjectTypeTag = (type) => {
   const typeMap = {
     '收入合同': 'success',
-    '支出合同': 'danger'
+    '支出合同': 'danger',
+    '框架合同': 'primary'
   }
   return typeMap[type] || 'info'
 }

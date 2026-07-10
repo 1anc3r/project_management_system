@@ -59,6 +59,8 @@
           <el-option label="合同金额" value="total_amount" />
           <el-option label="已开票金额" value="receipt_amount" />
           <el-option label="成本" value="cost" />
+          <el-option label="起始时间" value="start_date" />
+          <el-option label="终止时间" value="end_date" />
           <el-option label="创建时间" value="created_at" />
         </el-select>
         <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 75px">

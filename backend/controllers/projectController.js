@@ -209,7 +209,7 @@ const getProjects = async (req, res) => {
     
     // 排序
     let orderClause = 'ORDER BY p.start_date DESC';
-    const allowedSortFields = ['stage', 'total_amount', 'receipt_amount', 'cost', 'profit', 'created_at'];
+    const allowedSortFields = ['stage', 'total_amount', 'receipt_amount', 'cost', 'profit', 'start_date', 'end_date', 'created_at'];
     if (sortField && allowedSortFields.includes(sortField)) {
       const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
       // stage 字段为中文，使用 CONVERT 指定 GBK 编码实现拼音排序；其他字段直接排序

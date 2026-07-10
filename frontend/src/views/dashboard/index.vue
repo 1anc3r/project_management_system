@@ -293,7 +293,8 @@ const PROJ_STAGE_COLORS = {
 // 项目类型颜色映射
 const PROJ_TYPE_COLORS = {
   '收入合同': '#67C23A',
-  '支出合同': '#F56C6C'
+  '支出合同': '#F56C6C',
+  '框架合同': '#409EFF'
 }
 
 // 资讯类型颜色映射

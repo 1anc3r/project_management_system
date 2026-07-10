@@ -1,3 +1,8 @@
+/**
+ * 企业项目全生命周期管理系统 - 前端服务入口
+ * Vue 3 + Vite + Element Plus + Pinia
+ */
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'

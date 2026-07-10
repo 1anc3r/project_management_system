@@ -27,6 +27,35 @@ const ATTACHMENT_TYPES = ['营业执照', '测算表', '招投标文件', '法�
 // 图片文件扩展名
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
 
+/**
+ * 可预览的文件扩展名分类
+ */
+const PREVIEWABLE_EXTENSIONS = {
+  image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
+  pdf: ['.pdf'],
+  text: ['.txt', '.csv', '.json', '.md', '.log', '.xml', '.css', '.js', '.html', '.htm', '.yaml', '.yml', '.sql'],
+  office: ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx']
+};
+
+/**
+ * 文本文件 MIME 类型映射
+ */
+const TEXT_MIME_TYPES = {
+  '.txt': 'text/plain; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
+  '.log': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.htm': 'text/html; charset=utf-8',
+  '.yaml': 'text/yaml; charset=utf-8',
+  '.yml': 'text/yaml; charset=utf-8',
+  '.sql': 'text/plain; charset=utf-8'
+};
+
 module.exports = {
   PROJECT_STAGES,
   PROJECT_TYPES,
@@ -35,5 +64,7 @@ module.exports = {
   SICHUAN_CITIES,
   PARTNER_TYPES,
   ATTACHMENT_TYPES,
-  IMAGE_EXTENSIONS
+  IMAGE_EXTENSIONS,
+  PREVIEWABLE_EXTENSIONS,
+  TEXT_MIME_TYPES
 };

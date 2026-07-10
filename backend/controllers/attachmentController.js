@@ -6,7 +6,7 @@ const { query } = require('../config/db');
 const { deleteFile, getFileUrl } = require('../middleware/upload');
 const path = require('path');
 const fs = require('fs');
-const { ATTACHMENT_TYPES, IMAGE_EXTENSIONS } = require('../config/const');
+const { ATTACHMENT_TYPES, IMAGE_EXTENSIONS, PREVIEWABLE_EXTENSIONS, TEXT_MIME_TYPES } = require('../config/const');
 
 /**
  * 判断文件是否为图片
@@ -16,16 +16,6 @@ const { ATTACHMENT_TYPES, IMAGE_EXTENSIONS } = require('../config/const');
 const isImageFile = (filename) => {
   const ext = path.extname(filename).toLowerCase();
   return IMAGE_EXTENSIONS.includes(ext);
-};
-
-/**
- * 可预览的文件扩展名分类
- */
-const PREVIEWABLE_EXTENSIONS = {
-  image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
-  pdf: ['.pdf'],
-  text: ['.txt', '.csv', '.json', '.md', '.log', '.xml', '.css', '.js', '.html', '.htm', '.yaml', '.yml', '.sql'],
-  office: ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx']
 };
 
 /**
@@ -39,25 +29,6 @@ const getPreviewType = (filename) => {
     if (exts.includes(ext)) return type;
   }
   return null;
-};
-
-/**
- * 文本文件 MIME 类型映射
- */
-const TEXT_MIME_TYPES = {
-  '.txt': 'text/plain; charset=utf-8',
-  '.csv': 'text/csv; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.md': 'text/markdown; charset=utf-8',
-  '.log': 'text/plain; charset=utf-8',
-  '.xml': 'application/xml; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.html': 'text/html; charset=utf-8',
-  '.htm': 'text/html; charset=utf-8',
-  '.yaml': 'text/yaml; charset=utf-8',
-  '.yml': 'text/yaml; charset=utf-8',
-  '.sql': 'text/plain; charset=utf-8'
 };
 
 // 从字典表获取附件类型
