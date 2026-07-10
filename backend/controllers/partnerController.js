@@ -6,7 +6,7 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const { PARTNER_TYPES } = require('../config/const');
-const { sortPartnersByType } = require('../utils/dateHelper');
+const { sortPartnersByType } = require('../utils/sortHelper');
 const { convertToCSV } = require('../utils/csvHelper');
 
 // 从字典表获取合作方类型
@@ -74,7 +74,7 @@ const getPartners = async (req, res) => {
     }
 
     const fieldMap = {
-      'project_count': 'project_count', 
+      'project_count': 'project_count',
       'total_contract_amount': 'total_contract_amount',
       'created_at': 'p.created_at'
     };

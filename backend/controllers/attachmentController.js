@@ -141,7 +141,7 @@ const previewImage = async (req, res) => {
     }
 
     const attachment = attachments[0];
-    
+
     // 验证是否为图片
     if (!isImageFile(attachment.file_name)) {
       return res.status(400).json({
@@ -170,7 +170,7 @@ const previewImage = async (req, res) => {
       '.webp': 'image/webp'
     };
     res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-    
+
     // 发送文件
     res.sendFile(path.resolve(filePath));
   } catch (error) {

@@ -15,18 +15,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const authenticate = async (req, res, next) => {
   try {
     let token = null;
-    
+
     // 优先从 Header 获取
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
     }
-    
+
     // 如果 Header 中没有，尝试从 Query String 获取（用于图片预览等场景）
     if (!token && req.query.token) {
       token = req.query.token;
     }
-    
+
     if (!token) {
       return res.status(401).json({
         code: 401,
@@ -36,7 +36,7 @@ const authenticate = async (req, res, next) => {
 
     // 验证Token
     const decoded = jwt.verify(token, JWT_SECRET);
-    
+
     // 查询用户信息
     const users = await query(
       'SELECT id, username, nickname, role, status FROM users WHERE id = ?',
@@ -75,7 +75,7 @@ const authenticate = async (req, res, next) => {
         message: '登录已过期，请重新登录'
       });
     }
-    
+
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         code: 401,

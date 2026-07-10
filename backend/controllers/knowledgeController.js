@@ -560,7 +560,7 @@ const batchDeleteKnowledge = async (req, res) => {
       deletableIds = items
         .filter(item => item.created_by === user.userId)
         .map(item => item.id);
-      
+
       if (deletableIds.length === 0) {
         return res.status(403).json({
           code: 403,
@@ -719,9 +719,9 @@ const exportKnowledge = async (req, res) => {
     const ws = xlsx.utils.json_to_sheet(exportData);
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, '知识库');
-    
+
     const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=knowledge_${moment().format('YYYYMMDD')}.xlsx`);
     res.send(buffer);
@@ -753,7 +753,7 @@ const importKnowledge = async (req, res) => {
     try {
       // 根据文件类型解析
       const ext = req.file.originalname.split('.').pop().toLowerCase();
-      
+
       if (ext === 'json') {
         const content = fs.readFileSync(filePath, 'utf8');
         data = JSON.parse(content);

@@ -176,9 +176,9 @@ const exportLogs = async (req, res) => {
     const ws = xlsx.utils.json_to_sheet(logs);
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, '操作日志');
-    
+
     const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=logs_${moment().format('YYYYMMDD')}.xlsx`);
     res.send(buffer);

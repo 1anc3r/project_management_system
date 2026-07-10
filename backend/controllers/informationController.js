@@ -6,22 +6,7 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const { convertToCSV } = require('../utils/csvHelper');
-
-/**
- * 将各种日期格式统一转换为 YYYY-MM-DD 字符串
- * 兼容 ISO 字符串、Date 对象、YYYY-MM-DD 字符串等
- * @param {string|Date} dateValue 
- * @returns {string|null}
- */
-const normalizeDate = (dateValue) => {
-  if (!dateValue) return null;
-  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-    return dateValue;
-  }
-  const date = new Date(dateValue);
-  if (isNaN(date.getTime())) return null;
-  return date.toISOString().split('T')[0];
-};
+const { formatDate } = require('../utils/dateHelper');
 
 /**
  * 获取资讯列表
@@ -199,7 +184,7 @@ const createInformation = async (req, res) => {
       });
     }
 
-    const normalizedDate = normalizeDate(information_date);
+    const normalizedDate = formatDate(information_date);
     if (!normalizedDate) {
       return res.status(400).json({
         code: 400,
@@ -259,7 +244,7 @@ const updateInformation = async (req, res) => {
       });
     }
 
-    const normalizedDate = information_date ? normalizeDate(information_date) : null;
+    const normalizedDate = information_date ? formatDate(information_date) : null;
 
     await query(
       `UPDATE information SET 

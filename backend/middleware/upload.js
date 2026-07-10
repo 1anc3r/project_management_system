@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
     // 生成唯一文件名: UUID_原始文件名
     // 处理中文文件名编码问题
     let originalName = file.originalname;
-    
+
     // 如果文件名是乱码，尝试从latin1转换为utf8
     if (/[\ufffd]/.test(originalName) || !/[\u4e00-\u9fa5]/.test(originalName)) {
       try {
@@ -38,7 +38,7 @@ const storage = multer.diskStorage({
         // 转换失败则保持原样
       }
     }
-    
+
     const uniqueName = `${uuidv4()}_${originalName}`;
     cb(null, uniqueName);
   }
@@ -59,7 +59,7 @@ const fileFilter = (req, file, cb) => {
   ];
 
   const ext = path.extname(file.originalname).toLowerCase();
-  
+
   if (allowedTypes.includes(ext)) {
     cb(null, true);
   } else {
@@ -104,14 +104,14 @@ const handleUploadError = (err, req, res, next) => {
       message: `上传错误: ${err.message}`
     });
   }
-  
+
   if (err) {
     return res.status(400).json({
       code: 400,
       message: err.message
     });
   }
-  
+
   next();
 };
 

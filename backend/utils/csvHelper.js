@@ -25,15 +25,15 @@ function convertToCSV(data) {
 function parseCSV(content) {
   const lines = content.trim().split('\n');
   if (lines.length === 0) return [];
-  
+
   const headers = lines[0].split(',').map(h => h.trim());
   const result = [];
-  
+
   for (let i = 1; i < lines.length; i++) {
     const values = [];
     let current = '';
     let inQuotes = false;
-    
+
     for (const char of lines[i]) {
       if (char === '"') {
         if (inQuotes && lines[i][lines[i].indexOf(char) + 1] === '"') {
@@ -49,14 +49,14 @@ function parseCSV(content) {
       }
     }
     values.push(current.trim());
-    
+
     const obj = {};
     headers.forEach((header, index) => {
       obj[header] = values[index] || '';
     });
     result.push(obj);
   }
-  
+
   return result;
 }
 

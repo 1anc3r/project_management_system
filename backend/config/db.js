@@ -17,7 +17,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
-  charset:'utf8mb4',
+  charset: 'utf8mb4',
   // DATE / DATETIME / TIMESTAMP 以字符串形式返回，避免 Date 对象的时区偏移问题
   dateStrings: true
 });
@@ -45,7 +45,7 @@ const query = async (sql, params = []) => {
       }
       return param;
     });
-    
+
     const [results] = await pool.execute(sql, sanitizedParams);
     return results;
   } catch (error) {

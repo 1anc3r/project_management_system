@@ -64,10 +64,10 @@ const createLogMiddleware = (module, operation) => {
           module,
           operation,
           targetId: data.data?.id || req.params?.id || null,
-          targetName: data.data?.name || req.body?.name || 
-                      data.data?.nickname || req.body?.nickname || 
-                      data.data?.information_title || req.body?.information_title || 
-                      data.data?.item_name || req.body?.item_name || null,
+          targetName: data.data?.name || req.body?.name ||
+            data.data?.nickname || req.body?.nickname ||
+            data.data?.information_title || req.body?.information_title ||
+            data.data?.item_name || req.body?.item_name || null,
           content: {
             body: req.body,
             params: req.params,

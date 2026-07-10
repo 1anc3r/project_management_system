@@ -7,7 +7,8 @@ const xlsx = require('xlsx');
 const moment = require('moment');
 const fs = require('fs');
 const { convertToCSV, parseCSV } = require('../utils/csvHelper');
-const { formatDate, sortAttachmentsByType } = require('../utils/dateHelper');
+const { formatDate } = require('../utils/dateHelper');
+const { sortAttachmentsByType } = require('../utils/sortHelper');
 const { PROJECT_STAGES, PROJECT_TYPES, PROJECT_EXPANSION_METHODS, PROJECT_CONTENTS, SICHUAN_CITIES } = require('../config/const');
 
 // 从字典表获取项目类型
@@ -206,7 +207,7 @@ const getProjects = async (req, res) => {
       whereClause += ' AND p.partner_id = ?';
       params.push(partnerId);
     }
-    
+
     // 排序
     let orderClause = 'ORDER BY p.start_date DESC';
     const allowedSortFields = ['stage', 'total_amount', 'receipt_amount', 'cost', 'profit', 'start_date', 'end_date', 'created_at'];
@@ -723,9 +724,9 @@ const exportProjects = async (req, res) => {
     const ws = xlsx.utils.json_to_sheet(projects);
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, '项目列表');
-    
+
     const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=projects_${moment().format('YYYYMMDD')}.xlsx`);
     res.send(buffer);
@@ -757,7 +758,7 @@ const importProjects = async (req, res) => {
     try {
       // 根据文件类型解析
       const ext = req.file.originalname.split('.').pop().toLowerCase();
-      
+
       if (ext === 'json') {
         const content = fs.readFileSync(filePath, 'utf8');
         data = JSON.parse(content);
@@ -781,7 +782,7 @@ const importProjects = async (req, res) => {
           // 查找或创建合作方
           let partnerId = null;
           const partnerName = item['合作方名称'] || item.partner_name;
-          
+
           if (partnerName) {
             const partners = await query('SELECT id FROM partners WHERE name = ?', [partnerName]);
             if (partners.length > 0) {
@@ -870,7 +871,7 @@ const getProjectStats = async (req, res) => {
       whereClause += whereClause ? ' AND type = ?' : 'WHERE type = ?';
       params.push(type);
     }
-    
+
     // 统计项目数量、合同总金额、已开票金额、待开票金额
     const statsResult = await query(
       `SELECT 
@@ -881,7 +882,7 @@ const getProjectStats = async (req, res) => {
       FROM projects ${whereClause}`,
       params
     );
-    
+
     // 项目阶段分布
     const stageDistribution = await query(
       `SELECT 
@@ -998,7 +999,7 @@ const getCityDistribution = async (req, res) => {
     const cityDistribution = SICHUAN_CITIES.map(cityName => {
       const stat = cityStats.find(s => s.city === cityName);
       const cityStages = stageStats.filter(s => s.city === cityName);
-      
+
       // 构建阶段分布对象
       const stageDistribution = {};
       cityStages.forEach(s => {
