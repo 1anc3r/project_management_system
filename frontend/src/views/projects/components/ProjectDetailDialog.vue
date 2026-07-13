@@ -126,7 +126,8 @@
       <div class="section" v-if="projectData">
         <div class="section-title">合作方信息</div>
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="合作方名称" :span="2">{{ projectData.partner_name }}</el-descriptions-item>
+          <el-descriptions-item label="合作方名称" :span="2">{{ projectData.partner_name }}
+            <el-button type="primary" @click="handleViewPartner">查看</el-button></el-descriptions-item>
           <el-descriptions-item label="纳税人识别号" :span="2">{{ projectData.partner_tax_id || '-' }}</el-descriptions-item>
           <el-descriptions-item label="地址" :span="2">{{ projectData.partner_address || '-' }}</el-descriptions-item>
           <el-descriptions-item label="开户银行">{{ projectData.partner_bank || '-' }}</el-descriptions-item>
@@ -203,6 +204,9 @@
       </div>
     </div>
 
+    <!-- 合作方详情对话框 -->
+    <PartnerDetailDialog v-model="partnerDialogVisible" :partner="partnerDetailData"/>
+
     <!-- 附件预览对话框 -->
     <AttachmentPreviewDialog v-model="previewVisible" :attachment="previewAttachment" />
 
@@ -223,8 +227,10 @@ import { ElMessage } from 'element-plus'
 import { Link, ArrowLeft } from '@element-plus/icons-vue'
 import { getProjectById } from '@/api/projects'
 import { getInformationByProject } from '@/api/information'
+import { getPartnerById } from '@/api/partners'
 import { downloadAttachment } from '@/api/attachments'
 import { formatAmount, formatPercent, formatDate, formatDateTime, formatFileSize, downloadBlob, getProjectTypeTag, getProjectStageTag, getInfoTypeTag } from '@/utils/format'
+import PartnerDetailDialog from '../../partners/components/PartnerDetailDialog.vue'
 import AttachmentPreviewDialog from '@/components/AttachmentPreviewDialog.vue'
 
 const props = defineProps({
@@ -257,6 +263,10 @@ const informationList = ref([])
 // 折叠面板激活项
 const activeCollapse = ref(['information'])
 
+// 详情对话框
+const partnerDialogVisible = ref(false)
+const partnerDetailData = ref(null)
+
 // 附件预览状态
 const previewVisible = ref(false)
 const previewAttachment = ref(null)
@@ -273,8 +283,10 @@ const fetchProjectDetail = async () => {
   if (!props.project?.id) return
   loading.value = true
   try {
-    const res = await getProjectById(props.project.id)
-    projectData.value = res.data
+    const proj_res = await getProjectById(props.project.id)
+    projectData.value = proj_res.data
+    const part_res = await getPartnerById(projectData.value.partner_id)
+    partnerDetailData.value = part_res.data
   } catch (error) {
     console.error('获取项目详情失败:', error)
     ElMessage.error('获取项目详情失败')
@@ -316,6 +328,11 @@ watch(() => visible.value, (val) => {
     fetchInformationData()
   }
 })
+
+// 新增合作方
+const handleViewPartner = () => {
+  partnerDialogVisible.value = true
+}
 
 /**
  * 打开附件预览对话框

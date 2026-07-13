@@ -135,7 +135,7 @@
         </div>
 
         <div class="payment-toolbar">
-          <el-button type="primary" size="small" :icon="Plus" @click="handleAddPayment">新增款项</el-button>
+          <el-button type="primary" :icon="Plus" @click="handleAddPayment">新增款项</el-button>
         </div>
 
         <el-table :data="payments" border size="small">
@@ -197,7 +197,7 @@
             </el-form-item>
           </el-col>
           <div class="payment-toolbar">
-            <el-button type="primary" size="small" :icon="Plus" @click="handleAddPartner">新增合作方</el-button>
+            <el-button type="primary" :icon="Plus" @click="handleAddPartner">新增合作方</el-button>
           </div>
         </el-row>
 
