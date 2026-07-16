@@ -76,12 +76,14 @@ const getPartners = async (req, res) => {
     const fieldMap = {
       'project_count': 'project_count',
       'total_contract_amount': 'total_contract_amount',
+      'opportunity_count': 'opportunity_count',
+      'total_estimated_amount': 'total_estimated_amount',
       'created_at': 'p.created_at'
     };
 
     // 排序
     let orderClause = 'ORDER BY p.tax_id DESC';
-    const allowedSortFields = ['project_count', 'total_contract_amount', 'created_at'];
+    const allowedSortFields = ['project_count', 'total_contract_amount', 'opportunity_count', 'total_estimated_amount', 'created_at'];
     if (sortField && allowedSortFields.includes(sortField)) {
       const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
       // stage 字段为中文，使用 CONVERT 指定 GBK 编码实现拼音排序；其他字段直接排序
@@ -97,17 +99,30 @@ const getPartners = async (req, res) => {
 
     // 查询数据
     const partners = await query(
-      `SELECT 
+      `SELECT
         p.id, p.name, p.type, p.tax_id, p.address, p.longitude, p.latitude,
         p.bank, p.bank_account,
         p.created_at, p.updated_at,
-        COUNT(DISTINCT proj.id) as project_count,
-        COALESCE(SUM(proj.total_amount), 0) as total_contract_amount,
+        COALESCE(proj.project_count, 0) as project_count,
+        COALESCE(proj.total_contract_amount, 0) as total_contract_amount,
+        COALESCE(opp.opportunity_count, 0) as opportunity_count,
+        COALESCE(opp.total_estimated_amount, 0) as total_estimated_amount,
         (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_name,
         (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_phone,
         p.created_by
       FROM partners p
-      LEFT JOIN projects proj ON p.id = proj.partner_id
+      LEFT JOIN(
+        SELECT partner_id,
+        COUNT(*) as project_count,
+        SUM(total_amount) as total_contract_amount
+        FROM projects GROUP BY partner_id
+      ) proj ON p.id = proj.partner_id
+      LEFT JOIN(
+        SELECT partner_id,
+        COUNT(*) as opportunity_count,
+        SUM(estimated_amount) as total_estimated_amount
+        FROM opportunities GROUP BY partner_id
+      ) opp ON p.id = opp.partner_id
       ${whereClause}
       GROUP BY p.id
       ${orderClause}

@@ -25,6 +25,14 @@ export const deleteOpportunity = (id) => {
   return request.delete(`/api/opportunities/${id}`)
 }
 
+// 导出商机
+export const exportOpportunities = (params) => {
+  return request.get('/api/opportunities/export', {
+    params,
+    responseType: 'blob'
+  })
+}
+
 // 获取筛选选项
 export const getFilterOptions = () => {
   return request.get('/api/opportunities/filters')

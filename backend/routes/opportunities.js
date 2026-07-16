@@ -16,6 +16,13 @@ const { createLogMiddleware } = require('../middleware/logger');
 router.get('/filters', authenticate, opportunityController.getFilterOptions);
 
 /**
+ * @route   GET /api/opportunities/export
+ * @desc    导出商机
+ * @access  Private
+ */
+router.get('/export', authenticate, opportunityController.exportOpportunities);
+
+/**
  * @route   GET /api/opportunities
  * @desc    获取商机列表
  * @access  Private

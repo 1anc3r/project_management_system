@@ -3,6 +3,8 @@
  * 处理商机的CRUD操作
  */
 const { query, transaction } = require('../config/db');
+const xlsx = require('xlsx');
+const moment = require('moment');
 const { formatDate } = require('../utils/dateHelper');
 const { sortAttachmentsByType } = require('../utils/sortHelper');
 const { OPPORTUNITY_STAGES, OPPORTUNITY_INTEREST_LEVELS } = require('../config/const');
@@ -448,6 +450,80 @@ const deleteOpportunity = async (req, res) => {
 };
 
 /**
+ * 导出商机
+ * GET /api/opportunities/export
+ */
+const exportOpportunities = async (req, res) => {
+  try {
+    const { keyword, stage, interest } = req.query;
+    const user = req.user;
+
+    // 构建查询条件
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+
+    if (user.role === 'normal') {
+      whereClause += ' AND o.created_by = ?';
+      params.push(user.userId);
+    }
+
+    if (keyword) {
+      whereClause += ` AND (o.name LIKE ? OR par.name LIKE ? OR o.source LIKE ?)`;
+      const keywordPattern = `%${keyword}%`;
+      params.push(keywordPattern, keywordPattern, keywordPattern);
+    }
+
+    if (stage) {
+      whereClause += ' AND o.stage = ?';
+      params.push(stage);
+    }
+
+    if (interest) {
+      whereClause += ' AND o.interest = ?';
+      params.push(interest);
+    }
+
+    // 查询所有数据（不分页）
+    const opportunities = await query(
+      `SELECT 
+        o.name AS '商机名称',
+        o.source AS '商机来源',
+        o.stage AS '商机阶段',
+        o.interest AS '意向等级',
+        o.estimated_amount AS '预计金额(万元)',
+        o.estimated_date AS '预计成交日期',
+        par.name AS '合作方名称',
+        (SELECT pc.name FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) AS '联系人',
+        (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = par.id ORDER BY pc.id ASC LIMIT 1) AS '联系电话',
+        o.created_at AS '创建时间',
+        o.updated_at AS '更新时间'
+      FROM opportunities o
+      LEFT JOIN partners par ON o.partner_id = par.id
+      ${whereClause}
+      ORDER BY o.created_at DESC`,
+      params
+    );
+
+    // 生成 Excel
+    const ws = xlsx.utils.json_to_sheet(opportunities);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '商机列表');
+
+    const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=opportunities_${moment().format('YYYYMMDD')}.xlsx`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('导出商机错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '导出商机失败'
+    });
+  }
+};
+
+/**
  * 获取筛选选项
  * GET /api/opportunities/filters
  */
@@ -494,5 +570,6 @@ module.exports = {
   createOpportunity,
   updateOpportunity,
   deleteOpportunity,
+  exportOpportunities,
   getFilterOptions
 };

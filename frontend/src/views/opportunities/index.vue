@@ -8,6 +8,7 @@
           <el-button :icon="Edit" :disabled="!selectedRows.length" @click="handleBatchEdit">编辑</el-button>
           <el-button type="danger" :icon="Delete" :disabled="!selectedRows.length"
             @click="handleBatchDelete">删除</el-button>
+          <el-button :icon="Download" @click="handleExport">导出</el-button>
         </div>
 
         <div class="center-search">
@@ -170,10 +171,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Plus, Edit, Delete, Search, More, List, Grid
+  Plus, Edit, Delete, Search, Download, More, List, Grid
 } from '@element-plus/icons-vue'
-import { getOpportunities, deleteOpportunity, getFilterOptions } from '@/api/opportunities'
-import { formatAmount, formatDate, getOpportunityStageTag, getOpportunityInterestTag } from '@/utils/format'
+import { getOpportunities, deleteOpportunity, exportOpportunities, getFilterOptions } from '@/api/opportunities'
+import { formatAmount, formatDate, downloadBlob, getOpportunityStageTag, getOpportunityInterestTag } from '@/utils/format'
 import OpportunityFormDialog from './components/OpportunityFormDialog.vue'
 import OpportunityDetailDialog from './components/OpportunityDetailDialog.vue'
 
@@ -377,6 +378,22 @@ const handleCardCommand = (command, row) => {
     handleView(row)
   } else if (command === 'delete') {
     handleDelete(row)
+  }
+}
+
+// 导出
+const handleExport = async () => {
+  try {
+    const response = await exportOpportunities({
+      keyword: searchForm.keyword,
+      stage: searchForm.stage,
+      interest: searchForm.interest
+    })
+    downloadBlob(response.data, `opportunities_${new Date().getTime()}.xlsx`)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
   }
 }
 

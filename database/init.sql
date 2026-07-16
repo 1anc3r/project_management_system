@@ -607,9 +607,12 @@ SELECT
     par.address,
     COUNT(p.id) AS project_count,
     SUM(p.total_amount) AS total_contract_amount,
+    COUNT(opp.id) AS opportunity_count,
+    SUM(opp.estimated_amount) AS total_estimated_amount,
     SUM(p.receipt_amount) AS total_receipt_amount
 FROM partners par
 LEFT JOIN projects p ON par.id = p.partner_id
+LEFT JOIN opportunities opp ON par.id = opp.partner_id
 GROUP BY par.id, par.name, par.type, par.tax_id, par.address;
 
 -- 创建知识库视图

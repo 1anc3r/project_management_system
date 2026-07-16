@@ -55,16 +55,28 @@
     <div class="stats-section" v-if="partner">
       <div class="section-title">合作统计</div>
       <el-row :gutter="20">
-        <el-col :span="12">
+        <el-col :span="6">
           <div class="stat-card">
             <div class="stat-label">关联项目数</div>
             <div class="stat-value">{{ partner.project_count || 0 }} 个</div>
           </div>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="6">
           <div class="stat-card">
-            <div class="stat-label">合同总金额</div>
+            <div class="stat-label">项目总金额</div>
             <div class="stat-value">{{ formatAmount(partner.total_contract_amount) }} 万元</div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-card">
+            <div class="stat-label">关联商机数</div>
+            <div class="stat-value">{{ partner.opportunity_count || 0 }} 个</div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-card">
+            <div class="stat-label">商机总金额</div>
+            <div class="stat-value">{{ formatAmount(partner.total_estimated_amount) }} 万元</div>
           </div>
         </el-col>
       </el-row>

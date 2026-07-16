@@ -57,6 +57,8 @@
         <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 150px">
           <el-option label="项目数量" value="project_count" />
           <el-option label="合同金额" value="total_contract_amount" />
+          <el-option label="商机数量" value="opportunity_count" />
+          <el-option label="商机金额" value="total_estimated_amount" />
           <el-option label="创建时间" value="created_at" />
         </el-select>
         <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 75px">
@@ -86,6 +88,10 @@
         <el-table-column prop="project_count" label="项目数" width="80" align="center" />
         <el-table-column prop="total_contract_amount" label="合同总金额" width="100" align="right">
           <template #default="{ row }">{{ formatAmount(row.total_contract_amount) }} 万</template>
+        </el-table-column>
+        <el-table-column prop="opportunity_count" label="商机数" width="80" align="center" />
+        <el-table-column prop="total_estimated_amount" label="商机金额" width="100" align="right">
+          <template #default="{ row }">{{ formatAmount(row.total_estimated_amount) }} 万</template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
