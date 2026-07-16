@@ -1,18 +1,17 @@
 <template>
-  <div class="projects-container">
+  <div class="opportunities-container">
     <!-- 操作面板 -->
     <el-card class="operation-card" shadow="never">
       <div class="operation-bar">
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
-          <el-button :icon="Edit" :disabled=!selectedRows.length @click="handleBatchEdit">编辑</el-button>
-          <el-button type="danger" :icon="Delete" :disabled=!selectedRows.length
+          <el-button :icon="Edit" :disabled="!selectedRows.length" @click="handleBatchEdit">编辑</el-button>
+          <el-button type="danger" :icon="Delete" :disabled="!selectedRows.length"
             @click="handleBatchDelete">删除</el-button>
-          <el-button :icon="Download" @click="handleExport">导出</el-button>
         </div>
 
         <div class="center-search">
-          <el-input v-model="searchForm.keyword" placeholder="搜索项目名称、合作方、履约地点、联系人……" clearable style="width: 400px"
+          <el-input v-model="searchForm.keyword" placeholder="搜索商机名称、合作方、商机来源……" clearable style="width: 400px"
             @keyup.enter="handleSearch">
             <template #append>
               <el-button :icon="Search" @click="handleSearch" />
@@ -39,31 +38,20 @@
 
       <!-- 筛选条件 -->
       <div class="filter-bar">
-        <el-select v-model="searchForm.type" placeholder="项目类型" clearable style="width: 100px">
-          <el-option v-for="item in filterOptions.types" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-select v-model="searchForm.stage" placeholder="项目阶段" clearable style="width: 100px">
+        <el-select v-model="searchForm.stage" placeholder="商机阶段" clearable style="width: 120px">
           <el-option v-for="item in filterOptions.stages" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.city" placeholder="履约地点" clearable style="width: 100px">
-          <el-option v-for="item in filterOptions.cities" :key="item" :label="item" :value="item" />
+        <el-select v-model="searchForm.interest" placeholder="意向等级" clearable style="width: 120px">
+          <el-option v-for="item in filterOptions.interests" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="searchForm.expansionMethod" placeholder="签约方式" clearable style="width: 100px">
-          <el-option v-for="item in filterOptions.expansionMethods" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-select v-model="searchForm.content" placeholder="项目内容" clearable style="width: 100px">
-          <el-option v-for="item in filterOptions.contents" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 100px">
-          <el-option label="项目阶段" value="stage" />
-          <el-option label="合同金额" value="total_amount" />
-          <el-option label="已开票金额" value="receipt_amount" />
-          <el-option label="成本" value="cost" />
-          <el-option label="起始时间" value="start_date" />
-          <el-option label="终止时间" value="end_date" />
+        <el-select v-model="searchForm.sortField" placeholder="排序字段" clearable style="width: 120px">
+          <el-option label="商机阶段" value="stage" />
+          <el-option label="意向等级" value="interest" />
+          <el-option label="预计金额" value="estimated_amount" />
+          <el-option label="预计成交日期" value="estimated_date" />
           <el-option label="创建时间" value="created_at" />
         </el-select>
-        <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 75px">
+        <el-select v-model="searchForm.sortOrder" placeholder="排序方式" style="width: 90px">
           <el-option label="降序" value="desc" />
           <el-option label="升序" value="asc" />
         </el-select>
@@ -74,56 +62,30 @@
 
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never" v-loading="loading">
-      <el-table ref="tableRef" :data="projectList" style="width: 100%" @selection-change="handleSelectionChange"
+      <el-table ref="tableRef" :data="opportunityList" style="width: 100%" @selection-change="handleSelectionChange"
         @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="type" label="项目类型" width="90" align="center">
+        <el-table-column prop="name" label="商机名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="stage" label="商机阶段" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="getProjectTypeTag(row.type)" size="small">{{ row.type }}</el-tag>
+            <el-tag :type="getOpportunityStageTag(row.stage)" size="small">{{ row.stage }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="stage" label="项目阶段" width="90" align="center">
+        <el-table-column prop="interest" label="意向等级" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="getProjectStageTag(row.stage)" size="small">{{ row.stage }}</el-tag>
+            <el-tag :type="getOpportunityInterestTag(row.interest)" size="small">{{ row.interest }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="expansion_method" label="签约方式" width="100" />
-        <el-table-column prop="total_amount" label="合同总金额" width="100" align="right">
+        <el-table-column prop="estimated_amount" label="预计金额" width="90" align="right">
           <template #default="{ row }">
-            {{ formatAmount(row.total_amount) }}
+            {{ formatAmount(row.estimated_amount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="receipt_amount" label="已开票金额" width="100" align="right">
-          <template #default="{ row }">
-            {{ formatAmount(row.receipt_amount) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="pending_amount" label="待开票金额" width="100" align="right">
-          <template #default="{ row }">
-            {{ formatAmount(row.pending_amount) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="cost" label="成本" width="100" align="right">
-          <template #default="{ row }">
-            {{ formatAmount(row.cost) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="profit" label="毛利" width="100" align="right">
-          <template #default="{ row }">
-            {{ formatAmount(row.profit) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="profit_rate" label="毛利率" width="100" align="right">
-          <template #default="{ row }">
-            {{ formatPercent(row.profit_rate) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="start_date" label="起始日期" width="100" align="center"/>
-        <el-table-column prop="end_date" label="终止日期" width="100" align="center"/>
+        <el-table-column prop="estimated_date" label="预计成交日期" width="110" align="center"/>
         <el-table-column prop="partner_name" label="合作方" min-width="150" show-overflow-tooltip />
         <el-table-column prop="partner_contact" label="联系人" width="100" />
         <el-table-column prop="partner_contact_phone" label="联系电话" width="120" />
+        <el-table-column prop="source" label="商机来源" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -143,14 +105,14 @@
 
     <!-- 网格视图 -->
     <el-card v-else class="grid-card" shadow="never" v-loading="loading">
-      <el-empty v-if="projectList.length === 0" description="暂无项目" />
+      <el-empty v-if="opportunityList.length === 0" description="暂无商机" />
       <el-row :gutter="20">
-        <el-col v-for="item in projectList" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card class="project-card" shadow="hover" @dblclick="handleView(item)">
+        <el-col v-for="item in opportunityList" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
+          <el-card class="opportunity-card" shadow="hover" @dblclick="handleView(item)">
             <div class="card-header">
               <div class="card-tags">
-                <el-tag :type="getProjectTypeTag(item.type)" size="small">{{ item.type }}</el-tag>
-                <el-tag :type="getProjectStageTag(item.stage)" size="small">{{ item.stage }}</el-tag>
+                <el-tag :type="getOpportunityStageTag(item.stage)" size="small">{{ item.stage }}</el-tag>
+                <el-tag :type="getOpportunityInterestTag(item.interest)" size="small">{{ item.interest }}</el-tag>
               </div>
               <el-dropdown @command="(cmd) => handleCardCommand(cmd, item)">
                 <el-icon class="more-icon" size="28">
@@ -166,16 +128,16 @@
               </el-dropdown>
             </div>
             <div class="card-body">
-              <h4 class="project-name" :title="item.name">{{ item.name }}</h4>
+              <h4 class="opportunity-name" :title="item.name">{{ item.name }}</h4>
               <p class="partner-name">{{ item.partner_name }}</p>
-              <div class="amount-info">
-                <div class="amount-item">
-                  <span class="label">合同金额</span>
-                  <span class="value">{{ formatAmount(item.total_amount) }}万</span>
+              <div class="meta-info">
+                <div class="meta-item">
+                  <span class="label">预计金额</span>
+                  <span class="value">{{ formatAmount(item.estimated_amount) }}万</span>
                 </div>
-                <div class="amount-item">
-                  <span class="label">已开票</span>
-                  <span class="value">{{ formatAmount(item.receipt_amount) }}万</span>
+                <div class="meta-item">
+                  <span class="label">预计成交</span>
+                  <span class="value">{{ formatDate(item.estimated_date) }}</span>
                 </div>
               </div>
             </div>
@@ -196,28 +158,25 @@
     </div>
 
     <!-- 新增/编辑对话框 -->
-    <ProjectFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
+    <OpportunityFormDialog v-model:visible="formDialogVisible" :type="formType" :data="currentRow" @success="fetchData" />
 
     <!-- 详情对话框 -->
-    <ProjectDetailDialog v-model="detailDialogVisible" :project="detailRow" @edit="handleEditFromDetail" />
+    <OpportunityDetailDialog v-model="detailDialogVisible" :opportunity="detailRow" @edit="handleEditFromDetail" />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Plus, Edit, Delete, Search, Upload, Download, View, More
+  Plus, Edit, Delete, Search, More, List, Grid
 } from '@element-plus/icons-vue'
-import { getProjects, deleteProject, exportProjects, importProjects, getFilterOptions } from '@/api/projects'
-import { formatAmount, formatPercent, downloadBlob, getProjectStageTag, getProjectTypeTag } from '@/utils/format'
-import ProjectFormDialog from './components/ProjectFormDialog.vue'
-import ProjectDetailDialog from './components/ProjectDetailDialog.vue'
+import { getOpportunities, deleteOpportunity, getFilterOptions } from '@/api/opportunities'
+import { formatAmount, formatDate, getOpportunityStageTag, getOpportunityInterestTag } from '@/utils/format'
+import OpportunityFormDialog from './components/OpportunityFormDialog.vue'
+import OpportunityDetailDialog from './components/OpportunityDetailDialog.vue'
 
-// 路由
-const route = useRoute()
 const userStore = useUserStore()
 
 // 视图模式，默认列表
@@ -226,8 +185,8 @@ const viewMode = ref('list')
 // 加载状态
 const loading = ref(false)
 
-// 项目列表及选中行
-const projectList = ref([])
+// 商机列表及选中行
+const opportunityList = ref([])
 const selectedRows = ref([])
 const currentRow = ref(null)
 
@@ -241,11 +200,8 @@ const pagination = reactive({
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
-  type: '',
   stage: '',
-  city: '',
-  expansionMethod: '',
-  content: '',
+  interest: '',
   sortField: '',
   sortOrder: 'desc'
 })
@@ -253,10 +209,7 @@ const searchForm = reactive({
 // 筛选选项
 const filterOptions = reactive({
   stages: [],
-  types: [],
-  cities: [],
-  expansionMethods: [],
-  contents: []
+  interests: []
 })
 
 // 表单对话框
@@ -284,12 +237,12 @@ const fetchData = async () => {
       pageSize: pagination.pageSize,
       ...searchForm
     }
-    const res = await getProjects(params)
-    projectList.value = res.data.list || []
+    const res = await getOpportunities(params)
+    opportunityList.value = res.data.list || []
     pagination.total = res.data.pagination?.total || 0
   } catch (error) {
-    console.error('获取项目列表失败:', error)
-    ElMessage.error('获取项目列表失败')
+    console.error('获取商机列表失败:', error)
+    ElMessage.error('获取商机列表失败')
   } finally {
     loading.value = false
   }
@@ -299,11 +252,8 @@ const fetchData = async () => {
 const fetchFilterOptions = async () => {
   try {
     const res = await getFilterOptions()
-    filterOptions.stages = res.data.stages
-    filterOptions.types = res.data.types
-    filterOptions.cities = res.data.cities
-    filterOptions.expansionMethods = res.data.expansionMethods
-    filterOptions.contents = res.data.contents
+    filterOptions.stages = res.data.stages || []
+    filterOptions.interests = res.data.interests || []
   } catch (error) {
     console.error('获取筛选选项失败:', error)
   }
@@ -354,7 +304,7 @@ const handleEdit = (row) => {
     currentRow.value = row
     formDialogVisible.value = true
   } else {
-    ElMessage.warning('您没有权限编辑此项目')
+    ElMessage.warning('您没有权限编辑此商机')
   }
 }
 
@@ -387,53 +337,36 @@ const handleEditFromDetail = (row) => {
 // 删除
 const handleDelete = (row) => {
   if (canEdit(row)) {
-    ElMessageBox.confirm(`确定要删除项目 "${row.name}" 吗？`, '提示', {
+    ElMessageBox.confirm(`确定要删除商机 "${row.name}" 吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     }).then(async () => {
-      await deleteProject(row.id)
+      await deleteOpportunity(row.id)
       ElMessage.success('删除成功')
       fetchData()
     })
   } else {
-    ElMessage.warning('您没有权限删除此项目')
+    ElMessage.warning('您没有权限删除此商机')
   }
 }
 
 // 批量删除
 const handleBatchDelete = () => {
   if (selectedRows.value.length === 0) return
-  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个项目吗？`, '提示', {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个商机吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     for (const row of selectedRows.value) {
       if (canEdit(row)) {
-        await deleteProject(row.id)
+        await deleteOpportunity(row.id)
       }
     }
     ElMessage.success('批量删除成功')
     fetchData()
   })
-}
-
-// 导出
-const handleExport = async () => {
-  try {
-    const response = await exportProjects({
-      format: 'xlsx',
-      keyword: searchForm.keyword,
-      stage: searchForm.stage,
-      type: searchForm.type
-    })
-    downloadBlob(response.data, `projects_${new Date().getTime()}.xlsx`)
-    ElMessage.success('导出成功')
-  } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败，请稍后重试')
-  }
 }
 
 // 卡片操作
@@ -448,30 +381,13 @@ const handleCardCommand = (command, row) => {
 }
 
 onMounted(async () => {
-  // 先加载筛选选项
   await fetchFilterOptions()
-
-  // 从URL参数获取搜索条件
-  if (route.query.city) {
-    searchForm.city = route.query.city
-  }
-  if (route.query.stage) {
-    searchForm.stage = route.query.stage
-  }
-  if (route.query.type) {
-    searchForm.type = route.query.type
-  }
-  if (route.query.keyword) {
-    searchForm.keyword = route.query.keyword
-  }
-
-  // 再获取数据
   fetchData()
 })
 </script>
 
 <style scoped lang="scss">
-.projects-container {
+.opportunities-container {
   .operation-card {
     margin-bottom: 15px;
 
@@ -482,15 +398,6 @@ onMounted(async () => {
       margin-bottom: 15px;
       flex-wrap: wrap;
       gap: 10px;
-
-      .view-toggle {
-        .el-radio-group {
-          .el-radio-button__inner {
-            display: flex;
-            align-items: center;
-          }
-        }
-      }
     }
 
     .filter-bar {
@@ -515,7 +422,7 @@ onMounted(async () => {
   }
 
   .grid-card {
-    .project-card {
+    .opportunity-card {
       margin-bottom: 20px;
       cursor: pointer;
       transition: all 0.3s;
@@ -547,7 +454,7 @@ onMounted(async () => {
       }
 
       .card-body {
-        .project-name {
+        .opportunity-name {
           font-size: 16px;
           font-weight: 600;
           color: #303133;
@@ -566,14 +473,14 @@ onMounted(async () => {
           margin-bottom: 12px;
         }
 
-        .amount-info {
+        .meta-info {
           margin-top: 12px;
           padding-top: 12px;
           border-top: 1px solid #ebeef5;
           display: flex;
           justify-content: space-between;
 
-          .amount-item {
+          .meta-item {
             text-align: center;
 
             .label {

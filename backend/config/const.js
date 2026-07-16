@@ -1,15 +1,3 @@
-// 项目阶段枚举
-const PROJECT_STAGES = ['意向', '签约', '建设', '运营', '交付', '验收', '完结'];
-
-// 项目类型枚举
-const PROJECT_TYPES = ['收入合同', '支出合同'];
-
-// 签约方式枚举
-const PROJECT_EXPANSION_METHODS = ['投标', '比选', '比价', '直接谈判', '单一来源', '其他'];
-
-// 项目内容枚举
-const PROJECT_CONTENTS = ['系统建设', '数据服务', '技术服务', '业务运营', '业务咨询', '其他'];
-
 // 四川省市州列表
 const SICHUAN_CITIES = [
   '成都市', '自贡市', '攀枝花市', '泸州市', '德阳市', '绵阳市',
@@ -18,11 +6,29 @@ const SICHUAN_CITIES = [
   '阿坝藏族羌族自治州', '甘孜藏族自治州', '凉山彝族自治州'
 ];
 
-// 项目类型枚举
+// 合作方类型枚举
 const PARTNER_TYPES = ['甲方', '乙方', '丙方', '其他'];
 
+// 项目阶段枚举
+const PROJECT_STAGES = ['意向', '签约', '建设', '运营', '交付', '验收', '完结'];
+
+// 项目类型枚举
+const PROJECT_TYPES = ['收入合同', '支出合同', '框架合同'];
+
+// 项目签约方式枚举
+const PROJECT_EXPANSION_METHODS = ['投标', '比选', '比价', '直接谈判', '单一来源', '其他'];
+
+// 项目内容枚举
+const PROJECT_CONTENTS = ['系统建设', '数据服务', '技术服务', '业务运营', '业务咨询', '其他'];
+
+// 商机阶段枚举
+const OPPORTUNITY_STAGES = ['初步接触', '需求跟踪', '方案编制', '询价报价', '招标投标'];
+
+// 商机意向等级枚举
+const OPPORTUNITY_INTEREST_LEVELS = ['积极', '一般', '消极', '未知'];
+
 // 附件类型枚举
-const ATTACHMENT_TYPES = ['营业执照', '测算表', '招投标文件', '法律审查意见书', '合同/协议', '补充合同/协议', '验收报告', '发票', '其他'];
+const ATTACHMENT_TYPES = ['营业执照', '成本测算表', '招投标文件', '法律审查意见书', '合同/协议', '补充合同/协议', '验收报告', '发票', '需求说明书', '技术解决方案', '其他'];
 
 // 图片文件扩展名
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
@@ -57,12 +63,14 @@ const TEXT_MIME_TYPES = {
 };
 
 module.exports = {
+  SICHUAN_CITIES,
+  PARTNER_TYPES,
   PROJECT_STAGES,
   PROJECT_TYPES,
   PROJECT_EXPANSION_METHODS,
   PROJECT_CONTENTS,
-  SICHUAN_CITIES,
-  PARTNER_TYPES,
+  OPPORTUNITY_STAGES,
+  OPPORTUNITY_INTEREST_LEVELS,
   ATTACHMENT_TYPES,
   IMAGE_EXTENSIONS,
   PREVIEWABLE_EXTENSIONS,

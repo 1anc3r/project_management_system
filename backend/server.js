@@ -21,6 +21,7 @@ const attachmentRoutes = require('./routes/attachments');
 const dictionaryRoutes = require('./routes/dictionaries');
 const informationRoutes = require('./routes/information');
 const knowledgeRoutes = require('./routes/knowledge');
+const opportunityRoutes = require('./routes/opportunities');
 
 // 创建Express应用
 const app = express();
@@ -54,12 +55,13 @@ app.get('/health', (req, res) => {
 
 // API路由
 app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/partners', partnerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/logs', logRoutes);
-app.use('/api/attachments', attachmentRoutes);
 app.use('/api/dictionaries', dictionaryRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/opportunities', opportunityRoutes);
+app.use('/api/partners', partnerRoutes);
+app.use('/api/attachments', attachmentRoutes);
 app.use('/api/information', informationRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 

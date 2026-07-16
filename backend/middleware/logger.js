@@ -67,6 +67,7 @@ const createLogMiddleware = (module, operation) => {
           targetName: data.data?.name || req.body?.name ||
             data.data?.nickname || req.body?.nickname ||
             data.data?.information_title || req.body?.information_title ||
+            data.data?.question || req.body?.question ||
             data.data?.item_name || req.body?.item_name || null,
           content: {
             body: req.body,

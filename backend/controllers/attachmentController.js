@@ -188,7 +188,7 @@ const previewImage = async (req, res) => {
  */
 const uploadAttachment = async (req, res) => {
   try {
-    const { project_id, knowledge_id, attachment_type } = req.body;
+    const { project_id, knowledge_id, opportunity_id, attachment_type } = req.body;
 
     if (!req.file) {
       return res.status(400).json({
@@ -223,6 +223,22 @@ const uploadAttachment = async (req, res) => {
       }
     }
 
+    // 如果指定了 opportunity_id，检查商机是否存在
+    if (opportunity_id) {
+      const opportunities = await query(
+        'SELECT id FROM opportunities WHERE id = ?',
+        [opportunity_id]
+      );
+
+      if (opportunities.length === 0) {
+        deleteFile(req.file.filename);
+        return res.status(404).json({
+          code: 404,
+          message: '商机不存在'
+        });
+      }
+    }
+
     // 处理文件名编码问题
     let originalName = req.file.originalname;
     // 如果文件名包含乱码字符，尝试修复
@@ -234,7 +250,7 @@ const uploadAttachment = async (req, res) => {
       }
     }
 
-    // 保存附件记录（支持 project_id 和 knowledge_id）
+    // 保存附件记录（支持 project_id、knowledge_id、opportunity_id）
     let sql, sqlParams;
     if (project_id) {
       sql = `INSERT INTO attachments (project_id, attachment_type, file_path, file_name, file_size) 
@@ -244,6 +260,10 @@ const uploadAttachment = async (req, res) => {
       sql = `INSERT INTO attachments (knowledge_id, attachment_type, file_path, file_name, file_size) 
              VALUES (?, ?, ?, ?, ?)`;
       sqlParams = [knowledge_id, attachment_type || '其他', req.file.filename, originalName, req.file.size];
+    } else if (opportunity_id) {
+      sql = `INSERT INTO attachments (opportunity_id, attachment_type, file_path, file_name, file_size) 
+             VALUES (?, ?, ?, ?, ?)`;
+      sqlParams = [opportunity_id, attachment_type || '其他', req.file.filename, originalName, req.file.size];
     } else {
       // 临时附件（知识库表单中使用，稍后关联）
       sql = `INSERT INTO attachments (attachment_type, file_path, file_name, file_size) 
@@ -261,6 +281,7 @@ const uploadAttachment = async (req, res) => {
         id: result.insertId,
         project_id: project_id ? parseInt(project_id) : null,
         knowledge_id: knowledge_id ? parseInt(knowledge_id) : null,
+        opportunity_id: opportunity_id ? parseInt(opportunity_id) : null,
         attachment_type: attachment_type || '其他',
         file_name: originalName,
         file_size: req.file.size,

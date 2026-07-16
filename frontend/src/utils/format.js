@@ -186,6 +186,29 @@ export const getOperationTypeTag = (operation) => {
   return typeMap[operation] || 'info'
 }
 
+// 商机阶段标签样式
+export const getOpportunityStageTag = (stage) => {
+  const typeMap = {
+    '初步接触': 'success',
+    '需求跟踪': 'primary',
+    '方案编制': 'primary',
+    '询价报价': 'warning',
+    '招标投标': 'danger'
+  }
+  return typeMap[stage] || 'info'
+}
+
+// 意向等级标签样式
+export const getOpportunityInterestTag = (interest) => {
+  const typeMap = {
+    '积极': 'danger',
+    '一般': 'warning',
+    '消极': 'primary',
+    '未知': 'success'
+  }
+  return typeMap[interest] || 'info'
+}
+
 // 下载Blob文件
 export const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob)

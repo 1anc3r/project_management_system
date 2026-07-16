@@ -28,6 +28,12 @@ const routes = [
         meta: { title: '项目管理', icon: 'Folder' }
       },
       {
+        path: '/opportunities',
+        name: 'Opportunities',
+        component: () => import('@/views/opportunities/index.vue'),
+        meta: { title: '商机管理', icon: 'Suitcase' }
+      },
+      {
         path: '/partners',
         name: 'Partners',
         component: () => import('@/views/partners/index.vue'),

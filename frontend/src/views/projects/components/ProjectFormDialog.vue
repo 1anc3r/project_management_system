@@ -249,7 +249,7 @@
           <el-button type="primary" :icon="Upload">选择文件</el-button>
           <template #tip>
             <div class="el-upload__tip">
-              支持测算表、合同/协议、验收报告、发票等文件
+              支持营业执照、合同/协议、验收报告、发票等文件
             </div>
           </template>
         </el-upload>

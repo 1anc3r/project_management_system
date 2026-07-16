@@ -99,14 +99,37 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目款项表';
 
 -- =====================================================
--- 5. 项目附件表 attachments
+-- 5. 新增商机表 opportunities
+-- =====================================================
+DROP TABLE IF EXISTS opportunities;
+CREATE TABLE opportunities (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    name VARCHAR(255) NOT NULL COMMENT '商机名称',
+    source VARCHAR(100) NOT NULL COMMENT '商机来源',
+    stage VARCHAR(50) NOT NULL COMMENT '商机阶段',
+    interest VARCHAR(50) NOT NULL COMMENT '意向等级',
+    estimated_amount DECIMAL(16,2) NOT NULL DEFAULT 0.00 COMMENT '预计金额(万元)',
+    estimated_date DATE DEFAULT NULL COMMENT '预计成交日期',
+    partner_id BIGINT UNSIGNED NOT NULL COMMENT '合作方ID',
+    created_by BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    KEY idx_partner_id (partner_id),
+    KEY idx_created_by (created_by),
+    CONSTRAINT fk_opportunity_partner FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商机信息表';
+
+-- =====================================================
+-- 6. 附件表 attachments
 -- =====================================================
 DROP TABLE IF EXISTS attachments;
 CREATE TABLE attachments (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID（与知识条目二选一）',
-    knowledge_id BIGINT UNSIGNED DEFAULT NULL COMMENT '知识条目ID（与项目二选一）',
-    attachment_type VARCHAR(50) NOT NULL COMMENT '附件类型(测算表/招投标文件/合同/协议/补充合同/协议/法律审查意见书/营业执照/验收报告/图片/其他)',
+    project_id BIGINT UNSIGNED DEFAULT NULL COMMENT '项目ID',
+    opportunity_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商机ID',
+    knowledge_id BIGINT UNSIGNED DEFAULT NULL COMMENT '知识条目ID',
+    attachment_type VARCHAR(50) NOT NULL COMMENT '附件类型(成本测算表/招投标文件/合同/协议/补充合同/协议/法律审查意见书/营业执照/验收报告/图片/其他)',
     file_path VARCHAR(512) NOT NULL COMMENT '文件路径',
     file_name VARCHAR(255) DEFAULT NULL COMMENT '原文件名',
     file_size BIGINT DEFAULT NULL COMMENT '文件大小(字节)',
@@ -119,7 +142,7 @@ CREATE TABLE attachments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目附件表（支持项目和知识库）';
 
 -- =====================================================
--- 6. 用户表 users
+-- 7. 用户表 users
 -- =====================================================
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
@@ -137,7 +160,7 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- =====================================================
--- 7. 操作日志表 operation_logs
+-- 8. 操作日志表 operation_logs
 -- =====================================================
 DROP TABLE IF EXISTS operation_logs;
 CREATE TABLE operation_logs (
@@ -159,7 +182,7 @@ CREATE TABLE operation_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
 -- =====================================================
--- 8. 字典表 dictionaries
+-- 9. 字典表 dictionaries
 -- =====================================================
 DROP TABLE IF EXISTS dictionaries;
 CREATE TABLE dictionaries (
@@ -178,7 +201,7 @@ CREATE TABLE dictionaries (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典表';
 
 -- =====================================================
--- 9. 字典项表 dictionary_items
+-- 10. 字典项表 dictionary_items
 -- =====================================================
 DROP TABLE IF EXISTS dictionary_items;
 CREATE TABLE dictionary_items (
@@ -201,7 +224,7 @@ CREATE TABLE dictionary_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典项表';
 
 -- =====================================================
--- 10. 资讯表 information
+-- 11. 资讯表 information
 -- =====================================================
 DROP TABLE IF EXISTS information;
 CREATE TABLE information (
@@ -224,7 +247,7 @@ CREATE TABLE information (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资讯信息表';
 
 -- =====================================================
--- 11. 知识库模块表结构
+-- 12. 知识库模块表结构
 -- =====================================================
 
 -- 知识条目表
@@ -330,7 +353,11 @@ INSERT INTO `knowledge` (`question`, `answer`, `category`, `tags`, `created_by`)
 ('如何配置MySQL数据库连接池？', '<p><strong>一、连接池配置参数</strong></p><pre><code>const pool = mysql.createPool({\n  host: ''localhost'',\n  port: 3306,\n  user: ''root'',\n  password: ''password'',\n  database: ''project_management'',\n  waitForConnections: true,\n  connectionLimit: 10,\n  queueLimit: 0,\n  enableKeepAlive: true,\n  keepAliveInitialDelay: 0\n});</code></pre><p><strong>二、关键参数说明</strong></p><p>- connectionLimit: 最大连接数</p><p>- waitForConnections: 连接耗尽时是否等待</p><p>- queueLimit: 最大等待队列长度（0表示无限制）</p>', '常见技术问题', 'MySQL,数据库,配置', 1)
 ON DUPLICATE KEY UPDATE `question` = VALUES(`question`), `answer` = VALUES(`answer`);
 
--- 合作方类型
+-- =====================================================
+-- 初始化字典
+-- =====================================================
+
+-- 合作方类型字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('partner_type', '合作方类型', 'string', '合作方类型字典', 1);
 
@@ -343,7 +370,7 @@ SELECT id, '丙方', '丙方', '丙方', 3 FROM dictionaries WHERE dict_code = '
 UNION ALL
 SELECT id, '其他', '其他', '其他', 4 FROM dictionaries WHERE dict_code = 'partner_type';
 
--- 项目阶段
+-- 项目阶段字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('project_stage', '项目阶段', 'string', '项目阶段字典', 2);
 
@@ -356,7 +383,7 @@ SELECT id, '运营', '运营', '运营', 3 FROM dictionaries WHERE dict_code = '
 UNION ALL
 SELECT id, '完结', '完结', '完结', 4 FROM dictionaries WHERE dict_code = 'project_stage';
 
--- 签约方式
+-- 签约方式字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('expansion_method', '签约方式', 'string', '项目签约方式字典', 3);
 
@@ -373,7 +400,7 @@ SELECT id, '单一来源', '单一来源', '单一来源', 5 FROM dictionaries W
 UNION ALL
 SELECT id, '其他', '其他', '其他', 6 FROM dictionaries WHERE dict_code = 'expansion_method';
 
--- 项目内容
+-- 项目内容字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('project_content', '项目内容', 'string', '项目内容字典', 4);
 
@@ -390,7 +417,7 @@ SELECT id, '业务咨询', '业务咨询', '业务咨询', 5 FROM dictionaries W
 UNION ALL
 SELECT id, '其他', '其他', '其他', 6 FROM dictionaries WHERE dict_code = 'project_content';
 
--- 履约地点（四川省市州）
+-- 履约地点（四川省市州）字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('project_city', '履约地点', 'string', '项目履约地点字典', 5);
 
@@ -437,7 +464,7 @@ SELECT id, '甘孜藏族自治州', '甘孜藏族自治州', '甘孜藏族自治
 UNION ALL
 SELECT id, '凉山彝族自治州', '凉山彝族自治州', '凉山彝族自治州', 21 FROM dictionaries WHERE dict_code = 'project_city';
 
--- 款项类型
+-- 款项类型字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('payment_type', '款项类型', 'string', '项目款项类型字典', 6);
 
@@ -452,7 +479,7 @@ SELECT id, '尾款', '尾款', '尾款', 4 FROM dictionaries WHERE dict_code = '
 UNION ALL
 SELECT id, '其他', '其他', '其他', 5 FROM dictionaries WHERE dict_code = 'payment_type';
 
--- 附件类型
+-- 附件类型字典
 INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
 ('attachment_type', '附件类型', 'string', '项目附件类型字典', 7);
 
@@ -475,12 +502,39 @@ INSERT INTO dictionary_items (dict_id, item_code, item_name, item_value, sort_or
 SELECT id, '项目推进', '项目推进', '项目推进', 1 FROM dictionaries WHERE dict_code = 'information_type'
 UNION ALL
 SELECT id, '会议活动', '会议活动', '会议活动', 2 FROM dictionaries WHERE dict_code = 'information_type';
--- 知识库字典数据
+
+-- 商机阶段字典
+INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
+('opportunity_stage', '商机阶段', 'string', '商机阶段字典', 11);
+
+INSERT INTO dictionary_items (dict_id, item_code, item_name, item_value, sort_order) 
+SELECT id, '初步接触', '初步接触', '初步接触', 1 FROM dictionaries WHERE dict_code = 'opportunity_stage'
+UNION ALL
+SELECT id, '需求跟踪', '需求跟踪', '需求跟踪', 2 FROM dictionaries WHERE dict_code = 'opportunity_stage'
+UNION ALL
+SELECT id, '方案编制', '方案编制', '方案编制', 3 FROM dictionaries WHERE dict_code = 'opportunity_stage'
+UNION ALL
+SELECT id, '询价报价', '询价报价', '询价报价', 4 FROM dictionaries WHERE dict_code = 'opportunity_stage'
+UNION ALL
+SELECT id, '招标投标', '招标投标', '招标投标', 5 FROM dictionaries WHERE dict_code = 'opportunity_stage';
+
+-- 意向等级字典
+INSERT INTO dictionaries (dict_code, dict_name, dict_type, description, sort_order) VALUES
+('opportunity_interest', '意向等级', 'string', '商机意向等级字典', 12);
+
+INSERT INTO dictionary_items (dict_id, item_code, item_name, item_value, sort_order) 
+SELECT id, '积极', '积极', '积极', 1 FROM dictionaries WHERE dict_code = 'opportunity_interest'
+UNION ALL
+SELECT id, '一般', '一般', '一般', 2 FROM dictionaries WHERE dict_code = 'opportunity_interest'
+UNION ALL
+SELECT id, '消极', '消极', '消极', 3 FROM dictionaries WHERE dict_code = 'opportunity_interest'
+UNION ALL
+SELECT id, '未知', '未知', '未知', 4 FROM dictionaries WHERE dict_code = 'opportunity_interest';
+
 -- 知识分类字典
 INSERT INTO `dictionaries` (`dict_code`, `dict_name`, `dict_type`, `description`, `sort_order`, `status`) 
 VALUES ('knowledge_category', '知识分类', 'string', '知识库条目分类', 9, 1)
 ON DUPLICATE KEY UPDATE `dict_name` = '知识分类';
-
 -- 使用更可靠的方式插入字典项
 SET @knowledge_cat_dict_id = (SELECT id FROM dictionaries WHERE dict_code = 'knowledge_category' LIMIT 1);
 
