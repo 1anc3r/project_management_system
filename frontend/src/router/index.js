@@ -31,7 +31,7 @@ const routes = [
         path: '/opportunities',
         name: 'Opportunities',
         component: () => import('@/views/opportunities/index.vue'),
-        meta: { title: '商机管理', icon: 'Suitcase' }
+        meta: { title: '商机管理', icon: 'SuitcaseLine' }
       },
       {
         path: '/partners',

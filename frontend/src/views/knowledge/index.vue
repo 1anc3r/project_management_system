@@ -77,7 +77,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="category" label="分类" width="100">
+        <el-table-column prop="category" label="分类" width="90" align="center">
           <template #default="{ row }">
             <el-tag size="small" type="primary">{{ row.category }}</el-tag>
           </template>
@@ -145,7 +145,7 @@
             </div>
             <div class="card-body">
               <h4 class="card-title" :title="item.question">{{ item.question }}</h4>
-              <p class="card-preview">{{ stripHtml(item.answer_preview || item.answer) }}</p>
+              <p class="card-preview" style="height: 80px;">{{ stripHtml(item.answer_preview || item.answer) }}</p>
               <div class="card-footer">
                 <span class="footer-item">
                   <el-icon>

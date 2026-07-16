@@ -66,6 +66,7 @@
         @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="商机名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="source" label="商机来源" min-width="180" show-overflow-tooltip />
         <el-table-column prop="stage" label="商机阶段" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="getOpportunityStageTag(row.stage)" size="small">{{ row.stage }}</el-tag>
@@ -85,7 +86,6 @@
         <el-table-column prop="partner_name" label="合作方" min-width="150" show-overflow-tooltip />
         <el-table-column prop="partner_contact" label="联系人" width="100" />
         <el-table-column prop="partner_contact_phone" label="联系电话" width="120" />
-        <el-table-column prop="source" label="商机来源" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>

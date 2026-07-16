@@ -33,7 +33,7 @@
 
         <el-menu-item index="/opportunities">
           <el-icon>
-            <Suitcase />
+            <SuitcaseLine />
           </el-icon>
           <template #title>
             <span>商机管理</span>
