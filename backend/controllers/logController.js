@@ -6,6 +6,7 @@ const { query } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const { convertToCSV } = require('../utils/csvHelper');
+const { parsePage, MAX_EXPORT_ROWS } = require('../utils/pagination');
 
 /**
  * 获取操作日志列表
@@ -14,8 +15,6 @@ const { convertToCSV } = require('../utils/csvHelper');
 const getLogs = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       username,
       module,
       operation,
@@ -23,11 +22,8 @@ const getLogs = async (req, res) => {
       endDate
     } = req.query;
 
-    // 确保分页参数是有效的数字
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
 
     // 构建查询条件
     let whereClause = 'WHERE 1=1';
@@ -144,9 +140,9 @@ const exportLogs = async (req, res) => {
       params.push(`${endDate} 23:59:59`);
     }
 
-    // 查询所有数据
+    // 查询数据（限制最大导出行数）
     const logs = await query(
-      `SELECT 
+      `SELECT
         username as '操作人',
         module as '模块',
         operation as '操作',
@@ -155,7 +151,8 @@ const exportLogs = async (req, res) => {
         created_at as '操作时间'
       FROM operation_logs
       ${whereClause}
-      ORDER BY created_at DESC`,
+      ORDER BY created_at DESC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 

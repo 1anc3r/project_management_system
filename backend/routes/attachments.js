@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const attachmentController = require('../controllers/attachmentController');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, checkFileAccess } = require('../middleware/auth');
 const { upload, handleUploadError } = require('../middleware/upload');
 
 /**
@@ -42,25 +42,32 @@ router.post('/image',
 );
 
 /**
+ * @route   POST /api/attachments/access-tokens
+ * @desc    签发文件访问凭证（短期、绑定单个文件，用于预览/下载免 URL 传登录 JWT）
+ * @access  Private
+ */
+router.post('/access-tokens', authenticate, attachmentController.issueAccessTokens);
+
+/**
  * @route   GET /api/attachments/:id/preview
  * @desc    图片预览
  * @access  Private
  */
-router.get('/:id/preview', authenticate, attachmentController.previewImage);
+router.get('/:id/preview', authenticate, checkFileAccess, attachmentController.previewImage);
 
 /**
  * @route   GET /api/attachments/:id/view
  * @desc    通用文件预览（设置正确 Content-Type 供浏览器内联显示）
  * @access  Private
  */
-router.get('/:id/view', authenticate, attachmentController.previewFile);
+router.get('/:id/view', authenticate, checkFileAccess, attachmentController.previewFile);
 
 /**
  * @route   GET /api/attachments/:id/content
  * @desc    获取文本文件内容
  * @access  Private
  */
-router.get('/:id/content', authenticate, attachmentController.getFileContent);
+router.get('/:id/content', authenticate, checkFileAccess, attachmentController.getFileContent);
 
 /**
  * @route   POST /api/attachments
@@ -79,7 +86,7 @@ router.post('/',
  * @desc    下载附件
  * @access  Private
  */
-router.get('/:id/download', authenticate, attachmentController.downloadAttachment);
+router.get('/:id/download', authenticate, checkFileAccess, attachmentController.downloadAttachment);
 
 /**
  * @route   DELETE /api/attachments/:id

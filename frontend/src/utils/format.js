@@ -75,30 +75,43 @@ export const formatFileSize = (bytes) => {
 }
 
 /**
- * 处理 HTML 内容中的图片 URL，添加认证 token
- * 用于富文本编辑器中插入的图片在展示时能够通过认证
+ * 处理 HTML 内容中的图片 URL，注入短期文件访问凭证（access_token）
+ * 用于富文本编辑器中插入的图片在展示时能够通过认证。
+ * 凭证为短期（30分钟）、绑定单个文件的作用域 Token，
+ * 避免在 URL 中直接暴露登录 JWT（会进入 Nginx 日志、浏览器历史与 Referer）
  * @param {string} html - HTML 内容
- * @param {string} token - JWT token
- * @returns {string} 处理后的 HTML
+ * @returns {Promise<string>} 处理后的 HTML
  */
-export const injectImageToken = (html, token) => {
-  if (!html || !token) return html
-  
-  // 匹配 /uploads/ 开头的图片 src
-  // 将 /uploads/filename 替换为 /uploads/filename?token=xxx
-  // 避免重复添加 token
-  return html.replace(
-    /(src=["'])\/uploads\/([^"'?]+)(\?[^"']*)?(["'])/g,
-    (match, prefix, filename, existingQuery, suffix) => {
-      // 如果已经有 token 参数，先移除
-      const cleanQuery = existingQuery 
-        ? existingQuery.replace(/[?&]token=[^&]*/, '').replace(/^&/, '?')
-        : ''
-      const separator = cleanQuery && cleanQuery !== '?' ? '&' : '?'
-      const newQuery = cleanQuery + separator + 'token=' + encodeURIComponent(token)
-      return prefix + '/uploads/' + filename + newQuery + suffix
-    }
-  )
+export const injectImageTokens = async (html) => {
+  if (!html) return html
+
+  const regex = /(src=["'])\/uploads\/([^"'?]+)(\?[^"']*)?(["'])/g
+  // 收集去重后的文件名
+  const filenames = [...new Set([...html.matchAll(regex)].map(m => m[2]))]
+  if (filenames.length === 0) return html
+
+  // 延迟加载，避免与 api 模块产生循环依赖
+  const { getAccessTokens } = await import('@/api/attachments')
+
+  let tokenMap = {}
+  try {
+    const data = await getAccessTokens({ files: filenames })
+    tokenMap = data?.tokens || {}
+  } catch {
+    // 凭证申请失败时返回原始 HTML，图片加载失败但不影响文本展示
+    return html
+  }
+
+  return html.replace(regex, (match, prefix, filename, existingQuery, suffix) => {
+    const token = tokenMap[`file:${filename}`]
+    if (!token) return match
+    // 先移除已有的 token / access_token 参数，避免重复
+    const cleanQuery = existingQuery
+      ? existingQuery.replace(/[?&](token|access_token)=[^&]*/g, '').replace(/^&/, '?')
+      : ''
+    const separator = cleanQuery && cleanQuery !== '?' ? '&' : '?'
+    return `${prefix}/uploads/${filename}${cleanQuery}${separator}access_token=${encodeURIComponent(token)}${suffix}`
+  })
 }
 
 

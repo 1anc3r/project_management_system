@@ -1,5 +1,21 @@
-/backend/uploads
+# 依赖
+node_modules/
 /backend/node_modules
 /backend/package-lock.json
 /frontend/node_modules
 /frontend/package-lock.json
+
+# 环境配置（含密钥，禁止提交；参考 .env.example）
+.env
+.env.*
+!.env.example
+
+# 上传文件
+/backend/uploads
+
+# 构建产物
+/frontend/dist
+
+# 日志与临时文件
+*.log
+.DS_Store

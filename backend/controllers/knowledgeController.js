@@ -8,6 +8,8 @@ const moment = require('moment');
 const fs = require('fs');
 const path = require('path');
 const { convertToCSV, parseCSV } = require('../utils/csvHelper');
+const { getDictItems } = require('../utils/dictHelper');
+const { parsePage, MAX_EXPORT_ROWS } = require('../utils/pagination');
 
 /**
  * 去除HTML标签，获取纯文本
@@ -38,8 +40,6 @@ const formatFileSize = (bytes) => {
 const getKnowledges = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       keyword,
       category,
       tags,
@@ -49,10 +49,8 @@ const getKnowledges = async (req, res) => {
     } = req.query;
 
     const user = req.user;
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
 
     // 构建查询条件
     let whereClause = 'WHERE 1=1';
@@ -121,14 +119,9 @@ const getKnowledges = async (req, res) => {
       params
     );
 
-    // 获取筛选选项
-    const categories = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'knowledge_category' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
+    // 获取筛选选项（带缓存）
+    const categoryItems = await getDictItems('knowledge_category');
+    const categories = categoryItems.map(name => ({ item_name: name }));
 
     // 获取热门标签（出现频率最高的前20个）
     const hotTagsResult = await query(
@@ -595,14 +588,8 @@ const batchDeleteKnowledge = async (req, res) => {
  */
 const getFilterOptions = async (req, res) => {
   try {
-    // 获取分类选项
-    const categories = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'knowledge_category' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
+    // 获取分类选项（带缓存）
+    const categoryItems = await getDictItems('knowledge_category');
 
     // 获取热门标签
     const hotTagsResult = await query(
@@ -627,7 +614,7 @@ const getFilterOptions = async (req, res) => {
     res.json({
       code: 200,
       data: {
-        categories: categories.map(c => c.item_name),
+        categories: categoryItems,
         hotTags
       }
     });
@@ -692,7 +679,8 @@ const exportKnowledge = async (req, res) => {
       FROM knowledge k
       LEFT JOIN users u ON k.created_by = u.id
       ${whereClause}
-      ORDER BY k.created_at DESC`,
+      ORDER BY k.created_at DESC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 

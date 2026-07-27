@@ -55,6 +55,23 @@ export const downloadAttachment = (id) => {
   })
 }
 
+// 获取文件预览 Blob（通过 Authorization 头鉴权，不在 URL 中暴露登录凭证）
+export const getFileViewBlob = (id) => {
+  return request.get(`/api/attachments/${id}/view`, {
+    responseType: 'blob'
+  })
+}
+
+/**
+ * 申请文件访问凭证（短期、绑定单个文件）
+ * @param {Object} params - { ids?: number[], files?: string[] }
+ * @returns {Promise<{ tokens: Object, expiresIn: number }>}
+ */
+export const getAccessTokens = async (params) => {
+  const res = await request.post('/api/attachments/access-tokens', params)
+  return res.data
+}
+
 // 更新附件类型
 export const updateAttachment = (id, data) => {
   return request.put(`/api/attachments/${id}`, data)

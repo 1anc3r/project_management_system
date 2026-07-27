@@ -2,10 +2,20 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login, getProfile } from '@/api/auth'
 
+// 安全解析 localStorage 中的用户信息，数据损坏时自动清除，避免应用白屏
+const loadUserInfo = () => {
+  try {
+    return JSON.parse(localStorage.getItem('userInfo') || '{}')
+  } catch {
+    localStorage.removeItem('userInfo')
+    return {}
+  }
+}
+
 export const useUserStore = defineStore('user', () => {
   // State
   const token = ref(localStorage.getItem('token') || '')
-  const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}'))
+  const userInfo = ref(loadUserInfo())
 
   // Getters
   const isLoggedIn = computed(() => !!token.value)

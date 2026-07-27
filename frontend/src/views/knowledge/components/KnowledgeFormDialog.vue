@@ -75,7 +75,7 @@ import { Upload, Document, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { createKnowledge, updateKnowledge, getKnowledgeById } from '@/api/knowledge'
 import { getFilterOptions } from '@/api/knowledge'
-import { injectImageToken } from '@/utils/format'
+import { injectImageTokens } from '@/utils/format'
 import TagInput from '@/components/TagInput.vue'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 
@@ -187,8 +187,8 @@ const loadEditData = async () => {
         tags: data.tags || [],
         attachmentIds: data.attachments?.map(a => a.id) || []
       }
-      // 为编辑器内容中的图片注入认证token，确保编辑器内图片正常显示
-      editorAnswer.value = injectImageToken(data.answer, userStore.token)
+      // 为编辑器内容中的图片注入短期访问凭证，确保编辑器内图片正常显示
+      editorAnswer.value = await injectImageTokens(data.answer)
       uploadedAttachments.value = data.attachments || []
       fileList.value = data.attachments?.map(a => ({
         name: a.file_name,
@@ -213,7 +213,8 @@ watch(editorAnswer, (val) => {
  */
 const stripImageToken = (html) => {
   if (!html) return html
-  return html.replace(/(\/uploads\/[^"']+)([?&])token=[^&"']+/g, '$1')
+  // 同时清除旧的 token 参数与新的 access_token 参数
+  return html.replace(/(\/uploads\/[^"']+?)([?&])(?:token|access_token)=[^&"']+/g, '$1')
 }
 
 // 提交表单

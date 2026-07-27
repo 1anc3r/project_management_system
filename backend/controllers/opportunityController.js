@@ -7,53 +7,13 @@ const xlsx = require('xlsx');
 const moment = require('moment');
 const { formatDate } = require('../utils/dateHelper');
 const { sortAttachmentsByType } = require('../utils/sortHelper');
+const { getDictItems, validateDictValue } = require('../utils/dictHelper');
+const { parsePage, MAX_EXPORT_ROWS } = require('../utils/pagination');
 const { OPPORTUNITY_STAGES, OPPORTUNITY_INTEREST_LEVELS } = require('../config/const');
 
-// 从字典表获取商机阶段
-const getOpportunityStagesFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'opportunity_stage' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取商机阶段失败:', error);
-    return OPPORTUNITY_STAGES;
-  }
-};
-
-// 验证商机阶段
-const validateOpportunityStage = async (stage) => {
-  const stages = await getOpportunityStagesFromDB();
-  return stages.includes(stage);
-};
-
-// 从字典表获取意向等级
-const getInterestLevelsFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'opportunity_interest' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取意向等级失败:', error);
-    return OPPORTUNITY_INTEREST_LEVELS;
-  }
-};
-
-// 验证意向等级
-const validateInterestLevel = async (interest) => {
-  const levels = await getInterestLevelsFromDB();
-  return levels.includes(interest);
-};
+// 字典校验（带常量兜底）
+const validateOpportunityStage = (stage) => validateDictValue('opportunity_stage', stage, OPPORTUNITY_STAGES);
+const validateInterestLevel = (interest) => validateDictValue('opportunity_interest', interest, OPPORTUNITY_INTEREST_LEVELS);
 
 /**
  * 获取商机列表
@@ -62,8 +22,6 @@ const validateInterestLevel = async (interest) => {
 const getOpportunities = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       keyword,
       stage,
       interest,
@@ -72,10 +30,8 @@ const getOpportunities = async (req, res) => {
       partnerId
     } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
     const user = req.user;
 
     // 构建查询条件
@@ -500,7 +456,8 @@ const exportOpportunities = async (req, res) => {
       FROM opportunities o
       LEFT JOIN partners par ON o.partner_id = par.id
       ${whereClause}
-      ORDER BY o.created_at DESC`,
+      ORDER BY o.created_at DESC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 
@@ -529,21 +486,10 @@ const exportOpportunities = async (req, res) => {
  */
 const getFilterOptions = async (req, res) => {
   try {
-    const getDictItems = async (dictCode) => {
-      const items = await query(
-        `SELECT di.item_name 
-         FROM dictionary_items di
-         JOIN dictionaries d ON di.dict_id = d.id
-         WHERE d.dict_code = ? AND di.status = 1 AND d.status = 1
-         ORDER BY di.sort_order ASC`,
-        [dictCode]
-      );
-      return items.map(item => item.item_name);
-    };
-
+    // 从字典表读取筛选选项（带缓存与常量兜底）
     const [stages, interests, attachmentTypes] = await Promise.all([
-      getDictItems('opportunity_stage'),
-      getDictItems('opportunity_interest'),
+      getDictItems('opportunity_stage', OPPORTUNITY_STAGES),
+      getDictItems('opportunity_interest', OPPORTUNITY_INTEREST_LEVELS),
       getDictItems('attachment_type')
     ]);
 

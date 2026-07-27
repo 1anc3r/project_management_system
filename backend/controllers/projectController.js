@@ -9,121 +9,39 @@ const fs = require('fs');
 const { convertToCSV, parseCSV } = require('../utils/csvHelper');
 const { formatDate } = require('../utils/dateHelper');
 const { sortAttachmentsByType } = require('../utils/sortHelper');
+const { getDictItems, validateDictValue } = require('../utils/dictHelper');
+const { parsePage, MAX_EXPORT_ROWS } = require('../utils/pagination');
 const { PROJECT_STAGES, PROJECT_TYPES, PROJECT_EXPANSION_METHODS, PROJECT_CONTENTS, SICHUAN_CITIES } = require('../config/const');
 
-// 从字典表获取项目类型
-const getProjectTypesFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'project_type' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取项目类型失败:', error);
-    return PROJECT_TYPES;
-  }
-};
+// 字典校验（带常量兜底）
+const validateProjectStage = (stage) => validateDictValue('project_stage', stage, PROJECT_STAGES);
+const validateProjectType = (type) => validateDictValue('project_type', type, PROJECT_TYPES);
+const validateProjectCity = (city) => validateDictValue('project_city', city, SICHUAN_CITIES);
 
-// 验证项目类型
-const validateProjectType = async (type) => {
-  const types = await getProjectTypesFromDB();
-  return types.includes(type);
-};
-
-// 从字典表获取项目阶段
-const getProjectStagesFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'project_stage' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取项目阶段失败:', error);
-    return PROJECT_STAGES;
-  }
-};
-
-// 验证项目阶段
-const validateProjectStage = async (type) => {
-  const types = await getProjectStagesFromDB();
-  return types.includes(type);
-};
-
-// 从字典表获取项目拓展方式
-const getProjectExpansionMethodsFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'expansion_method' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取项目拓展方式失败:', error);
-    return PROJECT_EXPANSION_METHODS;
-  }
-};
-
-// 验证项目拓展方式
-const validateProjectExpansionMethod = async (type) => {
-  const types = await getProjectExpansionMethodsFromDB();
-  return types.includes(type);
-};
-
-// 从字典表获取项目内容
-const getProjectContentsFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'project_content' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取项目内容失败:', error);
-    return PROJECT_CONTENTS;
-  }
-};
-
-// 验证项目内容
-const validateProjectContent = async (type) => {
-  const types = await getProjectContentsFromDB();
-  return types.includes(type);
-};
-
-// 从字典表获取项目履约地点
-const getProjectCitysFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'project_city' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取项目履约地点失败:', error);
-    return SICHUAN_CITIES;
-  }
-};
-
-// 验证项目履约地点
-const validateProjectCity = async (type) => {
-  const types = await getProjectContentsFromDB();
-  return types.includes(type);
+/**
+ * 批量插入项目款项
+ * @param {Object} connection - 事务连接
+ * @param {number} projectId - 项目ID
+ * @param {Array} payments - 款项数组
+ */
+const insertPayments = async (connection, projectId, payments) => {
+  if (!payments || payments.length === 0) return;
+  const values = payments.map(payment => [
+    projectId,
+    payment.payment_type,
+    payment.payment_condition || null,
+    parseFloat(payment.payment_ratio) || 0,
+    parseFloat(payment.payment_amount) || 0,
+    payment.is_paid ? 1 : 0,
+    formatDate(payment.payment_date)
+  ]);
+  // 批量插入需使用 query（execute 不支持 VALUES ? 数组展开）
+  await connection.query(
+    `INSERT INTO payments 
+     (project_id, payment_type, payment_condition, payment_ratio, payment_amount, is_paid, payment_date) 
+     VALUES ?`,
+    [values]
+  );
 };
 
 /**
@@ -133,8 +51,6 @@ const validateProjectCity = async (type) => {
 const getProjects = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       keyword,
       stage,
       city,
@@ -146,11 +62,8 @@ const getProjects = async (req, res) => {
       partnerId
     } = req.query;
 
-    // 确保分页参数是有效的数字
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
     const user = req.user;
 
     // 构建查询条件
@@ -396,6 +309,17 @@ const createProject = async (req, res) => {
       }
     }
 
+    // 验证履约地点
+    if (city) {
+      const isValid = await validateProjectCity(city);
+      if (!isValid) {
+        return res.status(400).json({
+          code: 400,
+          message: '无效的履约地点'
+        });
+      }
+    }
+
     // 验证日期
     const formattedStartDate = formatDate(start_date);
     const formattedEndDate = formatDate(end_date);
@@ -437,25 +361,8 @@ const createProject = async (req, res) => {
 
       const projectId = projectResult.insertId;
 
-      // 创建款项
-      if (projectPayments && projectPayments.length > 0) {
-        for (const payment of projectPayments) {
-          await connection.execute(
-            `INSERT INTO payments 
-             (project_id, payment_type, payment_condition, payment_ratio, payment_amount, is_paid, payment_date) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [
-              projectId,
-              payment.payment_type,
-              payment.payment_condition || null,
-              parseFloat(payment.payment_ratio) || 0,
-              parseFloat(payment.payment_amount) || 0,
-              payment.is_paid ? 1 : 0,
-              formatDate(payment.payment_date)
-            ]
-          );
-        }
-      }
+      // 批量创建款项
+      await insertPayments(connection, projectId, projectPayments);
 
       return projectId;
     });
@@ -563,25 +470,8 @@ const updateProject = async (req, res) => {
       // 删除旧款项
       await connection.execute('DELETE FROM payments WHERE project_id = ?', [id]);
 
-      // 创建新款项
-      if (projectPayments && projectPayments.length > 0) {
-        for (const payment of projectPayments) {
-          await connection.execute(
-            `INSERT INTO payments 
-             (project_id, payment_type, payment_condition, payment_ratio, payment_amount, is_paid, payment_date) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [
-              id,
-              payment.payment_type,
-              payment.payment_condition || null,
-              parseFloat(payment.payment_ratio) || 0,
-              parseFloat(payment.payment_amount) || 0,
-              payment.is_paid ? 1 : 0,
-              formatDate(payment.payment_date)
-            ]
-          );
-        }
-      }
+      // 批量创建新款项
+      await insertPayments(connection, id, projectPayments);
     });
 
     res.json({
@@ -679,9 +569,9 @@ const exportProjects = async (req, res) => {
       params.push(type);
     }
 
-    // 查询所有数据
+    // 查询数据（限制最大导出行数，防止全表导出拖垮服务）
     const projects = await query(
-      `SELECT 
+      `SELECT
         p.name as '项目名称',
         p.type as '项目类型',
         p.city as '履约地点',
@@ -702,7 +592,8 @@ const exportProjects = async (req, res) => {
       FROM projects p
       LEFT JOIN partners par ON p.partner_id = par.id
       ${whereClause}
-      ORDER BY p.created_at DESC`,
+      ORDER BY p.created_at DESC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 
@@ -772,56 +663,54 @@ const importProjects = async (req, res) => {
         data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
       }
 
-      // 处理导入数据
-      let successCount = 0;
-      let failCount = 0;
+      // 一次性预加载全部合作方，消除逐行查询的 N+1 问题
+      const allPartners = await query('SELECT id, name FROM partners');
+      const partnerMap = new Map(allPartners.map(p => [p.name, p.id]));
+
+      // 先校验全部行，收集有效数据与错误
+      const validRows = [];
       const errors = [];
+      let failCount = 0;
 
       for (const item of data) {
-        try {
-          // 查找或创建合作方
-          let partnerId = null;
-          const partnerName = item['合作方名称'] || item.partner_name;
+        const partnerName = item['合作方名称'] || item.partner_name;
+        const partnerId = partnerName ? partnerMap.get(partnerName) : null;
 
-          if (partnerName) {
-            const partners = await query('SELECT id FROM partners WHERE name = ?', [partnerName]);
-            if (partners.length > 0) {
-              partnerId = partners[0].id;
-            }
-          }
-
-          if (!partnerId) {
-            failCount++;
-            errors.push(`项目 "${item['项目名称'] || item.name}" 的合作方不存在`);
-            continue;
-          }
-
-          // 创建项目
-          await query(
-            `INSERT INTO projects 
-             (name, city, stage, type, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              item['项目名称'] || item.name,
-              item['履约地点'] || item.city || '成都市',
-              item['项目阶段'] || item.stage || '意向',
-              item['项目类型'] || item.type || '收入合同',
-              item['签约方式'] || item.expansion_method || '其他',
-              item['项目内容'] || item.content || '其他',
-              parseFloat(item['合同总金额(万元)'] || item.total_amount) || 0,
-              parseFloat(item['已开票金额(万元)'] || item.receipt_amount) || 0,
-              parseFloat(item['成本(万元)'] || item.cost) || 0,
-              formatDate(item['起始日期'] || item.start_date),
-              formatDate(item['终止日期'] || item.end_date),
-              partnerId,
-              req.user.userId
-            ]
-          );
-          successCount++;
-        } catch (err) {
+        if (!partnerId) {
           failCount++;
-          errors.push(`项目 "${item['项目名称'] || item.name}" 导入失败: ${err.message}`);
+          errors.push(`项目 "${item['项目名称'] || item.name}" 的合作方不存在`);
+          continue;
         }
+
+        validRows.push([
+          item['项目名称'] || item.name,
+          item['履约地点'] || item.city || '成都市',
+          item['项目阶段'] || item.stage || '意向',
+          item['项目类型'] || item.type || '收入合同',
+          item['签约方式'] || item.expansion_method || '其他',
+          item['项目内容'] || item.content || '其他',
+          parseFloat(item['合同总金额(万元)'] || item.total_amount) || 0,
+          parseFloat(item['已开票金额(万元)'] || item.receipt_amount) || 0,
+          parseFloat(item['成本(万元)'] || item.cost) || 0,
+          formatDate(item['起始日期'] || item.start_date),
+          formatDate(item['终止日期'] || item.end_date),
+          partnerId,
+          req.user.userId
+        ]);
+      }
+
+      // 事务内批量插入：任一条失败整体回滚，避免留下半成品数据
+      let successCount = 0;
+      if (validRows.length > 0) {
+        await transaction(async (connection) => {
+          const [result] = await connection.query(
+            `INSERT INTO projects
+             (name, city, stage, type, expansion_method, content, total_amount, receipt_amount, cost, start_date, end_date, partner_id, created_by)
+             VALUES ?`,
+            [validRows]
+          );
+          successCount = result.affectedRows;
+        });
       }
 
       res.json({
@@ -1032,25 +921,13 @@ const getCityDistribution = async (req, res) => {
  */
 const getFilterOptions = async (req, res) => {
   try {
-    // 从字典表读取筛选选项
-    const getDictItems = async (dictCode) => {
-      const items = await query(
-        `SELECT di.item_name 
-         FROM dictionary_items di
-         JOIN dictionaries d ON di.dict_id = d.id
-         WHERE d.dict_code = ? AND di.status = 1 AND d.status = 1
-         ORDER BY di.sort_order ASC`,
-        [dictCode]
-      );
-      return items.map(item => item.item_name);
-    };
-
+    // 从字典表读取筛选选项（带缓存与常量兜底）
     const [stages, types, expansionMethods, contents, cities, paymentTypes, attachmentTypes] = await Promise.all([
-      getDictItems('project_stage'),
-      getDictItems('project_type'),
-      getDictItems('expansion_method'),
-      getDictItems('project_content'),
-      getDictItems('project_city'),
+      getDictItems('project_stage', PROJECT_STAGES),
+      getDictItems('project_type', PROJECT_TYPES),
+      getDictItems('expansion_method', PROJECT_EXPANSION_METHODS),
+      getDictItems('project_content', PROJECT_CONTENTS),
+      getDictItems('project_city', SICHUAN_CITIES),
       getDictItems('payment_type'),
       getDictItems('attachment_type')
     ]);

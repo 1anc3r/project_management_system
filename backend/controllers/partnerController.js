@@ -6,31 +6,12 @@ const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
 const { PARTNER_TYPES } = require('../config/const');
-const { sortPartnersByType } = require('../utils/sortHelper');
 const { convertToCSV } = require('../utils/csvHelper');
+const { getDictItems, validateDictValue } = require('../utils/dictHelper');
+const { parsePage, MAX_EXPORT_ROWS } = require('../utils/pagination');
 
-// 从字典表获取合作方类型
-const getPartnerTypesFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'partner_type' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取合作方类型失败:', error);
-    return PARTNER_TYPES;
-  }
-};
-
-// 验证合作方类型
-const validatePartnerType = async (type) => {
-  const types = await getPartnerTypesFromDB();
-  return types.includes(type);
-};
+// 验证合作方类型（带常量兜底）
+const validatePartnerType = (type) => validateDictValue('partner_type', type, PARTNER_TYPES);
 
 /**
  * 获取合作方列表
@@ -39,19 +20,14 @@ const validatePartnerType = async (type) => {
 const getPartners = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       keyword,
       type,
       sortField,
       sortOrder = 'desc'
     } = req.query;
 
-    // 确保分页参数是有效的数字
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
 
     // 构建查询条件
     let whereClause = 'WHERE 1=1';
@@ -81,13 +57,14 @@ const getPartners = async (req, res) => {
       'created_at': 'p.created_at'
     };
 
-    // 排序
-    let orderClause = 'ORDER BY p.tax_id DESC';
+    // 排序：默认按字典配置的类型顺序（sort_order）排序；
+    // 用户指定排序字段时仅按该字段排序，排序统一在 SQL 层完成，保证跨页顺序正确
+    // MAX() 聚合用于兼容 ONLY_FULL_GROUP_BY 模式下 ORDER BY 非分组列的限制
+    let orderClause = 'ORDER BY COALESCE(MAX(di_type.sort_order), 999) ASC, p.tax_id DESC';
     const allowedSortFields = ['project_count', 'total_contract_amount', 'opportunity_count', 'total_estimated_amount', 'created_at'];
     if (sortField && allowedSortFields.includes(sortField)) {
       const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
-      // stage 字段为中文，使用 CONVERT 指定 GBK 编码实现拼音排序；其他字段直接排序
-      orderClause = `ORDER BY ${fieldMap[sortField]} ${order}`;
+      orderClause = `ORDER BY ${fieldMap[sortField]} ${order}, p.id ASC`;
     }
 
     // 查询总数
@@ -111,6 +88,8 @@ const getPartners = async (req, res) => {
         (SELECT pc.phone FROM partner_contacts pc WHERE pc.partner_id = p.id ORDER BY pc.sort_order ASC, pc.id ASC LIMIT 1) as primary_contact_phone,
         p.created_by
       FROM partners p
+      LEFT JOIN dictionaries d_type ON d_type.dict_code = 'partner_type' AND d_type.status = 1
+      LEFT JOIN dictionary_items di_type ON di_type.dict_id = d_type.id AND di_type.item_name = p.type AND di_type.status = 1
       LEFT JOIN(
         SELECT partner_id,
         COUNT(*) as project_count,
@@ -130,12 +109,10 @@ const getPartners = async (req, res) => {
       params
     );
 
-    sortedPartners = sortPartnersByType(partners);
-
     res.json({
       code: 200,
       data: {
-        list: sortedPartners,
+        list: partners,
         pagination: {
           page: pageNum,
           pageSize: limit,
@@ -378,11 +355,11 @@ const updatePartner = async (req, res) => {
     }
 
     await transaction(async (connection) => {
-      // 更新合作方
+      // 更新合作方（created_by 为审计字段，不可被修改人覆盖）
       await connection.execute(
         `UPDATE partners SET 
           name = ?, type = ?, tax_id = ?, address = ?, 
-          bank = ?, bank_account = ?, longitude = ?, latitude = ?, created_by = ?
+          bank = ?, bank_account = ?, longitude = ?, latitude = ?
          WHERE id = ?`,
         [
           name,
@@ -393,7 +370,6 @@ const updatePartner = async (req, res) => {
           bank_account || null,
           longitude || null,
           latitude || null,
-          req.user.userId,
           id
         ]
       );
@@ -493,21 +469,9 @@ const deletePartner = async (req, res) => {
  */
 const getFilterOptions = async (req, res) => {
   try {
-    // 从字典表读取筛选选项
-    const getDictItems = async (dictCode) => {
-      const items = await query(
-        `SELECT di.item_name 
-         FROM dictionary_items di
-         JOIN dictionaries d ON di.dict_id = d.id
-         WHERE d.dict_code = ? AND di.status = 1 AND d.status = 1
-         ORDER BY di.sort_order ASC`,
-        [dictCode]
-      );
-      return items.map(item => item.item_name);
-    };
-
+    // 从字典表读取筛选选项（带缓存与常量兜底）
     const [types] = await Promise.all([
-      getDictItems('partner_type')
+      getDictItems('partner_type', PARTNER_TYPES)
     ]);
 
     res.json({
@@ -553,7 +517,8 @@ const exportPartnerContacts = async (req, res) => {
       FROM partner_contacts pc
       JOIN partners p ON pc.partner_id = p.id
       ${whereClause}
-      ORDER BY p.name ASC, pc.sort_order ASC, pc.id ASC`,
+      ORDER BY p.name ASC, pc.sort_order ASC, pc.id ASC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 
@@ -627,7 +592,8 @@ const exportPartners = async (req, res) => {
       LEFT JOIN projects proj ON p.id = proj.partner_id
       ${whereClause}
       GROUP BY p.id
-      ORDER BY p.created_at DESC`,
+      ORDER BY p.created_at DESC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 
@@ -740,7 +706,7 @@ const getAllPartners = async (req, res) => {
  */
 const getPartnerTypes = async (req, res) => {
   try {
-    const types = await getPartnerTypesFromDB();
+    const types = await getDictItems('partner_type', PARTNER_TYPES);
     res.json({
       code: 200,
       data: types

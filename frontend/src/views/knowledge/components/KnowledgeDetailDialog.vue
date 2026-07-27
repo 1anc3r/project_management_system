@@ -102,14 +102,11 @@ import {
   User, Calendar, View, Document, Download,
   ArrowLeft, Edit, Delete, Picture, ZoomIn
 } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
 import { getKnowledgeById, deleteKnowledge, recordView } from '@/api/knowledge'
-import { formatDateTime, injectImageToken } from '@/utils/format'
-import { isPreviewable } from '@/api/attachments'
+import { formatDateTime, injectImageTokens, downloadBlob } from '@/utils/format'
+import { isPreviewable, downloadAttachment } from '@/api/attachments'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 import AttachmentPreviewDialog from '@/components/AttachmentPreviewDialog.vue'
-
-const userStore = useUserStore()
 
 const props = defineProps({
   visible: Boolean,
@@ -140,11 +137,8 @@ const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
 
-// 处理后的内容（为图片 URL 添加认证 token）
-const processedAnswer = computed(() => {
-  if (!knowledgeData.value?.answer) return ''
-  return injectImageToken(knowledgeData.value.answer, userStore.token)
-})
+// 处理后的内容（为图片 URL 注入短期访问凭证，由 fetchDetail 异步填充）
+const processedAnswer = ref('')
 
 // 非图片附件列表
 const attachments = computed(() => {
@@ -170,6 +164,10 @@ const fetchDetail = async () => {
     // 再获取详情
     const res = await getKnowledgeById(props.data.id)
     knowledgeData.value = res.data
+    // 为富文本中的图片注入短期访问凭证
+    processedAnswer.value = res.data?.answer
+      ? await injectImageTokens(res.data.answer)
+      : ''
   } catch (error) {
     console.error('获取知识详情失败:', error)
     ElMessage.error('获取知识详情失败')
@@ -193,10 +191,14 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
-// 下载附件
-const downloadAttachment = (attId) => {
-  const token = userStore.token
-  window.open(`/api/attachments/${attId}/download?token=${token}`, '_blank')
+// 下载附件（通过 Authorization 头鉴权获取 Blob，不在 URL 中暴露登录凭证）
+const handleDownload = async (att) => {
+  try {
+    const response = await downloadAttachment(att.id)
+    downloadBlob(response.data, att.file_name)
+  } catch (error) {
+    console.error('下载附件失败:', error)
+  }
 }
 
 // 编辑

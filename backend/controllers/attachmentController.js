@@ -4,8 +4,10 @@
  */
 const { query } = require('../config/db');
 const { deleteFile, getFileUrl } = require('../middleware/upload');
+const { generateFileAccessToken } = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
+const { getDictItems, validateDictValue } = require('../utils/dictHelper');
 const { ATTACHMENT_TYPES, IMAGE_EXTENSIONS, PREVIEWABLE_EXTENSIONS, TEXT_MIME_TYPES } = require('../config/const');
 
 /**
@@ -31,28 +33,64 @@ const getPreviewType = (filename) => {
   return null;
 };
 
-// 从字典表获取附件类型
-const getAttachmentTypesFromDB = async () => {
-  try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'attachment_type' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
-    return items.map(item => item.item_name);
-  } catch (error) {
-    console.error('获取附件类型失败:', error);
-    // 返回默认类型
-    return ATTACHMENT_TYPES;
-  }
-};
+// 验证附件类型（带常量兜底）
+const validateAttachmentType = (type) => validateDictValue('attachment_type', type, ATTACHMENT_TYPES);
 
-// 验证附件类型
-const validateAttachmentType = async (type) => {
-  const types = await getAttachmentTypesFromDB();
-  return types.includes(type);
+/**
+ * 签发文件访问凭证
+ * POST /api/attachments/access-tokens
+ * body: { ids?: number[], files?: string[] }
+ * 返回短期（30分钟）、绑定单个文件的作用域凭证，替代在 URL 中传递登录 JWT
+ */
+const issueAccessTokens = async (req, res) => {
+  try {
+    const { ids = [], files = [] } = req.body || {};
+
+    if (!Array.isArray(ids) || !Array.isArray(files)) {
+      return res.status(400).json({
+        code: 400,
+        message: '参数格式错误'
+      });
+    }
+
+    // 限制单次签发数量，防止滥用
+    if (ids.length + files.length > 50) {
+      return res.status(400).json({
+        code: 400,
+        message: '单次最多申请 50 个文件访问凭证'
+      });
+    }
+
+    const tokens = {};
+
+    for (const id of ids) {
+      const numId = parseInt(id);
+      if (!Number.isInteger(numId) || numId <= 0) continue;
+      tokens[`id:${numId}`] = generateFileAccessToken({ kind: 'id', id: numId });
+    }
+
+    for (const file of files) {
+      if (typeof file !== 'string') continue;
+      // 仅取文件名部分，防止路径穿越
+      const safeName = path.basename(file);
+      if (!safeName || safeName !== file.replace(/^\/uploads\//, '')) continue;
+      tokens[`file:${safeName}`] = generateFileAccessToken({ kind: 'file', file: safeName });
+    }
+
+    res.json({
+      code: 200,
+      data: {
+        tokens,
+        expiresIn: 1800 // 秒
+      }
+    });
+  } catch (error) {
+    console.error('签发文件访问凭证错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '签发文件访问凭证失败'
+    });
+  }
 };
 
 /**
@@ -612,7 +650,7 @@ const deleteAttachment = async (req, res) => {
  */
 const getAttachmentTypes = async (req, res) => {
   try {
-    const types = await getAttachmentTypesFromDB();
+    const types = await getDictItems('attachment_type', ATTACHMENT_TYPES);
     res.json({
       code: 200,
       data: types
@@ -692,5 +730,6 @@ module.exports = {
   downloadAttachment,
   deleteAttachment,
   getAttachmentTypes,
-  updateAttachment
+  updateAttachment,
+  issueAccessTokens
 };

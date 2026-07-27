@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const { query, transaction } = require('../config/db');
 const xlsx = require('xlsx');
 const moment = require('moment');
+const { parsePage } = require('../utils/pagination');
 
 // 用户角色枚举
 const USER_ROLES = [
@@ -21,18 +22,13 @@ const USER_ROLES = [
 const getUsers = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       keyword,
       role,
       status
     } = req.query;
 
-    // 确保分页参数是有效的数字
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
 
     // 构建查询条件
     let whereClause = 'WHERE 1=1';

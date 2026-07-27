@@ -7,6 +7,8 @@ const xlsx = require('xlsx');
 const moment = require('moment');
 const { convertToCSV } = require('../utils/csvHelper');
 const { formatDate } = require('../utils/dateHelper');
+const { getDictItems } = require('../utils/dictHelper');
+const { parsePage, MAX_EXPORT_ROWS } = require('../utils/pagination');
 
 /**
  * 获取资讯列表
@@ -15,8 +17,6 @@ const { formatDate } = require('../utils/dateHelper');
 const getInformations = async (req, res) => {
   try {
     const {
-      page = 1,
-      pageSize = 20,
       keyword,
       partnerId,
       projectId,
@@ -27,10 +27,8 @@ const getInformations = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.max(1, parseInt(pageSize) || 20);
-    const offset = (pageNum - 1) * pageSizeNum;
-    const limit = pageSizeNum;
+    // 解析分页参数（pageSize 上限 100）
+    const { page: pageNum, pageSize: limit, offset } = parsePage(req.query);
 
     let whereClause = 'WHERE 1=1';
     const params = [];
@@ -79,15 +77,17 @@ const getInformations = async (req, res) => {
     );
     const total = countResult[0].total;
 
+    // 列表仅返回内容摘要（前200字符），完整内容通过详情接口获取，
+    // 避免长文本导致列表接口响应体积过大
     const list = await query(
-      `SELECT 
+      `SELECT
         i.id,
         i.partner_id,
         i.project_id,
         i.information_date,
         i.information_type,
         i.information_title,
-        i.information_content,
+        SUBSTRING(i.information_content, 1, 200) as information_content,
         i.created_at,
         i.updated_at,
         par.name as partner_name,
@@ -314,17 +314,11 @@ const deleteInformation = async (req, res) => {
  */
 const getInformationTypes = async (req, res) => {
   try {
-    const items = await query(
-      `SELECT di.item_name 
-       FROM dictionary_items di
-       JOIN dictionaries d ON di.dict_id = d.id
-       WHERE d.dict_code = 'information_type' AND di.status = 1 AND d.status = 1
-       ORDER BY di.sort_order ASC`
-    );
+    const items = await getDictItems('information_type');
 
     res.json({
       code: 200,
-      data: items.map(item => item.item_name)
+      data: items
     });
   } catch (error) {
     console.error('获取资讯类型错误:', error);
@@ -516,7 +510,8 @@ const exportInformations = async (req, res) => {
       LEFT JOIN partners par ON i.partner_id = par.id
       LEFT JOIN projects proj ON i.project_id = proj.id
       ${whereClause}
-      ORDER BY i.information_date DESC, i.created_at DESC`,
+      ORDER BY i.information_date DESC, i.created_at DESC
+      LIMIT ${MAX_EXPORT_ROWS}`,
       params
     );
 

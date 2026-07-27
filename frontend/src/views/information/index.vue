@@ -180,7 +180,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Search, Download, List, Timer } from '@element-plus/icons-vue'
-import { getInformations, deleteInformation, getInformationTypes, exportInformations } from '@/api/information'
+import { getInformations, getInformationById, deleteInformation, getInformationTypes, exportInformations } from '@/api/information'
 import { getAllPartners } from '@/api/partners'
 import { getProjects } from '@/api/projects'
 import { formatDate, formatDateTime, getInfoTypeTag, downloadBlob } from '@/utils/format'
@@ -309,11 +309,16 @@ const handleAdd = () => {
   formDialogVisible.value = true
 }
 
-// 编辑
-const handleEdit = (row) => {
-  formType.value = 'edit'
-  currentRow.value = row
-  formDialogVisible.value = true
+// 编辑（列表接口仅返回内容摘要，需先获取完整详情再打开表单）
+const handleEdit = async (row) => {
+  try {
+    const res = await getInformationById(row.id)
+    formType.value = 'edit'
+    currentRow.value = res.data
+    formDialogVisible.value = true
+  } catch (error) {
+    console.error('获取资讯详情失败:', error)
+  }
 }
 
 // 批量编辑

@@ -1,16 +1,30 @@
 /**
  * JWT认证中间件
  * 验证用户身份和权限
+ *
+ * 安全说明：
+ * 1. 生产环境必须配置 JWT_SECRET，缺失时启动即失败，杜绝硬编码密钥伪造 Token
+ * 2. 文件访问（预览/下载/静态资源）使用独立的短期作用域凭证 access_token，
+ *    不再支持在 URL 中传递登录 JWT，避免凭证进入 Nginx 日志、浏览器历史与 Referer
  */
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/db');
 
-// JWT密钥
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+// JWT密钥：生产环境未配置时直接抛错，启动失败
+const JWT_SECRET = process.env.JWT_SECRET || (
+  process.env.NODE_ENV === 'production'
+    ? (() => { throw new Error('生产环境必须配置 JWT_SECRET 环境变量'); })()
+    : 'dev-only-insecure-secret'
+);
+
+// 文件访问凭证作用域标识
+const FILE_ACCESS_SCOPE = 'file_access';
 
 /**
  * 验证JWT Token
- * 支持从 Header 或 Query String 中获取 Token
+ * 支持：
+ *  - Header: Authorization: Bearer <token>（标准业务接口）
+ *  - Query: ?access_token=<scoped_token>（仅文件预览/下载场景，短期、绑定单个文件）
  */
 const authenticate = async (req, res, next) => {
   try {
@@ -22,9 +36,26 @@ const authenticate = async (req, res, next) => {
       token = authHeader.substring(7);
     }
 
-    // 如果 Header 中没有，尝试从 Query String 获取（用于图片预览等场景）
-    if (!token && req.query.token) {
-      token = req.query.token;
+    // 文件访问场景：短期作用域凭证（绑定单个文件，不能用于业务接口之外）
+    if (!token && req.query.access_token) {
+      try {
+        const decoded = jwt.verify(req.query.access_token, JWT_SECRET);
+        if (decoded.scope !== FILE_ACCESS_SCOPE) {
+          return res.status(401).json({
+            code: 401,
+            message: '无效的文件访问凭证'
+          });
+        }
+        // 挂载文件授权信息，由具体路由/中间件校验文件归属
+        req.fileAccess = { kind: decoded.kind, id: decoded.id, file: decoded.file };
+        req.user = { userId: null, username: 'file-access', nickname: '文件访问', role: 'file-access' };
+        return next();
+      } catch (error) {
+        return res.status(401).json({
+          code: 401,
+          message: error.name === 'TokenExpiredError' ? '文件访问凭证已过期' : '无效的文件访问凭证'
+        });
+      }
     }
 
     if (!token) {
@@ -92,6 +123,42 @@ const authenticate = async (req, res, next) => {
 };
 
 /**
+ * 校验文件级访问凭证是否与请求的资源匹配
+ * 用于附件预览/下载等通过 access_token 访问的场景；
+ * 通过 Header JWT 认证的用户（req.fileAccess 为空）直接放行
+ */
+const checkFileAccess = (req, res, next) => {
+  if (!req.fileAccess) return next();
+
+  if (req.fileAccess.kind === 'id' && String(req.fileAccess.id) === String(req.params.id)) {
+    return next();
+  }
+
+  return res.status(403).json({
+    code: 403,
+    message: '无权访问该文件'
+  });
+};
+
+/**
+ * 校验 /uploads 静态文件访问凭证
+ * access_token 必须绑定当前请求的具体文件名
+ */
+const checkStaticFileAccess = (req, res, next) => {
+  if (!req.fileAccess) return next();
+
+  const requested = decodeURIComponent(req.path).replace(/^\//, '');
+  if (req.fileAccess.kind === 'file' && req.fileAccess.file === requested) {
+    return next();
+  }
+
+  return res.status(403).json({
+    code: 403,
+    message: '无权访问该文件'
+  });
+};
+
+/**
  * 验证管理员权限
  */
 const requireAdmin = (req, res, next) => {
@@ -128,9 +195,25 @@ const generateToken = (userId) => {
   );
 };
 
+/**
+ * 生成文件访问凭证（短期、绑定单个文件）
+ * @param {Object} payload - { kind: 'id', id } 或 { kind: 'file', file }
+ * @param {String} expiresIn - 有效期，默认 30 分钟
+ */
+const generateFileAccessToken = (payload, expiresIn = '30m') => {
+  return jwt.sign(
+    { scope: FILE_ACCESS_SCOPE, ...payload },
+    JWT_SECRET,
+    { expiresIn }
+  );
+};
+
 module.exports = {
   authenticate,
   requireAdmin,
   requireAdminOrGlobal,
-  generateToken
+  generateToken,
+  generateFileAccessToken,
+  checkFileAccess,
+  checkStaticFileAccess
 };

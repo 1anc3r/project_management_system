@@ -3,6 +3,7 @@
  * 处理字典的CRUD操作
  */
 const { query, transaction } = require('../config/db');
+const { invalidateDict } = require('../utils/dictHelper');
 
 /**
  * 获取字典列表（包含字典项）
@@ -244,6 +245,8 @@ const createDictionary = async (req, res) => {
       return dictId;
     });
 
+    // 字典数据已变更，清空字典缓存
+    invalidateDict();
     res.status(201).json({
       code: 201,
       message: '字典创建成功',
@@ -323,6 +326,8 @@ const updateDictionary = async (req, res) => {
       params
     );
 
+    // 字典数据已变更，清空字典缓存
+    invalidateDict();
     res.json({
       code: 200,
       message: '字典更新成功',
@@ -361,6 +366,8 @@ const deleteDictionary = async (req, res) => {
     // 删除字典（关联的字典项会通过外键级联删除）
     await query('DELETE FROM dictionaries WHERE id = ?', [id]);
 
+    // 字典数据已变更，清空字典缓存
+    invalidateDict();
     res.json({
       code: 200,
       message: '字典删除成功',
@@ -422,6 +429,8 @@ const addDictionaryItem = async (req, res) => {
       [id, item_code, item_name, item_value || item_name, sort_order, remark || null]
     );
 
+    // 字典数据已变更，清空字典缓存
+    invalidateDict();
     res.status(201).json({
       code: 201,
       message: '字典项添加成功',
@@ -501,6 +510,8 @@ const updateDictionaryItem = async (req, res) => {
       params
     );
 
+    // 字典数据已变更，清空字典缓存
+    invalidateDict();
     res.json({
       code: 200,
       message: '字典项更新成功',
@@ -538,6 +549,8 @@ const deleteDictionaryItem = async (req, res) => {
 
     await query('DELETE FROM dictionary_items WHERE id = ?', [itemId]);
 
+    // 字典数据已变更，清空字典缓存
+    invalidateDict();
     res.json({
       code: 200,
       message: '字典项删除成功',

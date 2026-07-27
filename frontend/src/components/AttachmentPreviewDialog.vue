@@ -93,9 +93,8 @@ import { ElMessage } from 'element-plus'
 import {
   Picture, Document, Download, FullScreen, Close
 } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { getPreviewType, getFileViewUrl, getFileContent } from '@/api/attachments'
-import { formatFileSize } from '@/utils/format'
+import { getPreviewType, getFileViewBlob, getFileContent, downloadAttachment } from '@/api/attachments'
+import { formatFileSize, downloadBlob } from '@/utils/format'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -106,8 +105,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-
-const userStore = useUserStore()
 
 const visible = computed({
   get: () => props.modelValue,
@@ -120,6 +117,8 @@ const isFullscreen = ref(false)
 const textContent = ref('')
 const fileSize = ref(0)
 const officePreviewUrl = ref('')
+// 图片/PDF 预览的 Blob 对象 URL（通过 Authorization 头鉴权获取，不在 URL 中暴露登录凭证）
+const previewObjectUrl = ref('')
 
 // 计算属性
 const fileName = computed(() => props.attachment?.file_name || '')
@@ -138,11 +137,8 @@ const fileExtension = computed(() => {
   return dotIndex > -1 ? name.slice(dotIndex) : ''
 })
 
-const previewUrl = computed(() => {
-  if (!props.attachment?.id) return ''
-  const token = userStore.token
-  return `${getFileViewUrl(props.attachment.id)}?token=${token}`
-})
+// 模板中图片与 PDF 统一使用 Blob 对象 URL
+const previewUrl = computed(() => previewObjectUrl.value)
 
 const textLineCount = computed(() => {
   if (!textContent.value) return 0
@@ -167,26 +163,45 @@ const fetchTextContent = async () => {
   }
 }
 
+// 获取图片/PDF 文件 Blob 并生成对象 URL
+const fetchPreviewBlob = async () => {
+  if (!props.attachment?.id) return
+  loading.value = true
+  try {
+    const response = await getFileViewBlob(props.attachment.id)
+    previewObjectUrl.value = URL.createObjectURL(response.data)
+  } catch (error) {
+    console.error('获取文件预览失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 释放对象 URL，避免内存泄漏
+const revokePreviewUrl = () => {
+  if (previewObjectUrl.value) {
+    URL.revokeObjectURL(previewObjectUrl.value)
+    previewObjectUrl.value = ''
+  }
+}
+
 // 设置 Office 预览 URL
 const setupOfficePreview = () => {
   // Microsoft Office Online Viewer 需要文件可以通过公网 URL 访问
   // 对于私有部署，通常无法直接使用，这里提供备用方案提示
-  // 如果系统部署在公网且有可访问的下载链接，可以取消下面的注释
-  /*
-  if (props.attachment?.id) {
-    const token = userStore.token
-    const fileUrl = encodeURIComponent(`${window.location.origin}/api/attachments/${props.attachment.id}/download?token=${token}`)
-    officePreviewUrl.value = `https://view.officeapps.live.com/op/embed.aspx?src=${fileUrl}`
-  }
-  */
+  // 如系统部署在公网，可改为先申请 access_token 再拼接临时下载链接
   officePreviewUrl.value = '' // 默认使用备用提示
 }
 
-// 下载文件
-const downloadFile = () => {
+// 下载文件（通过 Authorization 头鉴权获取 Blob 后保存）
+const downloadFile = async () => {
   if (!props.attachment?.id) return
-  const token = userStore.token
-  window.open(`/api/attachments/${props.attachment.id}/download?token=${token}`, '_blank')
+  try {
+    const response = await downloadAttachment(props.attachment.id)
+    downloadBlob(response.data, fileName.value || 'download')
+  } catch (error) {
+    console.error('下载文件失败:', error)
+  }
 }
 
 // 关闭
@@ -195,6 +210,7 @@ const handleClose = () => {
   textContent.value = ''
   officePreviewUrl.value = ''
   isFullscreen.value = false
+  revokePreviewUrl()
 }
 
 // 加载预览内容
@@ -205,6 +221,8 @@ const loadPreview = () => {
 
   if (previewType.value === 'text') {
     fetchTextContent()
+  } else if (previewType.value === 'image' || previewType.value === 'pdf') {
+    fetchPreviewBlob()
   } else if (previewType.value === 'office') {
     setupOfficePreview()
   }
