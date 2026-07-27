@@ -9,6 +9,7 @@ import ElementPlus from 'element-plus'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import horizontalScroll from 'el-table-horizontal-scroll'
 
 import App from './App.vue'
 import router from './router'
@@ -23,5 +24,6 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus, { locale: zhCn })
+app.use(horizontalScroll)
 
 app.mount('#app')

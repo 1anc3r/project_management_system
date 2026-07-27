@@ -63,7 +63,7 @@
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never" v-loading="loading">
       <el-table :data="knowledgeList" style="width: 100%" @selection-change="handleSelectionChange"
-        @row-click="handleRowClick" highlight-current-row stripe border>
+        @row-click="handleRowClick" highlight-current-row stripe border v-horizontal-scroll>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="question" label="标题" min-width="300" show-overflow-tooltip fixed="left" >
           <template #default="{ row }">

@@ -71,7 +71,7 @@
       <el-card class="list-card" shadow="never">
         <el-table ref="tableRef" v-loading="loading" :data="informationList" style="width: 100%"
           @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" border stripe
-          highlight-current-row>
+          highlight-current-row v-horizontal-scroll>
           <el-table-column type="selection" width="50" align="center" />
           <el-table-column prop="information_date" label="资讯日期" width="100" align="center">
             <template #default="{ row }">{{ formatDate(row.information_date) }}</template>

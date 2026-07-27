@@ -75,7 +75,7 @@
     <!-- 列表视图 -->
     <el-card v-if="viewMode === 'list'" class="list-card" shadow="never" v-loading="loading">
       <el-table ref="tableRef" :data="projectList" style="width: 100%" @selection-change="handleSelectionChange"
-        @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
+        @row-dblclick="handleRowDblClick" border stripe highlight-current-row v-horizontal-scroll>
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip fixed="left" />
         <el-table-column prop="type" label="项目类型" width="90" align="center">
