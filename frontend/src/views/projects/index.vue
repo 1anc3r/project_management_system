@@ -77,7 +77,7 @@
       <el-table ref="tableRef" :data="projectList" style="width: 100%" @selection-change="handleSelectionChange"
         @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip fixed="left" />
         <el-table-column prop="type" label="项目类型" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="getProjectTypeTag(row.type)" size="small">{{ row.type }}</el-tag>

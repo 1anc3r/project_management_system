@@ -66,7 +66,7 @@
       <el-table ref="tableRef" :data="opportunityList" style="width: 100%" @selection-change="handleSelectionChange"
         @row-dblclick="handleRowDblClick" border stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="name" label="商机名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="name" label="商机名称" min-width="180" show-overflow-tooltip fixed="left" />
         <el-table-column prop="source" label="商机来源" min-width="180" show-overflow-tooltip />
         <el-table-column prop="stage" label="商机阶段" width="90" align="center">
           <template #default="{ row }">

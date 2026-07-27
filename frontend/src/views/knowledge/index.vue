@@ -65,7 +65,7 @@
       <el-table :data="knowledgeList" style="width: 100%" @selection-change="handleSelectionChange"
         @row-click="handleRowClick" highlight-current-row stripe border>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="question" label="标题" min-width="300" show-overflow-tooltip>
+        <el-table-column prop="question" label="标题" min-width="300" show-overflow-tooltip fixed="left" >
           <template #default="{ row }">
             <div class="question-cell">
               <span class="question-text">{{ row.question }}</span>

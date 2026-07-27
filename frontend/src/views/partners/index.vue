@@ -75,7 +75,7 @@
       <el-table ref="tableRef" :data="partnerList" style="width: 100%" @selection-change="handleSelectionChange" border
         stripe highlight-current-row>
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column prop="name" label="合作方名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="name" label="合作方名称" min-width="180" show-overflow-tooltip fixed="left" />
         <el-table-column prop="type" label="类型" width="70" align="center">
           <template #default="{ row }">
             <el-tag :type="getPartnerTypeTag(row.type)" size="small">{{ row.type }}</el-tag>
