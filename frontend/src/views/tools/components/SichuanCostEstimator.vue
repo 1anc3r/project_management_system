@@ -31,7 +31,8 @@
                 <el-option label="预算/招投标" value="budget" />
                 <el-option label="结算/审计" value="settlement" />
               </el-select>
-              <div class="def-text">不同阶段影响规模变更因子 CF 和各项费率。可研/预算阶段 CF=1.39 ；初设/概算/预算/招投标阶段 CF=1.25 ；结算/审计阶段 CF=1.00</div>
+              <div class="def-text">不同阶段影响规模变更因子 CF 和各项费率。
+                <br>可研/预算阶段 CF=1.39 ；初设/概算/预算/招投标阶段 CF=1.25 ；结算/审计阶段 CF=1.00</div>
             </el-form-item>
           </el-form>
         </el-card>
@@ -1018,16 +1019,20 @@ export default {
 }
 
 .sub-title {
+  gap: 8px;
+  display: inline-flex;
+  align-items: center;
   font-weight: 600;
-  font-size: 15px;
-  color: #2a5f8f;
-  margin-bottom: 12px;
+  font-size: 14px;
+  color: #1a3a5c;
+  margin: 8px 0 8px 0;
 }
 
 .def-text {
   font-size: 12px;
   color: #6a7a8a;
   margin-bottom: 8px;
+  line-height: 1.6;
 }
 
 .calc-result {
@@ -1108,7 +1113,7 @@ export default {
 
 .process-step {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .step {

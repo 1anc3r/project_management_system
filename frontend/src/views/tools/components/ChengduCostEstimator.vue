@@ -52,7 +52,7 @@
           </div>
           <el-row :gutter="12">
             <el-col :xs="24" :sm="12">
-              <div class="card-sub-title"><el-icon>
+              <div class="sub-title"><el-icon>
                   <FolderOpened />
                 </el-icon><span>ILF</span></div>
               <el-form-item label="复用度低 (×1)">
@@ -66,7 +66,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12">
-              <div class="card-sub-title"><el-icon>
+              <div class="sub-title"><el-icon>
                   <Connection />
                 </el-icon><span>EIF</span></div>
               <el-form-item label="复用度低 (×1)">
@@ -106,7 +106,7 @@
               <div class="def-text">调整因子 AT = {{ sysTypeAT }}</div>
             </el-form-item>
 
-            <div class="card-sub-title"><el-icon>
+            <div class="sub-title"><el-icon>
                 <Odometer />
               </el-icon><span>质量特征 (QR)</span></div>
             <div class="def-text">
@@ -267,7 +267,7 @@
             <strong>调整后规模 S：</strong> {{ s.toFixed(2) }} FP
           </div>
 
-          <div class="card-sub-title"><el-icon>
+          <div class="sub-title"><el-icon>
               <Timer />
             </el-icon><span>工作量 (人时)</span></div>
           <div class="result-grid">
@@ -285,7 +285,7 @@
             </div>
           </div>
 
-          <div class="card-sub-title"><el-icon>
+          <div class="sub-title"><el-icon>
               <Calendar />
             </el-icon><span>工期 (月)</span></div>
           <div class="result-grid">
@@ -303,7 +303,7 @@
             </div>
           </div>
 
-          <div class="card-sub-title"><el-icon>
+          <div class="sub-title"><el-icon>
               <Money />
             </el-icon><span>软件开发费用 (元)</span></div>
           <div class="result-grid">
@@ -978,7 +978,7 @@ export default {
     color: #1a3a5c;
   }
 
-  .card-sub-title {
+  .sub-title {
     gap: 8px;
     display: flex;
     align-items: center;
@@ -1090,7 +1090,7 @@ export default {
   color: #1a3a5c;
 }
 
-.card-sub-title {
+.sub-title {
   gap: 8px;
   display: inline-flex;
   align-items: center;
@@ -1153,7 +1153,7 @@ export default {
 /* 实时测算过程样式 */
 .process-step {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .step {
@@ -1211,6 +1211,7 @@ export default {
   font-size: 12px;
   color: #6a7a8a;
   margin-bottom: 8px;
+  line-height: 1.6;
 }
 
 .el-divider--horizontal {
