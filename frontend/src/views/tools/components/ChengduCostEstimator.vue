@@ -924,7 +924,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .cost-estimator-container {
   font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
   color: #2c3e50;

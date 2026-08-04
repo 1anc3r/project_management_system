@@ -68,6 +68,12 @@ const routes = [
             name: 'SichuanCostEstimator',
             component: () => import('@/views/tools/components/SichuanCostEstimator.vue'),
             meta: { title: '四川费用测算' }
+          },
+          {
+            path: 'convert',   // 相对路径，实际访问 /tools/convert
+            name: 'Converter',
+            component: () => import('@/views/tools/components/Converter.vue'),
+            meta: { title: '数字转换工具' }
           }
         ]
       },

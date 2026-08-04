@@ -80,6 +80,9 @@
           <el-menu-item index="/tools/sichuan">
             <template #title>四川省项目费用测算</template>
           </el-menu-item>
+          <el-menu-item index="/tools/convert">
+            <template #title>数字大小写转换工具</template>
+          </el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu v-if="userStore.isAdmin" index="/system">
