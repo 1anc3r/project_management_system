@@ -55,7 +55,21 @@ const routes = [
         path: '/tools',
         name: 'Tools',
         component: () => import('@/views/tools/index.vue'),
-        meta: { title: '工具箱', icon: 'Box' }
+        meta: { title: '工具箱', icon: 'Box' },
+        children: [
+          {
+            path: 'chengdu',   // 相对路径，实际访问 /tools/chengdu
+            name: 'ChengduCostEstimator',
+            component: () => import('@/views/tools/components/ChengduCostEstimator.vue'),
+            meta: { title: '成都费用测算' }
+          },
+          {
+            path: 'sichuan',   // 相对路径，实际访问 /tools/sichuan
+            name: 'SichuanCostEstimator',
+            component: () => import('@/views/tools/components/SichuanCostEstimator.vue'),
+            meta: { title: '四川费用测算' }
+          }
+        ]
       },
       {
         path: '/system',
@@ -101,7 +115,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  
+
   // 公开路由直接通过
   if (to.meta.public) {
     next()

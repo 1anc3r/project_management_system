@@ -500,7 +500,7 @@ export default {
     const exportRef = ref(null)
 
     // ---------- 响应式数据 ----------
-    const projectName = ref('信息化项目示例')
+    const projectName = ref('示例项目')
     const phase = ref('bidding') // 'budget' | 'bidding'
 
     // 功能点计数
@@ -740,7 +740,7 @@ export default {
 
     // ---------- 其他方法 ----------
     function loadExample() {
-      projectName.value = '信息化项目示例'
+      projectName.value = '示例项目'
       phase.value = 'bidding'
       ilfLow.value = 9
       ilfMid.value = 3
@@ -921,8 +921,6 @@ export default {
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 12px;
-  background: #fff;
-  /* 确保PDF背景白色 */
 }
 
 /* 移动端适配等 (原样保留) */

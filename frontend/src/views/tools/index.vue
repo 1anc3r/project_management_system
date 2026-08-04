@@ -1,7 +1,7 @@
 <template>
-  <ChengduCostEstimator />
+  <router-view />
 </template>
 
 <script setup>
-import ChengduCostEstimator from '@/views/tools/components/ChengduCostEstimator.vue'
+// 系统管理布局组件，仅作为子路由的容器
 </script>
