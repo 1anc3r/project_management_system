@@ -3,7 +3,7 @@
     destroy-on-close :fullscreen="isFullscreen">
     <template #header>
       <div class="header">
-        <span class="title">知识详情</span>
+        <span class="title"><el-icon><Document /></el-icon>知识详情</span>
         <div class="header-actions">
           <el-button link size="small" @click="toggleFullscreen">
             <el-icon>
@@ -231,6 +231,9 @@ watch(() => props.visible, (val) => {
     padding-right: 16px;
 
     .title {
+      gap: 8px;
+      display: flex;
+      align-items: center;
       font-size: 18px;
       font-weight: 500;
       color: #303133;

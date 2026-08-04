@@ -52,6 +52,12 @@ const routes = [
         meta: { title: '知识库管理', icon: 'Collection' }
       },
       {
+        path: '/tools',
+        name: 'Tools',
+        component: () => import('@/views/tools/index.vue'),
+        meta: { title: '工具库管理', icon: 'Tools' }
+      },
+      {
         path: '/system',
         name: 'System',
         component: () => import('@/views/system/index.vue'),

@@ -67,6 +67,15 @@
           </template>
         </el-menu-item>
 
+        <el-menu-item index="/tools">
+          <el-icon>
+            <Tools />
+          </el-icon>
+          <template #title>
+            <span>工具库管理</span>
+          </template>
+        </el-menu-item>
+
         <el-sub-menu v-if="userStore.isAdmin" index="/system">
           <template #title>
             <el-icon>
@@ -122,17 +131,6 @@
             </template>
           </el-dropdown>
         </div>
-
-        <!-- <div class="header-left">
-          <el-input v-model="searchKeyword" placeholder="搜索项目名称、合作方、履约地点、联系人……" class="search-input" clearable style="width: 600px"
-            @keyup.enter="handleSearch">
-            <template #prefix>
-              <el-icon>
-                <Search />
-              </el-icon>
-            </template>
-          </el-input>
-        </div> -->
 
         <div class="header-right">
           <el-dropdown @command="handleCommand">
@@ -197,7 +195,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UserFilled } from '@element-plus/icons-vue'
+import { Tools, UserFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useTabStore } from '@/stores/tabs'
 import { changePassword } from '@/api/auth'

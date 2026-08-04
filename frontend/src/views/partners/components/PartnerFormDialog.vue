@@ -3,7 +3,7 @@
     :fullscreen="isFullscreen">
     <template #header>
       <div class="header">
-        <span class="title">{{ dialogTitle }}</span>
+        <span class="title"><el-icon><User /></el-icon>{{ dialogTitle }}</span>
         <div class="header-actions">
           <el-button link size="small" @click="toggleFullscreen">
             <el-icon>
@@ -469,6 +469,9 @@ onMounted(() => {
   padding-right: 16px;
 
   .title {
+    gap: 8px;
+    display: flex;
+    align-items: center;
     font-size: 18px;
     font-weight: 500;
     color: #303133;

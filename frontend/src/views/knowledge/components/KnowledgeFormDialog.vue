@@ -3,7 +3,7 @@
     class="knowledge-form-dialog" destroy-on-close :fullscreen="isFullscreen">
     <template #header>
       <div class="header">
-        <span class="title">{{ dialogTitle }}</span>
+        <span class="title"><el-icon><Document /></el-icon>{{ dialogTitle }}</span>
         <div class="header-actions">
           <el-button link size="small" @click="toggleFullscreen">
             <el-icon>
@@ -349,6 +349,9 @@ watch(() => props.visible, (val) => {
     padding-right: 16px;
 
     .title {
+      gap: 8px;
+      display: flex;
+      align-items: center;
       font-size: 18px;
       font-weight: 500;
       color: #303133;

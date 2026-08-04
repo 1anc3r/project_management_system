@@ -2,7 +2,7 @@
   <el-dialog v-model="visible" title="合作方详情" width="900px" destroy-on-close :fullscreen="isFullscreen">
     <template #header>
       <div class="header">
-        <span class="title">合作方详情</span>
+        <span class="title"><el-icon><User /></el-icon>合作方详情</span>
         <div class="header-actions">
           <el-button link size="small" @click="toggleFullscreen">
             <el-icon>
@@ -223,6 +223,9 @@ const handleEdit = () => {
   padding-right: 16px;
 
   .title {
+    gap: 8px;
+    display: flex;
+    align-items: center;
     font-size: 18px;
     font-weight: 500;
     color: #303133;
