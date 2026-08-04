@@ -55,7 +55,7 @@ const routes = [
         path: '/tools',
         name: 'Tools',
         component: () => import('@/views/tools/index.vue'),
-        meta: { title: '工具库管理', icon: 'Tools' }
+        meta: { title: '工具箱', icon: 'Box' }
       },
       {
         path: '/system',

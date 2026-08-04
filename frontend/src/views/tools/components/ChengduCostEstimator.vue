@@ -1,7 +1,7 @@
 <template>
   <div class="cost-estimator-container">
     <!-- 头部 -->
-    <header class="app-header">
+    <header class="app-header" ref="headerRef">
       <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;">
         <h1>
           <el-icon>
@@ -10,14 +10,6 @@
           成都市信息化项目费用测算
           <small>DB5101/T 5—2018</small>
         </h1>
-        <div class="header-actions">
-          <el-button class="opt_btn" type="success" plain @click="exportCSV"><el-icon>
-              <Download />
-            </el-icon><span>导出表格</span></el-button>
-          <el-button class="opt_btn" type="warning" plain @click="printReport"><el-icon>
-              <Printer />
-            </el-icon><span>打印报告</span></el-button>
-        </div>
       </div>
     </header>
 
@@ -40,7 +32,7 @@
                 <el-option label="预算阶段" value="budget" />
                 <el-option label="招投标阶段" value="bidding" />
               </el-select>
-              <div style="font-size:12px;color:#8a9aa8;margin-top:4px;">
+              <div class="def-text">
                 预算阶段 CF=1.5 ；招投标阶段 CF=1.26
               </div>
             </el-form-item>
@@ -242,17 +234,17 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            <div style="font-size:12px;color:#8a9aa8;">默认 F=16900 元/人月，HM=176 人时/人月</div>
+            <div class="def-text">默认 F=16900 元/人月，HM=176 人时/人月</div>
           </el-form>
         </el-card>
 
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
-          <el-button type="primary" @click="loadExample" size="large" style="flex:1;min-width:120px;gap:4px;">
+        <div class="header-actions">
+          <el-button class="opt_btn" size="large" type="primary" @click="loadExample">
             <el-icon>
               <Warning />
             </el-icon><span>示例</span>
           </el-button>
-          <el-button @click="resetAll" size="large" style="flex:1;min-width:120px;">
+          <el-button class="opt_btn" size="large" @click="resetAll">
             <el-icon>
               <Refresh />
             </el-icon><span>清空</span>
@@ -261,7 +253,7 @@
       </div>
 
       <!-- 右栏：结果 & 实时过程 -->
-      <div>
+      <div ref="exportRef">
         <!-- 结果 -->
         <el-card class="card" shadow="never">
           <template #header>
@@ -334,7 +326,7 @@
         </el-card>
 
         <!-- 测算过程 -->
-        <el-card class="card" style="margin-top:24px;" shadow="never">
+        <el-card class="card" shadow="never">
           <template #header>
             <div class="card-title"><el-icon>
                 <TrendCharts />
@@ -343,7 +335,8 @@
           <div class="process-step">
             <div class="step"><span class="label">① 未调整功能点 UFP</span><br>
               <span class="formula">UFP = 35×ILF + 15×EIF</span><br>
-              <span class="calc">= 35×({{ ilfLow + ilfMid + ilfHigh }}) + 15×({{ eifLow + eifMid + eifHigh }}) = {{ ufp
+              <span class="calc">= 35×({{ ilfLow + ilfMid + ilfHigh }}) + 15×({{ eifLow + eifMid + eifHigh }}) = {{
+                ufp
               }}</span>
             </div>
             <div class="step"><span class="label">② 复用调整后规模 US</span><br>
@@ -366,7 +359,8 @@
               <span class="calc">= (269.6446 + {{ s.toFixed(2) }}×0.7094) / {{ s.toFixed(2) }} = {{ sf.toFixed(4)
               }}</span>
               <span class="formula">AT = {{ sysTypeAT }}</span><br>
-              <span class="formula">QR = (分布式 + 性能 + 可靠性 + 多重点)×0.025 + 1 = ({{ distributed + performance + reliability
+              <span class="formula">QR = (分布式 + 性能 + 可靠性 + 多重点)×0.025 + 1 = ({{ distributed + performance +
+                reliability
                 +
                 multiSite }})×0.025 + 1 = {{ qr.toFixed(4) }}</span><br>
               <span class="calc">SWF = SF × AT × QR = {{ sf.toFixed(4) }} × {{ sysTypeAT }} × {{ qr.toFixed(4) }} = {{
@@ -413,14 +407,14 @@
         </el-card>
 
         <!-- 公式折叠（保留） -->
-        <el-card class="card" style="margin-top:24px;" shadow="never">
+        <el-card class="card" shadow="never">
           <template #header>
             <div class="card-title"><el-icon>
                 <QuestionFilled />
               </el-icon>测算公式 &amp; 指标定义</div>
           </template>
           <el-collapse accordion>
-            <el-collapse-item title="📌 规模测算 (功能点)" name="1">
+            <el-collapse-item title="规模测算 (功能点)" name="1">
               <div class="formula-block">
                 <div><span class="math">UFP = 35×ILF + 15×EIF</span></div>
                 <div class="def">ILF：内部逻辑文件数量；EIF：外部接口文件数量。<br />按复用程度加权：低×1，中×2/3，高×1/3。</div>
@@ -430,7 +424,7 @@
                 <div class="def">CF：规模变更因子，预算阶段1.5，招投标阶段1.26。</div>
               </div>
             </el-collapse-item>
-            <el-collapse-item title="⚙️ 工作量测算 (方程法)" name="2">
+            <el-collapse-item title="工作量测算 (方程法)" name="2">
               <div class="formula-block">
                 <div><span class="math">AE = (S × PDR) × SWF × RDF</span></div>
                 <div class="def">
@@ -441,7 +435,7 @@
                 </div>
               </div>
             </el-collapse-item>
-            <el-collapse-item title="📅 工期测算" name="3">
+            <el-collapse-item title="工期测算" name="3">
               <div class="formula-block">
                 <div><span class="math">D = 1.277 × (AE / HM)<sup>0.04</sup></span></div>
                 <div class="def">
@@ -450,7 +444,7 @@
                 </div>
               </div>
             </el-collapse-item>
-            <el-collapse-item title="💰 费用测算" name="4">
+            <el-collapse-item title="费用测算" name="4">
               <div class="formula-block">
                 <div><span class="math">P = AE / HM × F + DNC</span></div>
                 <div class="def">
@@ -463,29 +457,48 @@
                 </div>
               </div>
             </el-collapse-item>
-            <el-collapse-item title="📊 调整因子详解" name="5">
+            <el-collapse-item title="调整因子详解" name="5">
               <div class="formula-block" style="font-size:13px;">
                 <div><strong>规模调整因子 SF</strong> = (269.6446 + S × 0.7094) / S</div>
                 <div><strong>系统类型 AT</strong>：业务处理1.0 / 系统集成1.2 / 科技1.2 / 多媒体1.3 / 智能信息1.7 / 通信控制1.9 / 流程控制2.0</div>
                 <div><strong>质量特征 QR</strong> = (分布式 + 性能 + 可靠性 + 多重点) × 0.025 + 1，各因子取值 -1,0,1</div>
                 <div><strong>开发语言 SL</strong>：C=1.5 / JAVA/C++/C#=1.0 / PowerBuilder/ASP=0.6</div>
                 <div><strong>团队背景 DT</strong>：同类经验0.8 / 其他行业1.0 / 无经验1.2</div>
-                <div style="margin-top:6px;font-size:12px;color:#6a7a8a;">基准数据基于 CSBMK-201610，可随行业数据更新。</div>
+                <div class="def-text">基准数据基于 CSBMK-201610，可随行业数据更新。</div>
               </div>
             </el-collapse-item>
           </el-collapse>
         </el-card>
+
+        <div class="header-actions">
+          <el-button class="opt_btn" size="large" type="success" plain @click="exportCSV">
+            <el-icon>
+              <Download />
+            </el-icon><span>导出表格(csv)</span>
+          </el-button>
+          <el-button class="opt_btn" size="large" type="primary" plain @click="exportPDF">
+            <el-icon>
+              <Printer />
+            </el-icon><span>导出报告(pdf)</span>
+          </el-button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import html2canvas from 'html2canvas'
+import { jsPDF } from "jspdf";
 
 export default {
   name: 'ChengduCostEstimator',
   setup() {
+    // 容器引用（用于PDF截取）
+    const headerRef = ref(null)
+    const exportRef = ref(null)
+
     // ---------- 响应式数据 ----------
     const projectName = ref('信息化项目示例')
     const phase = ref('bidding') // 'budget' | 'bidding'
@@ -620,7 +633,112 @@ export default {
       return (aeUpper.value / hm.value) * rateF.value + dncTotal.value
     })
 
-    // ---------- 方法 ----------
+    // ---------- 导出PDF ----------
+    async function exportPDF() {
+      try {
+        const headerEl = headerRef.value
+        const exportEl = exportRef.value
+        if (!headerEl || !exportEl) {
+          alert('未找到需要导出的组件，请确保页面已完整渲染。')
+          return
+        }
+
+        const capture = (el) => html2canvas(el, {
+          useCORS: true,
+          scale: 2,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: '#ffffff',
+        })
+
+        const [headerCanvas, exportCanvas] = await Promise.all([
+          capture(headerEl),
+          capture(exportEl)
+        ])
+
+        const targetWidth = exportCanvas.width
+        const targetWidthPx = 1600
+
+        // 缩放函数
+        const resizeCanvas = (canvas, targetWidth) => {
+          const scale = targetWidth / canvas.width
+          const newCanvas = document.createElement('canvas')
+          newCanvas.width = targetWidth
+          newCanvas.height = canvas.height * scale
+          const ctx = newCanvas.getContext('2d')
+          ctx.drawImage(canvas, 0, 0, newCanvas.width, newCanvas.height)
+          return newCanvas
+        }
+
+        const resizedHeader = resizeCanvas(headerCanvas, targetWidthPx)
+        const resizedExport = resizeCanvas(exportCanvas, targetWidthPx)
+
+        // 垂直拼接两个 canvas
+        const totalHeight = resizedHeader.height + resizedExport.height
+        const mergedCanvas = document.createElement('canvas')
+        mergedCanvas.width = targetWidthPx
+        mergedCanvas.height = totalHeight
+        const ctx = mergedCanvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, targetWidthPx, totalHeight)
+        ctx.drawImage(resizedHeader, 0, 0)
+        ctx.drawImage(resizedExport, 0, resizedHeader.height)
+
+        // 现在将 mergedCanvas 按 A4 页面高度切分，每一页放入 PDF
+        const pdf = new jsPDF('p', 'mm', 'a4')
+        const pageWidth = pdf.internal.pageSize.getWidth()
+        const pageHeight = pdf.internal.pageSize.getHeight()
+
+        // 计算合并后的图片在 PDF 中每页显示的高度（保持宽度适应页面）
+        const imgWidth = mergedCanvas.width
+        const imgHeight = mergedCanvas.height
+        // 缩放比例使宽度适应页面
+        const scale = pageWidth / imgWidth
+        const displayWidth = pageWidth
+        const displayHeight = imgHeight * scale
+
+        // 如果总高度不超过一页，直接添加
+        if (displayHeight <= pageHeight) {
+          const imgData = mergedCanvas.toDataURL('image/png')
+          const x = 0
+          const y = (pageHeight - displayHeight) / 2 // 居中垂直
+          pdf.addImage(imgData, 'PNG', x, y, displayWidth, displayHeight)
+        } else {
+          // 分页：计算每页能显示的高度（像素），然后切割 canvas
+          // 每页可容纳的 canvas 像素高度 = pageHeight / scale (因为缩放后高度=canvas像素高度*scale)
+          const pixelsPerPage = pageHeight / scale
+          let startY = 0
+          let pageNum = 0
+          while (startY < imgHeight) {
+            const endY = Math.min(startY + pixelsPerPage, imgHeight)
+            // 切割当前页的 canvas 区域
+            const pageCanvas = document.createElement('canvas')
+            pageCanvas.width = imgWidth
+            pageCanvas.height = endY - startY
+            const pageCtx = pageCanvas.getContext('2d')
+            pageCtx.drawImage(mergedCanvas, 0, startY, imgWidth, endY - startY, 0, 0, imgWidth, endY - startY)
+
+            const imgData = pageCanvas.toDataURL('image/png')
+            // 计算在 PDF 中的显示尺寸
+            const pageDisplayHeight = (endY - startY) * scale
+            const x = 0
+            const y = (pageHeight - pageDisplayHeight) / 2 // 居中
+            if (pageNum > 0) pdf.addPage()
+            pdf.addImage(imgData, 'PNG', x, y, displayWidth, pageDisplayHeight)
+
+            startY = endY
+            pageNum++
+          }
+        }
+
+        pdf.save(`费用测算报告_${projectName.value || '项目'}.pdf`)
+      } catch (error) {
+        console.error('导出PDF出错:', error)
+        alert('导出PDF失败，请查看控制台错误信息。')
+      }
+    }
+
+    // ---------- 其他方法 ----------
     function loadExample() {
       projectName.value = '信息化项目示例'
       phase.value = 'bidding'
@@ -739,12 +857,9 @@ export default {
       URL.revokeObjectURL(url)
     }
 
-    // ---------- 打印报告 ----------
-    function printReport() {
-      window.print()
-    }
-
     return {
+      headerRef,
+      exportRef,
       projectName,
       phase,
       ilfLow,
@@ -793,7 +908,7 @@ export default {
       loadExample,
       resetAll,
       exportCSV,
-      printReport,
+      exportPDF,
     }
   }
 }
@@ -806,9 +921,11 @@ export default {
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 12px;
+  background: #fff;
+  /* 确保PDF背景白色 */
 }
 
-/* 移动端适配 */
+/* 移动端适配等 (原样保留) */
 @media (max-width: 768px) {
   .cost-estimator-container {
     padding: 0 6px;
@@ -837,9 +954,9 @@ export default {
   }
 
   .opt_btn {
+    flex: 1;
+    min-width: 120px;
     gap: 8px;
-    display: flex;
-    align-items: center;
   }
 
   .main-grid {
@@ -935,9 +1052,9 @@ export default {
 }
 
 .opt_btn {
+  flex: 1;
+  min-width: 120px;
   gap: 8px;
-  display: flex;
-  align-items: center;
 }
 
 .main-grid {
@@ -1106,7 +1223,7 @@ export default {
   margin-bottom: 8px;
 }
 
-/* 打印样式 */
+/* 打印样式：确保全部内容可见 */
 @media print {
   .cost-estimator-container {
     height: auto !important;
@@ -1134,7 +1251,7 @@ export default {
   }
 
   .main-grid {
-    display: block;
+    display: block !important;
   }
 
   .main-grid>div {
@@ -1152,6 +1269,17 @@ export default {
     background: #f0f4fa !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* 强制所有内容可见，避免裁剪 */
+  .cost-estimator-container,
+  .main-grid,
+  .el-card,
+  .process-step,
+  .formula-block {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 }
 </style>

@@ -69,10 +69,10 @@
 
         <el-menu-item index="/tools">
           <el-icon>
-            <Tools />
+            <Box />
           </el-icon>
           <template #title>
-            <span>工具库管理</span>
+            <span>工具箱</span>
           </template>
         </el-menu-item>
 
