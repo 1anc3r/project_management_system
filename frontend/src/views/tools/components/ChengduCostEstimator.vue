@@ -2,7 +2,7 @@
   <div class="cost-estimator-container">
     <!-- 头部 -->
     <header class="app-header" ref="headerRef">
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;">
+      <div class="app-header-inner">
         <h1>
           <el-icon>
             <Histogram />
@@ -13,15 +13,16 @@
       </div>
     </header>
 
+    <!-- 主内容：左右布局 -->
     <div class="main-grid">
-      <!-- 左栏：输入 -->
-      <div>
-        <!-- 项目信息 -->
+      <!-- 左栏：输入表单 -->
+      <div class="left-panel">
+        <!-- 项目基本信息 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <Management />
-              </el-icon>项目信息</div>
+              </el-icon>项目基本信息</div>
           </template>
           <el-form label-position="top" size="default">
             <el-form-item label="项目名称">
@@ -29,8 +30,8 @@
             </el-form-item>
             <el-form-item label="测算阶段">
               <el-select v-model="phase" placeholder="选择测算阶段">
-                <el-option label="预算阶段" value="budget" />
-                <el-option label="招投标阶段" value="bidding" />
+                <el-option label="预算" value="budget" />
+                <el-option label="招投标" value="bidding" />
               </el-select>
               <div class="def-text">
                 预算阶段 CF=1.5 ；招投标阶段 CF=1.26
@@ -42,7 +43,7 @@
         <!-- 功能点计数 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <List />
               </el-icon>功能点计数</div>
           </template>
@@ -80,21 +81,21 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <div style="background:#f8fafc;border-radius:8px;padding:12px 16px;margin-top:4px;">
-            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-              <span><strong>UFP</strong> (未调整) = 35×ILF + 15×EIF = <span style="color:#1a3a5c;font-weight:700;">{{ ufp
-                  }}</span></span>
-              <span><strong>US</strong> (复用调整后) = <span style="color:#1a3a5c;font-weight:700;">{{ us }}</span></span>
-              <span><strong>CF</strong> = {{ cf }}</span>
-              <span><strong>S</strong> (调整后规模) = <span style="color:#c0392b;font-weight:700;">{{ s }}</span> FP</span>
-            </div>
+          <div class="formula-text">
+            <span><strong>UFP</strong> (未调整) = 35×ILF + 15×EIF = <span class="high-light-text">{{ ufp
+                }}</span>
+              &nbsp;|&nbsp; <strong>US</strong> (复用调整后) = <span class="high-light-text">{{ us }}</span>
+              &nbsp;|&nbsp; <span><strong>CF</strong> = {{ cf }}</span>
+              &nbsp;|&nbsp; <strong>S</strong> (调整后规模) = <span class="high-light-text">{{ s }}</span>
+              FP
+            </span>
           </div>
         </el-card>
 
         <!-- 软件因素调整 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <HelpFilled />
               </el-icon>软件因素调整 (SWF)</div>
           </template>
@@ -150,8 +151,13 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            <div class="def-text">
-              QR = {{ qr }} &nbsp;|&nbsp; SF = {{ sf }} &nbsp;|&nbsp; <strong>SWF = SF × AT × QR = {{ swf }}</strong>
+            <div class="formula-text">
+              <span><strong>QR</strong> = {{ qr }}
+                &nbsp;|&nbsp; <strong>SF</strong> = {{ sf }}
+                &nbsp;|&nbsp; <strong>SWF</strong> = SF × AT × QR = <span class="high-light-text">{{
+                  swf
+                }}</span>
+              </span>
             </div>
           </el-form>
         </el-card>
@@ -159,7 +165,7 @@
         <!-- 开发因素调整 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <Opportunity />
               </el-icon>开发因素调整 (RDF)</div>
           </template>
@@ -180,8 +186,9 @@
               </el-select>
               <div class="def-text">调整因子 DT = {{ dt }}</div>
             </el-form-item>
-            <div class="def-text">
-              <strong>RDF = SL × DT = {{ rdf }}</strong>
+            <div class="formula-text">
+              <span><strong>RDF</strong> = SL × DT = <span class="high-light-text">{{ rdf
+              }}</span></span>
             </div>
           </el-form>
         </el-card>
@@ -189,7 +196,7 @@
         <!-- 直接非人力成本 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <Briefcase />
               </el-icon>直接非人力成本 (DNC)</div>
           </template>
@@ -208,8 +215,8 @@
               <el-col :xs="12" :sm="12"><el-form-item label="其他"><el-input-number v-model="dncOther" :min="0"
                     :step="1000" controls-position="right" style="width:100%;" /></el-form-item></el-col>
             </el-row>
-            <div class="def-text">
-              DNC 合计 = <strong>{{ dncTotal }}</strong> 元
+            <div class="formula-text">
+              <span><strong>DNC</strong> = <span class="high-light-text">{{ dncTotal }} 元</span></span>
             </div>
           </el-form>
         </el-card>
@@ -217,7 +224,7 @@
         <!-- 人力参数 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <Avatar />
               </el-icon>人力成本参数</div>
           </template>
@@ -252,12 +259,12 @@
         </div>
       </div>
 
-      <!-- 右栏：结果 & 实时过程 -->
-      <div ref="exportRef">
+      <!-- 右栏：结果汇总与过程 -->
+      <div class="right-panel" ref="exportRef">
         <!-- 结果 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <Flag />
               </el-icon>测算结果</div>
           </template>
@@ -328,7 +335,7 @@
         <!-- 测算过程 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <TrendCharts />
               </el-icon>测算过程</div>
           </template>
@@ -406,10 +413,10 @@
           </div>
         </el-card>
 
-        <!-- 公式折叠（保留） -->
+        <!-- 测算公式 & 指标定义 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon>
+            <div class="main-title"><el-icon>
                 <QuestionFilled />
               </el-icon>测算公式 &amp; 指标定义</div>
           </template>
@@ -488,14 +495,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import html2canvas from 'html2canvas'
-import { jsPDF } from "jspdf";
+import { jsPDF } from 'jspdf'
 
 export default {
   name: 'ChengduCostEstimator',
   setup() {
-    // 容器引用（用于PDF截取）
+    // ---------- ref 引用 ----------
     const headerRef = ref(null)
     const exportRef = ref(null)
 
@@ -639,7 +647,7 @@ export default {
         const headerEl = headerRef.value
         const exportEl = exportRef.value
         if (!headerEl || !exportEl) {
-          alert('未找到需要导出的组件，请确保页面已完整渲染。')
+          ElMessage.error('未找到需要导出的组件，请确保页面已完整渲染。')
           return
         }
 
@@ -732,9 +740,9 @@ export default {
         }
 
         pdf.save(`费用测算报告_${projectName.value || '项目'}.pdf`)
+        ElMessage.success('PDF导出成功')
       } catch (error) {
-        console.error('导出PDF出错:', error)
-        alert('导出PDF失败，请查看控制台错误信息。')
+        ElMessage.error('PDF导出失败，请查看控制台错误信息。')
       }
     }
 
@@ -763,6 +771,7 @@ export default {
       dncOther.value = 0
       rateF.value = 16900
       hm.value = 176
+      ElMessage.success('示例数据已加载')
     }
 
     function resetAll() {
@@ -789,6 +798,7 @@ export default {
       dncOther.value = 0
       rateF.value = 16900
       hm.value = 176
+      ElMessage.success('已清空所有数据')
     }
 
     // ---------- 导出 CSV ----------
@@ -918,12 +928,11 @@ export default {
 .cost-estimator-container {
   font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
   color: #2c3e50;
-  max-width: 1440px;
+  max-width: 2000px;
   margin: 0 auto;
-  padding: 0 12px;
 }
 
-/* 移动端适配等 (原样保留) */
+/* 移动端适配等 */
 @media (max-width: 768px) {
   .cost-estimator-container {
     padding: 0 6px;
@@ -931,6 +940,13 @@ export default {
 
   .app-header {
     padding: 16px 20px;
+  }
+
+  .app-header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .app-header h1 {
@@ -970,7 +986,7 @@ export default {
     margin-bottom: 12px;
   }
 
-  .card-title {
+  .main-title {
     gap: 8px;
     display: flex;
     align-items: center;
@@ -993,6 +1009,23 @@ export default {
     color: #6a7a8a;
   }
 
+  .formula-text {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .high-light-text {
+    color: #c0392b;
+    font-weight: 700;
+  }
+
   .el-input-number {
     width: 100% !important;
   }
@@ -1009,6 +1042,13 @@ export default {
   border-radius: 16px;
   margin-bottom: 24px;
   box-shadow: 0 8px 24px rgba(26, 58, 92, 0.25);
+}
+
+.app-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .app-header h1 {
@@ -1067,8 +1107,15 @@ export default {
   }
 }
 
+.left-panel,
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .card {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .card :deep(.el-card__header) {
@@ -1076,7 +1123,7 @@ export default {
   border-bottom: 2px solid #eef2f7;
 }
 
-.card-title {
+.main-title {
   gap: 8px;
   display: inline-flex;
   align-items: center;
@@ -1085,9 +1132,19 @@ export default {
   color: #1a3a5c;
 }
 
-.card-title .icon {
+.main-title .icon {
   font-size: 20px;
   color: #1a3a5c;
+}
+
+.sub-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #eaeef3;
+}
+
+.sub-section:last-child {
+  border-bottom: none;
 }
 
 .sub-title {
@@ -1150,10 +1207,9 @@ export default {
   color: #c0392b;
 }
 
-/* 实时测算过程样式 */
 .process-step {
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 2;
 }
 
 .step {
@@ -1189,7 +1245,7 @@ export default {
   padding: 14px 18px;
   margin: 8px 0;
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 2;
   border-left: 4px solid #2a5f8f;
 }
 
@@ -1214,15 +1270,28 @@ export default {
   line-height: 1.6;
 }
 
-.el-divider--horizontal {
-  margin: 16px 0;
+.formula-text {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.high-light-text {
+  color: #c0392b;
+  font-weight: 700;
 }
 
 .el-form-item {
   margin-bottom: 8px;
 }
 
-/* 打印样式：确保全部内容可见 */
+/* 打印样式 */
 @media print {
   .cost-estimator-container {
     height: auto !important;
@@ -1249,10 +1318,6 @@ export default {
     box-shadow: none !important;
   }
 
-  .main-grid {
-    display: block !important;
-  }
-
   .main-grid>div {
     width: 100%;
   }
@@ -1270,7 +1335,6 @@ export default {
     print-color-adjust: exact;
   }
 
-  /* 强制所有内容可见，避免裁剪 */
   .cost-estimator-container,
   .main-grid,
   .el-card,

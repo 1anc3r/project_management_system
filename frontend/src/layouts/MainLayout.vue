@@ -75,10 +75,10 @@
             <span>工具箱</span>
           </template>
           <el-menu-item index="/tools/chengdu">
-            <template #title>成都费用测算</template>
+            <template #title>成都市项目费用测算</template>
           </el-menu-item>
           <el-menu-item index="/tools/sichuan">
-            <template #title>四川费用测算</template>
+            <template #title>四川省项目费用测算</template>
           </el-menu-item>
         </el-sub-menu>
 

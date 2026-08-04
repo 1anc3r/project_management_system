@@ -1,10 +1,12 @@
 <template>
   <div class="cost-estimator-container">
     <!-- 头部 -->
-    <header class="app-header">
-      <div class="header-inner">
+    <header class="app-header" ref="headerRef">
+      <div class="app-header-inner">
         <h1>
-          <el-icon><Histogram /></el-icon>
+          <el-icon>
+            <Histogram />
+          </el-icon>
           四川省信息化项目费用测算
           <small>TSCSIA 0015-2023</small>
         </h1>
@@ -18,7 +20,9 @@
         <!-- 项目基本信息 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><Management /></el-icon> 项目基本信息</div>
+            <div class="main-title"><el-icon>
+                <Management />
+              </el-icon>项目基本信息</div>
           </template>
           <el-form label-position="top" size="default">
             <el-form-item label="项目名称">
@@ -32,7 +36,8 @@
                 <el-option label="结算/审计" value="settlement" />
               </el-select>
               <div class="def-text">不同阶段影响规模变更因子 CF 和各项费率。
-                <br>可研/预算阶段 CF=1.39 ；初设/概算/预算/招投标阶段 CF=1.25 ；结算/审计阶段 CF=1.00</div>
+                <br>可研/预算阶段 CF=1.39 ；初设/概算/预算/招投标阶段 CF=1.25 ；结算/审计阶段 CF=1.00
+              </div>
             </el-form-item>
           </el-form>
         </el-card>
@@ -40,7 +45,9 @@
         <!-- 建设费用 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><Wallet /></el-icon> 建设费用</div>
+            <div class="main-title"><el-icon>
+                <Wallet />
+              </el-icon> 建设费用</div>
           </template>
 
           <!-- 成品软件购置 -->
@@ -55,11 +62,16 @@
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="单价 (万元/套)">
-                    <el-input-number v-model="cost.software.purchase.unitPrice" :min="0" :step="0.5" style="width:100%;" />
+                    <el-input-number v-model="cost.software.purchase.unitPrice" :min="0" :step="0.5"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">小计：{{ softwarePurchaseTotal.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  小计：<span class="high-light-text">{{ softwarePurchaseTotal.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -139,10 +151,12 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">
-                预估 UFP = {{ devUFP.toFixed(0) }} FP &nbsp;|&nbsp;
-                调整后规模 = {{ devS.toFixed(0) }} FP &nbsp;|&nbsp;
-                软件开发费 = {{ devCost.toFixed(2) }} 万元
+              <div class="formula-text">
+                <span>
+                  预估 <strong>UFP</strong> = <span class="high-light-text">{{ devUFP.toFixed(0) }}</span> FP
+                  &nbsp;|&nbsp; 调整后规模 <strong>S</strong> = <span class="high-light-text">{{ devS.toFixed(0) }}</span> FP
+                  &nbsp;|&nbsp; 软件开发费 = <span class="high-light-text">{{ devCost.toFixed(2) }}</span> 万元
+                </span>
               </div>
             </el-form>
           </div>
@@ -175,7 +189,11 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">数据建设费合计：{{ dataTotal.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  小计：<span class="high-light-text">{{ dataTotal.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -191,16 +209,22 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="集成费率 (%)">
-                    <el-input-number v-model="cost.integration.rate" :min="0" :max="10" :step="0.5" style="width:100%;" />
+                    <el-input-number v-model="cost.integration.rate" :min="0" :max="10" :step="0.5"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="调整系数">
-                    <el-input-number v-model="cost.integration.adjust" :min="0.6" :max="1.2" :step="0.1" style="width:100%;" />
+                    <el-input-number v-model="cost.integration.adjust" :min="0.6" :max="1.2" :step="0.1"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">系统集成费：{{ integrationCost.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  小计：<span class="high-light-text">{{ integrationCost.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -220,7 +244,11 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">标准规范编制费：{{ standardCost.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  小计：<span class="high-light-text">{{ standardCost.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -240,7 +268,11 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">系统迁移费：{{ migrationCost.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  小计：<span class="high-light-text">{{ migrationCost.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -254,7 +286,9 @@
         <!-- 购买服务费用 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><ShoppingCart /></el-icon> 购买服务费用</div>
+            <div class="main-title"><el-icon>
+                <ShoppingCart />
+              </el-icon> 购买服务费用</div>
           </template>
           <div class="sub-section">
             <div class="sub-title">购买信息化产品服务</div>
@@ -262,7 +296,8 @@
               <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item label="产品单价 (万元)">
-                    <el-input-number v-model="cost.service.product.unitPrice" :min="0" :step="0.5" style="width:100%;" />
+                    <el-input-number v-model="cost.service.product.unitPrice" :min="0" :step="0.5"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
@@ -272,18 +307,24 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="折旧年限">
-                    <el-input-number v-model="cost.service.product.depreciation" :min="1" :step="1" style="width:100%;" />
+                    <el-input-number v-model="cost.service.product.depreciation" :min="1" :step="1"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row :gutter="12">
                 <el-col :span="12">
                   <el-form-item label="服务期 (年)">
-                    <el-input-number v-model="cost.service.product.serviceYears" :min="1" :step="1" style="width:100%;" />
+                    <el-input-number v-model="cost.service.product.serviceYears" :min="1" :step="1"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">购买产品服务费：{{ productServiceCost.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  小计：<span class="high-light-text">{{ productServiceCost.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -303,19 +344,22 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="经济性系数">
-                    <el-input-number v-model="cost.service.system.economy" :min="0" :max="0.5" :step="0.05" style="width:100%;" />
+                    <el-input-number v-model="cost.service.system.economy" :min="0" :max="0.5" :step="0.05"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item label="投资回报率 i (%)">
-                    <el-input-number v-model="cost.service.system.roi" :min="0" :max="10" :step="0.5" style="width:100%;" />
+                    <el-input-number v-model="cost.service.system.roi" :min="0" :max="10" :step="0.5"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="折现率 c (%)">
-                    <el-input-number v-model="cost.service.system.discount" :min="0" :max="5" :step="0.1" style="width:100%;" />
+                    <el-input-number v-model="cost.service.system.discount" :min="0" :max="5" :step="0.1"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
@@ -324,7 +368,11 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              <div class="calc-result">信息系统服务年均费 ≈ {{ systemServiceCost.toFixed(2) }} 万元</div>
+              <div class="formula-text">
+                <span>
+                  信息系统服务年均费 ≈ <span class="high-light-text">{{ systemServiceCost.toFixed(2) }}</span> 万元
+                </span>
+              </div>
             </el-form>
           </div>
 
@@ -338,7 +386,9 @@
         <!-- 运维费用 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><Tools /></el-icon> 运维费用</div>
+            <div class="main-title"><el-icon>
+                <Tools />
+              </el-icon> 运维费用</div>
           </template>
           <div class="sub-section">
             <div class="sub-title">IT 资产系数法</div>
@@ -373,7 +423,8 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="规模调整系数">
-                    <el-input-number v-model="cost.ops.scaleFactor" :min="0.5" :max="1" :step="0.1" style="width:100%;" />
+                    <el-input-number v-model="cost.ops.scaleFactor" :min="0.5" :max="1" :step="0.1"
+                      style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -390,24 +441,26 @@
         <!-- 其他费用与预备费 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><More /></el-icon> 其他费用 & 预备费</div>
+            <div class="main-title"><el-icon>
+                <More />
+              </el-icon> 其他费用 & 预备费</div>
           </template>
           <div class="sub-section">
-          <el-form label-position="top" size="default">
-            <el-row :gutter="12">
-              <el-col :span="12">
-                <el-form-item label="项目建设其他费用 (万元)">
-                  <el-input-number v-model="cost.other.managementFee" :min="0" :step="1" style="width:100%;" />
-                  <div class="def-text">包括管理费、咨询、监理、测评等</div>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="预备费费率 (%)">
-                  <el-input-number v-model="cost.other.contRate" :min="0" :max="5" :step="0.5" style="width:100%;" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-form>
+            <el-form label-position="top" size="default">
+              <el-row :gutter="12">
+                <el-col :span="12">
+                  <el-form-item label="项目建设其他费用 (万元)">
+                    <el-input-number v-model="cost.other.managementFee" :min="0" :step="1" style="width:100%;" />
+                    <div class="def-text">包括管理费、咨询、监理、测评等</div>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="预备费费率 (%)">
+                    <el-input-number v-model="cost.other.contRate" :min="0" :max="5" :step="0.5" style="width:100%;" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
           </div>
 
           <!-- 预备费汇总 -->
@@ -432,51 +485,56 @@
       </div>
 
       <!-- 右栏：结果汇总与过程 -->
-      <div class="right-panel">
+      <div class="right-panel" ref="exportRef">
+        <!-- 测算汇总 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><Flag /></el-icon> 测算汇总</div>
+            <div class="main-title"><el-icon>
+                <Flag />
+              </el-icon> 测算汇总</div>
           </template>
           <div class="result-block">
-            <div class="result-row">
+            <div class="result-item">
               <span class="label">项目名称</span>
               <span class="value">{{ project.name || '(未命名)' }}</span>
             </div>
-            <div class="result-row">
+            <div class="result-item">
               <span class="label">测算阶段</span>
               <span class="value">{{ project.phaseLabel }}</span>
             </div>
-            <div class="result-row">
+            <div class="result-item">
               <span class="label">建设费用</span>
               <span class="value">{{ constructionTotal.toFixed(2) }} 万元</span>
             </div>
-            <div class="result-row">
+            <div class="result-item">
               <span class="label">购买服务费</span>
               <span class="value">{{ purchaseServiceTotal.toFixed(2) }} 万元</span>
             </div>
-            <div class="result-row">
+            <div class="result-item">
               <span class="label">运维年费</span>
               <span class="value">{{ opsCost.toFixed(2) }} 万元</span>
             </div>
-            <div class="result-row">
+            <div class="result-item">
               <span class="label">其他费用</span>
               <span class="value">{{ cost.other.managementFee.toFixed(2) }} 万元</span>
             </div>
-            <div class="result-row highlight">
+            <div class="result-item highlight">
               <span class="label">预备费</span>
               <span class="value">{{ contingencyCost.toFixed(2) }} 万元</span>
             </div>
-            <div class="result-row total">
+            <div class="result-item total">
               <span class="label">项目总投资</span>
               <span class="value">{{ totalInvestment.toFixed(2) }} 万元</span>
             </div>
           </div>
         </el-card>
 
-        <!-- 详细计算过程（简略展示关键公式） -->
+        <!-- 计算过程 -->
         <el-card class="card" shadow="never">
           <template #header>
-            <div class="card-title"><el-icon><TrendCharts /></el-icon> 计算过程</div>
+            <div class="main-title"><el-icon>
+                <TrendCharts />
+              </el-icon> 计算过程</div>
           </template>
           <div class="process-step">
             <div class="step">
@@ -491,12 +549,63 @@
             <div class="step">
               <span class="label">② 系统集成费</span><br>
               <span class="formula">集成费 = 集成对象总费用 × 集成费率 × 调整系数</span><br>
-              <span class="calc">= {{ cost.integration.base }} × {{ cost.integration.rate }}% × {{ cost.integration.adjust }} = {{ integrationCost.toFixed(2) }} 万元</span>
+              <span class="calc">= {{ cost.integration.base }} × {{ cost.integration.rate }}% × {{
+                cost.integration.adjust }}
+                = {{ integrationCost.toFixed(2) }} 万元</span>
             </div>
             <div class="step">
               <span class="label">③ 预备费</span><br>
               <span class="formula">预备费 = (建设费用 + 其他费用) × 预备费费率</span><br>
-              <span class="calc">= ({{ constructionTotal.toFixed(2) }} + {{ cost.other.managementFee }}) × {{ cost.other.contRate }}% = {{ contingencyCost.toFixed(2) }} 万元</span>
+              <span class="calc">= ({{ constructionTotal.toFixed(2) }} + {{ cost.other.managementFee }}) × {{
+                cost.other.contRate }}% = {{ contingencyCost.toFixed(2) }} 万元</span>
+            </div>
+          </div>
+        </el-card>
+
+        <!-- 新增：测算公式与指标定义 -->
+        <el-card class="card" shadow="never">
+          <template #header>
+            <div class="main-title"><el-icon>
+                <QuestionFilled />
+              </el-icon>测算公式 &amp; 指标定义</div>
+          </template>
+          <div class="formula-block">
+            <div class="formula-item">
+              <div class="formula-title">定制软件开发费（功能点法）</div>
+              <div class="formula-content">
+                <div>开发费 = 工作量 × 人月单价</div>
+                <div>工作量 = S × PDR × SWF / HM</div>
+                <div>S = UFP × CF × 重用</div>
+                <div>UFP = 35×ILF + 15×EIF</div>
+                <div>SWF = ST × NF × SL × DT</div>
+              </div>
+            </div>
+            <div class="formula-item">
+              <div class="formula-title">系统集成费</div>
+              <div class="formula-content">
+                集成费 = 集成对象总费用 × 集成费率 × 调整系数
+              </div>
+            </div>
+            <div class="formula-item">
+              <div class="formula-title">预备费</div>
+              <div class="formula-content">
+                预备费 = (建设费用 + 其他费用) × 预备费费率
+              </div>
+            </div>
+            <div class="formula-item">
+              <div class="formula-title">关键指标定义</div>
+              <div class="formula-content">
+                <ul>
+                  <li><b>ILF</b>：内部逻辑文件</li>
+                  <li><b>EIF</b>：外部接口文件</li>
+                  <li><b>CF</b>：规模变更因子（可研1.39，初设1.25，结算1.0）</li>
+                  <li><b>ST</b>：应用类型调整因子</li>
+                  <li><b>NF</b>：非功能性特征调整因子</li>
+                  <li><b>SL</b>：开发平台调整因子</li>
+                  <li><b>DT</b>：开发团队背景调整因子</li>
+                  <li><b>PDR</b>：基准生产率（人时/FP，参照CSBMK P50）</li>
+                </ul>
+              </div>
             </div>
           </div>
         </el-card>
@@ -521,28 +630,29 @@
 <script>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 import {
   Histogram, Download, Management, Wallet, ShoppingCart, Tools, More,
-  Flag, TrendCharts, Warning, Refresh
+  Flag, TrendCharts, Warning, Refresh, QuestionFilled
 } from '@element-plus/icons-vue'
 
 export default {
-  name: 'CostEstimator',
-  components: {
-    Histogram, Download, Management, Wallet, ShoppingCart, Tools, More,
-    Flag, TrendCharts, Warning, Refresh
-  },
+  name: 'SichuanCostEstimator',
   setup() {
+    // ---------- ref 引用 ----------
+    const headerRef = ref(null)
+    const exportRef = ref(null)
+
     // ---------- 响应式数据 ----------
     const project = ref({
       name: '示例项目',
       phase: 'preliminary'
     })
 
-    // 成本明细
     const cost = ref({
       software: {
-        purchase: { count: 2, unitPrice: 15 } // 套, 万元/套
+        purchase: { count: 2, unitPrice: 15 }
       },
       dev: {
         ilf: 20,
@@ -552,18 +662,18 @@ export default {
         nf: 1.0,
         sl: 1.0,
         dt: 0.8,
-        rate: 2.0,      // 万元/人月
-        hm: 174         // 人时/人月
+        rate: 2.0,
+        hm: 174
       },
       data: {
-        purchase: 5,    // 数据资源购置
-        service: 3,     // 数据服务
-        build: 4,       // 建库
-        process: 2      // 加工
+        purchase: 5,
+        service: 3,
+        build: 4,
+        process: 2
       },
       integration: {
-        base: 120,      // 集成对象总费用
-        rate: 5,        // %
+        base: 120,
+        rate: 5,
         adjust: 1.0
       },
       standard: {
@@ -594,17 +704,16 @@ export default {
         infrastructure: { room: 100 },
         hardware: { purchase: 150 },
         software: { purchase: 50, dev: 300 },
-        rate: 6,            // 综合费率 %
+        rate: 6,
         scaleFactor: 0.9
       },
       other: {
-        managementFee: 45,  // 其他费用
-        contRate: 3         // 预备费费率 %
+        managementFee: 45,
+        contRate: 3
       }
     })
 
     // ---------- 计算属性 ----------
-    // 阶段对应的 CF
     const cfMap = {
       feasibility: 1.39,
       preliminary: 1.25,
@@ -613,12 +722,10 @@ export default {
     }
     const devCF = computed(() => cfMap[project.value.phase] || 1.25)
 
-    // 成品软件购置
     const softwarePurchaseTotal = computed(() => {
       return cost.value.software.purchase.count * cost.value.software.purchase.unitPrice
     })
 
-    // 定制开发
     const devUFP = computed(() => {
       return 35 * cost.value.dev.ilf + 15 * cost.value.dev.eif
     })
@@ -628,7 +735,6 @@ export default {
     const devSWF = computed(() => {
       return cost.value.dev.st * cost.value.dev.nf * cost.value.dev.sl * cost.value.dev.dt
     })
-    // 采用中间值 PDR = 7.16 人时/FP，来自 CSBMK（这里简化）
     const PDR_MID = 7.16
     const devWorkload = computed(() => {
       return (devS.value * PDR_MID * devSWF.value) / cost.value.dev.hm
@@ -637,45 +743,37 @@ export default {
       return devWorkload.value * cost.value.dev.rate
     })
 
-    // 数据建设
     const dataTotal = computed(() => {
       const d = cost.value.data
       return d.purchase + d.service + d.build + d.process
     })
 
-    // 系统集成
     const integrationCost = computed(() => {
       return cost.value.integration.base * (cost.value.integration.rate / 100) * cost.value.integration.adjust
     })
 
-    // 标准规范
     const standardCost = computed(() => {
       return cost.value.standard.workload * cost.value.standard.rate
     })
 
-    // 系统迁移
     const migrationCost = computed(() => {
       return cost.value.migration.workload * cost.value.migration.rate
     })
 
-    // 建设费用合计（包含：成品软件、开发、数据、集成、标准、迁移）
     const constructionTotal = computed(() => {
       return softwarePurchaseTotal.value + devCost.value + dataTotal.value +
-             integrationCost.value + standardCost.value + migrationCost.value
+        integrationCost.value + standardCost.value + migrationCost.value
     })
 
-    // 购买产品服务
     const productServiceCost = computed(() => {
       const p = cost.value.service.product
       return (p.unitPrice * p.count / p.depreciation) * p.serviceYears
     })
 
-    // 购买信息系统服务（年均）
     const systemServiceCost = computed(() => {
       const s = cost.value.service.system
       if (s.term <= 0) return 0
       const base = (s.investment + s.maintenance) * s.economy * (1 + s.roi / 100)
-      // 简化为年均，折现忽略（实际应逐期折现，此处取简单平均）
       return base / s.term
     })
 
@@ -683,27 +781,23 @@ export default {
       return productServiceCost.value + systemServiceCost.value
     })
 
-    // 运维费用
     const opsCost = computed(() => {
       const ops = cost.value.ops
       const base = ops.infrastructure.room * 0.04 +
-                   ops.hardware.purchase * 0.05 +
-                   ops.software.purchase * 0.05 +
-                   ops.software.dev * 0.08
-      return base * (ops.rate / 6) * ops.scaleFactor  // 按综合费率调整
+        ops.hardware.purchase * 0.05 +
+        ops.software.purchase * 0.05 +
+        ops.software.dev * 0.08
+      return base * (ops.rate / 6) * ops.scaleFactor
     })
 
-    // 预备费
     const contingencyCost = computed(() => {
       return (constructionTotal.value + cost.value.other.managementFee) * (cost.value.other.contRate / 100)
     })
 
-    // 总投资
     const totalInvestment = computed(() => {
       return constructionTotal.value + cost.value.other.managementFee + contingencyCost.value
     })
 
-    // ---------- 辅助 ----------
     const phaseLabelMap = {
       feasibility: '可研/估算',
       preliminary: '初设/概算',
@@ -714,7 +808,6 @@ export default {
 
     // ---------- 方法 ----------
     function loadExample() {
-      // 加载一组示例数据
       project.value.name = '示例项目'
       project.value.phase = 'preliminary'
       cost.value.software.purchase.count = 3
@@ -806,12 +899,209 @@ export default {
       ElMessage.success('已清空所有数据')
     }
 
-    // 导出PDF（占位功能，可对接打印或html2canvas）
-    function exportPDF() {
-      ElMessage.info('PDF 导出功能待集成（可接入 html2canvas + jsPDF）')
+    // ---------- 导出 CSV ----------
+    function exportCSV() {
+      const rows = [
+        ['===== 项目信息 =====', ''],
+        ['项目名称', project.value.name],
+        ['测算阶段', project.value.phaseLabel || project.value.phase],
+        [''],
+        ['===== 建设费用 =====', ''],
+        ['--- 成品软件购置 ---', ''],
+        ['软件套数', cost.value.software.purchase.count],
+        ['单价 (万元/套)', cost.value.software.purchase.unitPrice],
+        ['小计 (万元)', softwarePurchaseTotal.value.toFixed(2)],
+        [''],
+        ['--- 定制软件开发费（功能点法）---', ''],
+        ['ILF 数量', cost.value.dev.ilf],
+        ['EIF 数量', cost.value.dev.eif],
+        ['重用程度', cost.value.dev.reuse],
+        ['应用类型调整 ST', cost.value.dev.st],
+        ['非功能因子 NF', cost.value.dev.nf],
+        ['开发平台 SL', cost.value.dev.sl],
+        ['团队背景 DT', cost.value.dev.dt],
+        ['人月单价 (万元/人月)', cost.value.dev.rate],
+        ['人月折算 (人时/人月)', cost.value.dev.hm],
+        ['UFP (未调整)', devUFP.value.toFixed(0)],
+        ['调整后规模 (FP)', devS.value.toFixed(0)],
+        ['软件开发费 (万元)', devCost.value.toFixed(2)],
+        [''],
+        ['--- 数据建设费 ---', ''],
+        ['数据资源购置 (万元)', cost.value.data.purchase],
+        ['数据服务购置 (万元)', cost.value.data.service],
+        ['数据资源建库 (万元)', cost.value.data.build],
+        ['数据加工 (万元)', cost.value.data.process],
+        ['数据建设费合计 (万元)', dataTotal.value.toFixed(2)],
+        [''],
+        ['--- 系统集成费 ---', ''],
+        ['集成对象总费用 (万元)', cost.value.integration.base],
+        ['集成费率 (%)', cost.value.integration.rate],
+        ['调整系数', cost.value.integration.adjust],
+        ['系统集成费 (万元)', integrationCost.value.toFixed(2)],
+        [''],
+        ['--- 标准规范编制费 ---', ''],
+        ['编制工作量 (人月)', cost.value.standard.workload],
+        ['人月单价 (万元/人月)', cost.value.standard.rate],
+        ['标准规范编制费 (万元)', standardCost.value.toFixed(2)],
+        [''],
+        ['--- 系统迁移费 ---', ''],
+        ['迁移工作量 (人月)', cost.value.migration.workload],
+        ['人月单价 (万元/人月)', cost.value.migration.rate],
+        ['系统迁移费 (万元)', migrationCost.value.toFixed(2)],
+        [''],
+        ['建设费用合计 (万元)', constructionTotal.value.toFixed(2)],
+        [''],
+        ['===== 购买服务费用 =====', ''],
+        ['--- 购买信息化产品服务 ---', ''],
+        ['产品单价 (万元)', cost.value.service.product.unitPrice],
+        ['数量', cost.value.service.product.count],
+        ['折旧年限', cost.value.service.product.depreciation],
+        ['服务期 (年)', cost.value.service.product.serviceYears],
+        ['购买产品服务费 (万元)', productServiceCost.value.toFixed(2)],
+        [''],
+        ['--- 购买信息系统服务 ---', ''],
+        ['建设投资 (万元)', cost.value.service.system.investment],
+        ['总运维费 (万元)', cost.value.service.system.maintenance],
+        ['经济性系数', cost.value.service.system.economy],
+        ['投资回报率 i (%)', cost.value.service.system.roi],
+        ['折现率 c (%)', cost.value.service.system.discount],
+        ['使用期限 N (年)', cost.value.service.system.term],
+        ['信息系统服务年均费 (万元)', systemServiceCost.value.toFixed(2)],
+        [''],
+        ['购买服务费合计 (万元)', purchaseServiceTotal.value.toFixed(2)],
+        [''],
+        ['===== 运维费用 =====', ''],
+        ['--- IT 资产系数法 ---', ''],
+        ['机房建设费用 (万元)', cost.value.ops.infrastructure.room],
+        ['硬件设备购置费 (万元)', cost.value.ops.hardware.purchase],
+        ['软件产品购置费 (万元)', cost.value.ops.software.purchase],
+        ['定制软件开发费 (万元)', cost.value.ops.software.dev],
+        ['综合运维费率 (%)', cost.value.ops.rate],
+        ['规模调整系数', cost.value.ops.scaleFactor],
+        ['运维年费 (万元)', opsCost.value.toFixed(2)],
+        [''],
+        ['===== 其他费用 & 预备费 =====', ''],
+        ['项目建设其他费用 (万元)', cost.value.other.managementFee],
+        ['预备费费率 (%)', cost.value.other.contRate],
+        ['预备费 (万元)', contingencyCost.value.toFixed(2)],
+        [''],
+        ['===== 项目总投资 =====', ''],
+        ['项目总投资 (万元)', totalInvestment.value.toFixed(2)],
+      ]
+
+      let csv = '\uFEFF' // BOM for Excel
+      rows.forEach(row => {
+        csv += row.join(',') + '\n'
+      })
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.href = url
+      link.setAttribute('download', `费用测算表_${project.value.name || '项目'}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    }
+
+    // ---------- 导出 PDF ----------
+    async function exportPDF() {
+      try {
+        const headerEl = headerRef.value
+        const exportEl = exportRef.value
+        if (!headerEl || !exportEl) {
+          ElMessage.error('未找到需要导出的组件，请确保页面已完整渲染。')
+          return
+        }
+
+        const capture = (el) => html2canvas(el, {
+          useCORS: true,
+          scale: 2,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: '#ffffff',
+        })
+
+        const [headerCanvas, exportCanvas] = await Promise.all([
+          capture(headerEl),
+          capture(exportEl)
+        ])
+
+        const targetWidthPx = 1600
+
+        const resizeCanvas = (canvas, targetWidth) => {
+          const scale = targetWidth / canvas.width
+          const newCanvas = document.createElement('canvas')
+          newCanvas.width = targetWidth
+          newCanvas.height = canvas.height * scale
+          const ctx = newCanvas.getContext('2d')
+          ctx.drawImage(canvas, 0, 0, newCanvas.width, newCanvas.height)
+          return newCanvas
+        }
+
+        const resizedHeader = resizeCanvas(headerCanvas, targetWidthPx)
+        const resizedExport = resizeCanvas(exportCanvas, targetWidthPx)
+
+        const totalHeight = resizedHeader.height + resizedExport.height
+        const mergedCanvas = document.createElement('canvas')
+        mergedCanvas.width = targetWidthPx
+        mergedCanvas.height = totalHeight
+        const ctx = mergedCanvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, targetWidthPx, totalHeight)
+        ctx.drawImage(resizedHeader, 0, 0)
+        ctx.drawImage(resizedExport, 0, resizedHeader.height)
+
+        const pdf = new jsPDF('p', 'mm', 'a4')
+        const pageWidth = pdf.internal.pageSize.getWidth()
+        const pageHeight = pdf.internal.pageSize.getHeight()
+
+        const imgWidth = mergedCanvas.width
+        const imgHeight = mergedCanvas.height
+        const scale = pageWidth / imgWidth
+        const displayWidth = pageWidth
+        const displayHeight = imgHeight * scale
+
+        if (displayHeight <= pageHeight) {
+          const imgData = mergedCanvas.toDataURL('image/png')
+          const x = 0
+          const y = (pageHeight - displayHeight) / 2
+          pdf.addImage(imgData, 'PNG', x, y, displayWidth, displayHeight)
+        } else {
+          const pixelsPerPage = pageHeight / scale
+          let startY = 0
+          let pageNum = 0
+          while (startY < imgHeight) {
+            const endY = Math.min(startY + pixelsPerPage, imgHeight)
+            const pageCanvas = document.createElement('canvas')
+            pageCanvas.width = imgWidth
+            pageCanvas.height = endY - startY
+            const pageCtx = pageCanvas.getContext('2d')
+            pageCtx.drawImage(mergedCanvas, 0, startY, imgWidth, endY - startY, 0, 0, imgWidth, endY - startY)
+
+            const imgData = pageCanvas.toDataURL('image/png')
+            const pageDisplayHeight = (endY - startY) * scale
+            const x = 0
+            const y = (pageHeight - pageDisplayHeight) / 2
+            if (pageNum > 0) pdf.addPage()
+            pdf.addImage(imgData, 'PNG', x, y, displayWidth, pageDisplayHeight)
+
+            startY = endY
+            pageNum++
+          }
+        }
+
+        pdf.save(`费用测算报告_${project.value.name || '项目'}.pdf`)
+        ElMessage.success('PDF导出成功')
+      } catch (error) {
+        ElMessage.error('PDF导出失败，请查看控制台错误信息。')
+      }
     }
 
     return {
+      headerRef,
+      exportRef,
       project,
       cost,
       softwarePurchaseTotal,
@@ -834,6 +1124,7 @@ export default {
       totalInvestment,
       loadExample,
       resetAll,
+      exportCSV,
       exportPDF
     }
   }
@@ -844,12 +1135,11 @@ export default {
 .cost-estimator-container {
   font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
   color: #2c3e50;
-  max-width: 1440px;
+  max-width: 2000px;
   margin: 0 auto;
-  padding: 0 12px;
 }
 
-/* 移动端适配等 (原样保留) */
+/* 移动端适配等 */
 @media (max-width: 768px) {
   .cost-estimator-container {
     padding: 0 6px;
@@ -857,6 +1147,13 @@ export default {
 
   .app-header {
     padding: 16px 20px;
+  }
+
+  .app-header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .app-header h1 {
@@ -896,7 +1193,7 @@ export default {
     margin-bottom: 12px;
   }
 
-  .card-title {
+  .main-title {
     gap: 8px;
     display: flex;
     align-items: center;
@@ -904,7 +1201,7 @@ export default {
     color: #1a3a5c;
   }
 
-  .card-sub-title {
+  .sub-title {
     gap: 8px;
     display: flex;
     align-items: center;
@@ -917,6 +1214,23 @@ export default {
   .def-text {
     font-size: 12px;
     color: #6a7a8a;
+  }
+
+  .formula-text {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .high-light-text {
+    color: #c0392b;
+    font-weight: 700;
   }
 
   .el-input-number {
@@ -937,7 +1251,7 @@ export default {
   box-shadow: 0 8px 24px rgba(26, 58, 92, 0.25);
 }
 
-.header-inner {
+.app-header-inner {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -958,6 +1272,22 @@ export default {
   font-weight: 400;
   opacity: 0.8;
   margin-left: 12px;
+}
+
+.app-header .sub {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.85;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.app-header .sub .badge {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 2px 14px;
+  border-radius: 20px;
+  font-size: 12px;
 }
 
 .header-actions {
@@ -984,7 +1314,8 @@ export default {
   }
 }
 
-.left-panel, .right-panel {
+.left-panel,
+.right-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -999,12 +1330,17 @@ export default {
   border-bottom: 2px solid #eef2f7;
 }
 
-.card-title {
+.main-title {
+  gap: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   font-size: 17px;
   font-weight: 600;
+  color: #1a3a5c;
+}
+
+.main-title .icon {
+  font-size: 20px;
   color: #1a3a5c;
 }
 
@@ -1026,23 +1362,6 @@ export default {
   font-size: 14px;
   color: #1a3a5c;
   margin: 8px 0 8px 0;
-}
-
-.def-text {
-  font-size: 12px;
-  color: #6a7a8a;
-  margin-bottom: 8px;
-  line-height: 1.6;
-}
-
-.calc-result {
-  background: #f8fafc;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 14px;
-  color: #1a3a5c;
-  margin-top: 8px;
-  font-weight: 500;
 }
 
 .total-section {
@@ -1067,53 +1386,41 @@ export default {
   color: #c0392b;
 }
 
-.action-bar {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.action-bar .el-button {
-  flex: 1;
-  min-width: 120px;
-}
-
 .result-block {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.result-row {
+.result-item {
   display: flex;
   justify-content: space-between;
   padding: 6px 0;
   border-bottom: 1px solid #f0f2f5;
 }
 
-.result-row .label {
+.result-item .label {
   color: #6a7a8a;
   font-weight: 500;
 }
 
-.result-row .value {
+.result-item .value {
   font-weight: 600;
   color: #2c3e50;
 }
 
-.result-row.highlight .value {
+.result-item.highlight .value {
   color: #e67e22;
 }
 
-.result-row.total .value {
+.result-item.total .value {
   font-size: 20px;
   color: #c0392b;
 }
 
 .process-step {
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 2;
 }
 
 .step {
@@ -1141,5 +1448,144 @@ export default {
   display: block;
   font-size: 12px;
   word-break: break-all;
+}
+
+.formula-block {
+  background: #f0f4fa;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 2;
+  border-left: 4px solid #2a5f8f;
+}
+
+.formula-block .math {
+  font-family: 'Courier New', monospace;
+  background: #e8edf4;
+  padding: 2px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  font-weight: 600;
+  color: #1a3a5c;
+}
+
+.formula-block .def {
+  color: #4a5b6e;
+}
+
+.formula-block .formula-item {
+  margin-bottom: 14px;
+}
+
+.formula-block .formula-item:last-child {
+  margin-bottom: 0;
+}
+
+.formula-block .formula-title {
+  font-weight: 600;
+  color: #1a3a5c;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.formula-block .formula-content {
+  font-size: 13px;
+  color: #2c3e50;
+  padding-left: 12px;
+  line-height: 1.8;
+}
+
+.formula-block ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.formula-block ul li {
+  list-style: disc;
+  line-height: 1.6;
+}
+
+.def-text {
+  font-size: 12px;
+  color: #6a7a8a;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.formula-text {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.high-light-text {
+  color: #c0392b;
+  font-weight: 700;
+}
+
+.el-form-item {
+  margin-bottom: 8px;
+}
+
+/* 打印样式 */
+@media print {
+  .cost-estimator-container {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .main-grid {
+    display: block !important;
+  }
+
+  .app-header {
+    background: #1a3a5c !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .el-button,
+  .el-card__header .el-button {
+    display: none !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .main-grid>div {
+    width: 100%;
+  }
+
+  .result-item {
+    border-left-color: #2a5f8f !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .process-step .step .formula,
+  .formula-block {
+    background: #f0f4fa !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cost-estimator-container,
+  .main-grid,
+  .el-card,
+  .process-step,
+  .formula-block {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
 }
 </style>
