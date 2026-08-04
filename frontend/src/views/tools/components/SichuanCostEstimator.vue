@@ -46,7 +46,7 @@
         <el-card class="card" shadow="never">
           <template #header>
             <div class="main-title"><el-icon>
-                <Wallet />
+                <BrushFilled />
               </el-icon> 建设费用</div>
           </template>
 
@@ -287,7 +287,7 @@
         <el-card class="card" shadow="never">
           <template #header>
             <div class="main-title"><el-icon>
-                <ShoppingCart />
+                <GoodsFilled />
               </el-icon> 购买服务费用</div>
           </template>
           <div class="sub-section">
@@ -442,7 +442,7 @@
         <el-card class="card" shadow="never">
           <template #header>
             <div class="main-title"><el-icon>
-                <More />
+                <MoreFilled />
               </el-icon> 其他费用 & 预备费</div>
           </template>
           <div class="sub-section">
@@ -486,12 +486,12 @@
 
       <!-- 右栏：结果汇总与过程 -->
       <div class="right-panel" ref="exportRef">
-        <!-- 测算汇总 -->
+        <!-- 测算结果 -->
         <el-card class="card" shadow="never">
           <template #header>
             <div class="main-title"><el-icon>
                 <Flag />
-              </el-icon> 测算汇总</div>
+              </el-icon> 测算结果</div>
           </template>
           <div class="result-block">
             <div class="result-item">
@@ -529,12 +529,12 @@
           </div>
         </el-card>
 
-        <!-- 计算过程 -->
+        <!-- 测算过程 -->
         <el-card class="card" shadow="never">
           <template #header>
             <div class="main-title"><el-icon>
                 <TrendCharts />
-              </el-icon> 计算过程</div>
+              </el-icon> 测算过程</div>
           </template>
           <div class="process-step">
             <div class="step">
@@ -1131,7 +1131,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .cost-estimator-container {
   font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
   color: #2c3e50;
