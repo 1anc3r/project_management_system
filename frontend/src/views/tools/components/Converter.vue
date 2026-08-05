@@ -531,7 +531,7 @@ function convertToNumber() {
     chineseError.value = '';
     numberResult.value = result;
     numberCopied.value = false;
-    setStatus('success', '解析成功 ✓');
+    setStatus('success', '解析成功');
   }
 }
 
@@ -666,7 +666,7 @@ watch(chineseInput, (val) => {
 .converter-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 20px;
   margin-top: 6px;
 }
 
@@ -967,7 +967,7 @@ watch(chineseInput, (val) => {
   flex-wrap: wrap;
   gap: 12px;
   border-top: 1px solid #eef3f8;
-  padding-top: 20px;
+  padding-top: 12px;
 
   .text-muted {
     display: inline-flex;
