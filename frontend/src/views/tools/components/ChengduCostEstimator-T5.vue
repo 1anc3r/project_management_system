@@ -7,7 +7,7 @@
           <el-icon>
             <Histogram />
           </el-icon>
-          成都市信息化项目费用测算
+          成都市信息化项目开发费用测算
           <small>DB5101/T 5—2018</small>
         </h1>
       </div>

@@ -58,10 +58,16 @@ const routes = [
         meta: { title: '工具箱', icon: 'Box' },
         children: [
           {
-            path: 'chengdu',   // 相对路径，实际访问 /tools/chengdu
-            name: 'ChengduCostEstimator',
-            component: () => import('@/views/tools/components/ChengduCostEstimator.vue'),
-            meta: { title: '成都费用测算' }
+            path: 'chengdu-T5',   // 相对路径，实际访问 /tools/chengdu
+            name: 'ChengduCostEstimator-T5',
+            component: () => import('@/views/tools/components/ChengduCostEstimator-T5.vue'),
+            meta: { title: '成都开发费用测算' }
+          },
+          {
+            path: 'chengdu-T6',   // 相对路径，实际访问 /tools/chengdu
+            name: 'ChengduCostEstimator-T6',
+            component: () => import('@/views/tools/components/ChengduCostEstimator-T6.vue'),
+            meta: { title: '成都运维费用测算' }
           },
           {
             path: 'sichuan',   // 相对路径，实际访问 /tools/sichuan
