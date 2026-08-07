@@ -8,7 +8,7 @@
             <Histogram />
           </el-icon>
           四川省信息化项目费用测算
-          <small>TSCSIA 0015-2023</small>
+          <small>TSCSIA 0015-2025</small>
         </h1>
       </div>
     </header>
@@ -35,8 +35,10 @@
                 <el-option label="预算/招投标" value="budget" />
                 <el-option label="结算/审计" value="settlement" />
               </el-select>
-              <div class="def-text">不同阶段影响规模变更因子 CF 和各项费率。
-                <br>可研/预算阶段 CF=1.39 ；初设/概算/预算/招投标阶段 CF=1.25 ；结算/审计阶段 CF=1.00
+              <div class="def-text">不同阶段影响规模变更因子 CF 和功能点计数方法：
+                <br>可研/估算阶段采用预估法（仅 ILF/EIF），CF=1.39；
+                <br>初设/概算 & 预算/招投标阶段采用估算法（ILF/EIF/EI/EO/EQ），CF=1.25；
+                <br>结算/审计阶段采用预估法（仅 ILF/EIF），CF=1.00。
               </div>
             </el-form-item>
           </el-form>
@@ -79,6 +81,7 @@
           <div class="sub-section">
             <div class="sub-title">定制软件开发费（功能点法）</div>
             <el-form label-position="top" size="default">
+              <!-- 数据功能：ILF、EIF -->
               <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item label="ILF 数量">
@@ -100,6 +103,25 @@
                   </el-form-item>
                 </el-col>
               </el-row>
+              <!-- 事务功能：EI、EO、EQ（初设/预算阶段使用） -->
+              <el-row :gutter="12" v-if="project.phase !== 'feasibility' && project.phase !== 'settlement'">
+                <el-col :span="8">
+                  <el-form-item label="EI 数量">
+                    <el-input-number v-model="cost.dev.ei" :min="0" :step="1" style="width:100%;" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="EO 数量">
+                    <el-input-number v-model="cost.dev.eo" :min="0" :step="1" style="width:100%;" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="EQ 数量">
+                    <el-input-number v-model="cost.dev.eq" :min="0" :step="1" style="width:100%;" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <!-- 其他调整因子 -->
               <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item label="应用类型调整 ST">
@@ -129,8 +151,6 @@
                     </el-select>
                   </el-form-item>
                 </el-col>
-              </el-row>
-              <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item label="团队背景 DT">
                     <el-select v-model="cost.dev.dt" placeholder="选择">
@@ -140,6 +160,8 @@
                     </el-select>
                   </el-form-item>
                 </el-col>
+              </el-row>
+              <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item label="人月单价 (万元/人月)">
                     <el-input-number v-model="cost.dev.rate" :min="0" :step="0.1" style="width:100%;" />
@@ -148,6 +170,11 @@
                 <el-col :span="8">
                   <el-form-item label="人月折算 (人时/人月)">
                     <el-input-number v-model="cost.dev.hm" :min="1" :step="1" style="width:100%;" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="基准生产率 PDR (P50)">
+                    <el-input-number v-model="cost.dev.pdr" :min="0.1" :step="0.1" style="width:100%;" />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -322,7 +349,7 @@
               </el-row>
               <div class="formula-text">
                 <span>
-                  小计：<span class="high-light-text">{{ productServiceCost.toFixed(2) }}</span> 万元
+                  小计：<span class="high-light-text">{{ productServiceCost.toFixed(2) }}</span> 万元/年
                 </span>
               </div>
             </el-form>
@@ -370,7 +397,7 @@
               </el-row>
               <div class="formula-text">
                 <span>
-                  信息系统服务年均费 ≈ <span class="high-light-text">{{ systemServiceCost.toFixed(2) }}</span> 万元
+                  小计：<span class="high-light-text">{{ systemServiceCost.toFixed(2) }}</span> 万元/年
                 </span>
               </div>
             </el-form>
@@ -379,7 +406,7 @@
           <!-- 购买服务费汇总 -->
           <div class="total-section">
             <div class="total-label">购买服务费合计</div>
-            <div class="total-value">{{ purchaseServiceTotal.toFixed(2) }} 万元</div>
+            <div class="total-value">{{ purchaseServiceTotal.toFixed(2) }} 万元/年</div>
           </div>
         </el-card>
 
@@ -431,10 +458,10 @@
             </el-form>
           </div>
 
-          <!-- 运维年费汇总 -->
+          <!-- 运维费用汇总 -->
           <div class="total-section">
-            <div class="total-label">运维年费合计</div>
-            <div class="total-value">{{ opsCost.toFixed(2) }} 万元</div>
+            <div class="total-label">运维费用合计</div>
+            <div class="total-value">{{ opsCost.toFixed(2) }} 万元/年</div>
           </div>
         </el-card>
 
@@ -465,8 +492,8 @@
 
           <!-- 预备费汇总 -->
           <div class="total-section">
-            <div class="total-label">预备费合计</div>
-            <div class="total-value">{{ contingencyCost.toFixed(2) }} 万元</div>
+            <div class="total-label">其他费用 & 预备费合计</div>
+            <div class="total-value">{{ (cost.other.managementFee + contingencyCost).toFixed(2) }} 万元</div>
           </div>
         </el-card>
 
@@ -507,12 +534,44 @@
               <span class="value">{{ constructionTotal.toFixed(2) }} 万元</span>
             </div>
             <div class="result-item">
-              <span class="label">购买服务费</span>
-              <span class="value">{{ purchaseServiceTotal.toFixed(2) }} 万元</span>
+              <small class="label"> - 成品软件购置费</small>
+              <small class="value">{{ softwarePurchaseTotal.toFixed(2) }} 万元</small>
             </div>
             <div class="result-item">
-              <span class="label">运维年费</span>
-              <span class="value">{{ opsCost.toFixed(2) }} 万元</span>
+              <small class="label"> - 定制软件开发费</small>
+              <small class="value">{{ devCost.toFixed(2) }} 万元</small>
+            </div>
+            <div class="result-item">
+              <small class="label"> - 数据建设费</small>
+              <small class="value">{{ dataTotal.toFixed(2) }} 万元</small>
+            </div>
+            <div class="result-item">
+              <small class="label"> - 系统集成费</small>
+              <small class="value">{{ integrationCost.toFixed(2) }} 万元</small>
+            </div>
+            <div class="result-item">
+              <small class="label"> - 标准规范编制费</small>
+              <small class="value">{{ standardCost.toFixed(2) }} 万元</small>
+            </div>
+            <div class="result-item">
+              <small class="label"> - 系统迁移费</small>
+              <small class="value">{{ migrationCost.toFixed(2) }} 万元</small>
+            </div>
+            <div class="result-item">
+              <span class="label">购买服务费</span>
+              <span class="value">{{ purchaseServiceTotal.toFixed(2) }} 万元/年</span>
+            </div>
+            <div class="result-item">
+              <small class="label"> - 购买信息化产品服务</small>
+              <small class="value">{{ productServiceCost.toFixed(2) }} 万元/年</small>
+            </div>
+            <div class="result-item">
+              <small class="label"> - 购买信息系统服务</small>
+              <small class="value">{{ systemServiceCost.toFixed(2) }} 万元/年</small>
+            </div>
+            <div class="result-item">
+              <span class="label">运维费用</span>
+              <span class="value">{{ opsCost.toFixed(2) }} 万元/年</span>
             </div>
             <div class="result-item">
               <span class="label">其他费用</span>
@@ -539,11 +598,11 @@
           <div class="process-step">
             <div class="step">
               <span class="label">① 定制开发软件费（功能点法）</span><br>
-              <span class="formula">UFP = 35×ILF + 15×EIF = {{ devUFP.toFixed(0) }}</span><br>
+              <span class="formula">UFP = {{ devUFPFormula }}</span><br>
               <span class="formula">CF = {{ devCF }}</span><br>
               <span class="formula">S = UFP × CF × 重用 = {{ devS.toFixed(0) }}</span><br>
               <span class="formula">SWF = ST × NF × SL × DT = {{ devSWF.toFixed(3) }}</span><br>
-              <span class="formula">工作量 = S × PDR(中间值) × SWF / HM = {{ devWorkload.toFixed(0) }} 人月</span><br>
+              <span class="formula">工作量 = S × PDR × SWF / HM = {{ devWorkload.toFixed(0) }} 人月</span><br>
               <span class="formula">开发费 = 工作量 × 人月单价 = {{ devCost.toFixed(2) }} 万元</span>
             </div>
             <div class="step">
@@ -554,7 +613,12 @@
                 = {{ integrationCost.toFixed(2) }} 万元</span>
             </div>
             <div class="step">
-              <span class="label">③ 预备费</span><br>
+              <span class="label">③ 购买信息系统服务费（年均）</span><br>
+              <span class="formula">年均费 = (投资+运维) × 经济性系数 × (1+i) / N × Σ(1+c)^n</span><br>
+              <span class="calc">= {{ systemServiceCost.toFixed(2) }} 万元</span>
+            </div>
+            <div class="step">
+              <span class="label">④ 预备费</span><br>
               <span class="formula">预备费 = (建设费用 + 其他费用) × 预备费费率</span><br>
               <span class="calc">= ({{ constructionTotal.toFixed(2) }} + {{ cost.other.managementFee }}) × {{
                 cost.other.contRate }}% = {{ contingencyCost.toFixed(2) }} 万元</span>
@@ -576,7 +640,8 @@
                 <div>开发费 = 工作量 × 人月单价</div>
                 <div>工作量 = S × PDR × SWF / HM</div>
                 <div>S = UFP × CF × 重用</div>
-                <div>UFP = 35×ILF + 15×EIF</div>
+                <div>UFP = 35×ILF + 15×EIF （预估法，可研/结算）</div>
+                <div>UFP = 10×ILF + 7×EIF + 4×EI + 5×EO + 4×EQ （估算法，初设/预算）</div>
                 <div>SWF = ST × NF × SL × DT</div>
               </div>
             </div>
@@ -584,6 +649,12 @@
               <div class="formula-title">系统集成费</div>
               <div class="formula-content">
                 集成费 = 集成对象总费用 × 集成费率 × 调整系数
+              </div>
+            </div>
+            <div class="formula-item">
+              <div class="formula-title">购买信息系统服务费（年均）</div>
+              <div class="formula-content">
+                年均费 = (建设投资 + 总运维费) × 经济性系数 × (1+i) / N × Σ(1+c)^n
               </div>
             </div>
             <div class="formula-item">
@@ -598,7 +669,10 @@
                 <ul>
                   <li><b>ILF</b>：内部逻辑文件</li>
                   <li><b>EIF</b>：外部接口文件</li>
-                  <li><b>CF</b>：规模变更因子（可研1.39，初设1.25，结算1.0）</li>
+                  <li><b>EI</b>：外部输入</li>
+                  <li><b>EO</b>：外部输出</li>
+                  <li><b>EQ</b>：外部查询</li>
+                  <li><b>CF</b>：规模变更因子（可研1.39，初设/预算1.25，结算1.0）</li>
                   <li><b>ST</b>：应用类型调整因子</li>
                   <li><b>NF</b>：非功能性特征调整因子</li>
                   <li><b>SL</b>：开发平台调整因子</li>
@@ -633,7 +707,7 @@ import { ElMessage } from 'element-plus'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import {
-  Histogram, Download, Management, Wallet, ShoppingCart, Tools, More,
+  Histogram, Download, Management, BrushFilled, GoodsFilled, Tools, MoreFilled,
   Flag, TrendCharts, Warning, Refresh, QuestionFilled
 } from '@element-plus/icons-vue'
 
@@ -657,13 +731,17 @@ export default {
       dev: {
         ilf: 20,
         eif: 8,
+        ei: 0,
+        eo: 0,
+        eq: 0,
         reuse: 0.67,
         st: 1.0,
         nf: 1.0,
         sl: 1.0,
         dt: 0.8,
         rate: 2.0,
-        hm: 174
+        hm: 174,
+        pdr: 6.96   // 基准生产率 P50
       },
       data: {
         purchase: 5,
@@ -722,25 +800,48 @@ export default {
     }
     const devCF = computed(() => cfMap[project.value.phase] || 1.25)
 
-    const softwarePurchaseTotal = computed(() => {
-      return cost.value.software.purchase.count * cost.value.software.purchase.unitPrice
+    // UFP 根据阶段选择不同计数法
+    const devUFP = computed(() => {
+      const phase = project.value.phase
+      const d = cost.value.dev
+      if (phase === 'feasibility' || phase === 'settlement') {
+        // 预估法
+        return 35 * d.ilf + 15 * d.eif
+      } else {
+        // 估算法（初设/预算）
+        return 10 * d.ilf + 7 * d.eif + 4 * d.ei + 5 * d.eo + 4 * d.eq
+      }
     })
 
-    const devUFP = computed(() => {
-      return 35 * cost.value.dev.ilf + 15 * cost.value.dev.eif
+    // 显示计算公式
+    const devUFPFormula = computed(() => {
+      const phase = project.value.phase
+      const d = cost.value.dev
+      if (phase === 'feasibility' || phase === 'settlement') {
+        return `35×${d.ilf} + 15×${d.eif} = ${devUFP.value.toFixed(0)}`
+      } else {
+        return `10×${d.ilf} + 7×${d.eif} + 4×${d.ei} + 5×${d.eo} + 4×${d.eq} = ${devUFP.value.toFixed(0)}`
+      }
     })
+
     const devS = computed(() => {
       return devUFP.value * devCF.value * cost.value.dev.reuse
     })
+
     const devSWF = computed(() => {
       return cost.value.dev.st * cost.value.dev.nf * cost.value.dev.sl * cost.value.dev.dt
     })
-    const PDR_MID = 7.16
+
     const devWorkload = computed(() => {
-      return (devS.value * PDR_MID * devSWF.value) / cost.value.dev.hm
+      return (devS.value * cost.value.dev.pdr * devSWF.value) / cost.value.dev.hm
     })
+
     const devCost = computed(() => {
       return devWorkload.value * cost.value.dev.rate
+    })
+
+    const softwarePurchaseTotal = computed(() => {
+      return cost.value.software.purchase.count * cost.value.software.purchase.unitPrice
     })
 
     const dataTotal = computed(() => {
@@ -765,11 +866,13 @@ export default {
         integrationCost.value + standardCost.value + migrationCost.value
     })
 
+    // 购买信息化产品服务费
     const productServiceCost = computed(() => {
       const p = cost.value.service.product
       return (p.unitPrice * p.count / p.depreciation) * p.serviceYears
     })
 
+    // 购买信息系统服务费（年均）按标准公式：年均费 = (投资+运维) × 经济性系数 × (1+i) / N × Σ(1+c)^n
     const systemServiceCost = computed(() => {
       const s = cost.value.service.system
       if (s.term <= 0) return 0
@@ -781,6 +884,7 @@ export default {
       return productServiceCost.value + systemServiceCost.value
     })
 
+    // 运维费（IT资产系数法）
     const opsCost = computed(() => {
       const ops = cost.value.ops
       const base = ops.infrastructure.room * 0.04 +
@@ -814,6 +918,9 @@ export default {
       cost.value.software.purchase.unitPrice = 12
       cost.value.dev.ilf = 30
       cost.value.dev.eif = 12
+      cost.value.dev.ei = 20
+      cost.value.dev.eo = 8
+      cost.value.dev.eq = 10
       cost.value.dev.reuse = 0.67
       cost.value.dev.st = 1.0
       cost.value.dev.nf = 1.0
@@ -821,6 +928,7 @@ export default {
       cost.value.dev.dt = 0.8
       cost.value.dev.rate = 2.0
       cost.value.dev.hm = 174
+      cost.value.dev.pdr = 6.96
       cost.value.data.purchase = 8
       cost.value.data.service = 5
       cost.value.data.build = 6
@@ -860,6 +968,9 @@ export default {
       cost.value.software.purchase.unitPrice = 0
       cost.value.dev.ilf = 0
       cost.value.dev.eif = 0
+      cost.value.dev.ei = 0
+      cost.value.dev.eo = 0
+      cost.value.dev.eq = 0
       cost.value.dev.reuse = 0.67
       cost.value.dev.st = 1.0
       cost.value.dev.nf = 1.0
@@ -867,6 +978,7 @@ export default {
       cost.value.dev.dt = 0.8
       cost.value.dev.rate = 2.0
       cost.value.dev.hm = 174
+      cost.value.dev.pdr = 6.96
       cost.value.data.purchase = 0
       cost.value.data.service = 0
       cost.value.data.build = 0
@@ -915,6 +1027,9 @@ export default {
         ['--- 定制软件开发费（功能点法）---', ''],
         ['ILF 数量', cost.value.dev.ilf],
         ['EIF 数量', cost.value.dev.eif],
+        ['EI 数量', cost.value.dev.ei],
+        ['EO 数量', cost.value.dev.eo],
+        ['EQ 数量', cost.value.dev.eq],
         ['重用程度', cost.value.dev.reuse],
         ['应用类型调整 ST', cost.value.dev.st],
         ['非功能因子 NF', cost.value.dev.nf],
@@ -922,6 +1037,7 @@ export default {
         ['团队背景 DT', cost.value.dev.dt],
         ['人月单价 (万元/人月)', cost.value.dev.rate],
         ['人月折算 (人时/人月)', cost.value.dev.hm],
+        ['基准生产率 PDR', cost.value.dev.pdr],
         ['UFP (未调整)', devUFP.value.toFixed(0)],
         ['调整后规模 (FP)', devS.value.toFixed(0)],
         ['软件开发费 (万元)', devCost.value.toFixed(2)],
@@ -1106,6 +1222,7 @@ export default {
       cost,
       softwarePurchaseTotal,
       devUFP,
+      devUFPFormula,
       devCF,
       devS,
       devSWF,
