@@ -53,7 +53,7 @@
           </div>
           <template #tip>
             <div class="el-upload__tip">
-              支持文档、图片等格式，单个文件不超过 50MB
+              支持文档、图片等格式，单个文件不超过 100MB
             </div>
           </template>
         </el-upload>
@@ -271,9 +271,9 @@ const handleClose = () => {
 
 // 上传前检查
 const beforeUpload = (file) => {
-  const maxSize = 50 * 1024 * 1024 // 50MB
+  const maxSize = 100 * 1024 * 1024 // 100MB
   if (file.size > maxSize) {
-    ElMessage.error('文件大小不能超过 50MB')
+    ElMessage.error('文件大小不能超过 100MB')
     return false
   }
   return true

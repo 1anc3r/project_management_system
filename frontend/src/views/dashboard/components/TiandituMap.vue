@@ -29,7 +29,7 @@
           <span>项目列表</span>
         </div>
         <el-tag type="primary" size="small" effect="dark">
-          共计 {{ totalProjects }} 个项目，{{ totalAmount }} 万元
+          共计 {{ totalProjects }} 个项目，{{ formatAmount(totalAmount) }} 万元
         </el-tag>
       </div>
 
