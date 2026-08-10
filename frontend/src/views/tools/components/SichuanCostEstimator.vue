@@ -558,6 +558,18 @@
               <small class="value">{{ migrationCost.toFixed(2) }} 万元</small>
             </div>
             <div class="result-item">
+              <span class="label">其他费用</span>
+              <span class="value">{{ cost.other.managementFee.toFixed(2) }} 万元</span>
+            </div>
+            <div class="result-item highlight">
+              <span class="label">预备费</span>
+              <span class="value">{{ contingencyCost.toFixed(2) }} 万元</span>
+            </div>
+            <div class="result-item total">
+              <span class="label">项目总投资</span>
+              <span class="value">{{ totalInvestment.toFixed(2) }} 万元</span>
+            </div>
+            <div class="result-item">
               <span class="label">购买服务费</span>
               <span class="value">{{ purchaseServiceTotal.toFixed(2) }} 万元/年</span>
             </div>
@@ -573,17 +585,9 @@
               <span class="label">运维费用</span>
               <span class="value">{{ opsCost.toFixed(2) }} 万元/年</span>
             </div>
-            <div class="result-item">
-              <span class="label">其他费用</span>
-              <span class="value">{{ cost.other.managementFee.toFixed(2) }} 万元</span>
-            </div>
-            <div class="result-item highlight">
-              <span class="label">预备费</span>
-              <span class="value">{{ contingencyCost.toFixed(2) }} 万元</span>
-            </div>
             <div class="result-item total">
-              <span class="label">项目总投资</span>
-              <span class="value">{{ totalInvestment.toFixed(2) }} 万元</span>
+              <span class="label">项目年费</span>
+              <span class="value">{{ (purchaseServiceTotal + opsCost).toFixed(2) }} 万元/年</span>
             </div>
           </div>
         </el-card>
