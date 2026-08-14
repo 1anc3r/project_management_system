@@ -77,7 +77,7 @@ const getInformations = async (req, res) => {
     );
     const total = countResult[0].total;
 
-    // 列表仅返回内容摘要（前200字符），完整内容通过详情接口获取，
+    // 列表仅返回内容摘要（前1000字符），完整内容通过详情接口获取，
     // 避免长文本导致列表接口响应体积过大
     const list = await query(
       `SELECT
@@ -87,7 +87,7 @@ const getInformations = async (req, res) => {
         i.information_date,
         i.information_type,
         i.information_title,
-        SUBSTRING(i.information_content, 1, 200) as information_content,
+        SUBSTRING(i.information_content, 1, 1000) as information_content,
         i.created_at,
         i.updated_at,
         par.name as partner_name,
