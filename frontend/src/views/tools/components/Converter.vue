@@ -527,12 +527,12 @@ function convertToNumber() {
   if (error) {
     chineseError.value = error;
     numberResult.value = null;
-    setStatus('error', '解析失败');
+    setStatus('error', '转换失败');
   } else {
     chineseError.value = '';
     numberResult.value = result;
     numberCopied.value = false;
-    setStatus('success', '解析成功');
+    setStatus('success', '转换成功');
   }
 }
 
