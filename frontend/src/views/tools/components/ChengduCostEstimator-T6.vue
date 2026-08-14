@@ -669,7 +669,8 @@ export default {
   color: #fff;
   padding: 24px 28px;
   border-radius: 16px;
-  margin-bottom: 24px;
+  margin-top: 5px;
+  margin-bottom: 20px;
   box-shadow: 0 8px 24px rgba(26, 58, 92, 0.25);
 }
 .app-header-inner {

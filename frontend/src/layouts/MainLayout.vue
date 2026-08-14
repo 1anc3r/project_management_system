@@ -84,7 +84,10 @@
             <template #title>四川项目费用测算</template>
           </el-menu-item>
           <el-menu-item index="/tools/convert">
-            <template #title>数字大小写转换工具</template>
+            <template #title>数字转换工具</template>
+          </el-menu-item>
+          <el-menu-item index="/tools/tax-calculator">
+            <template #title>税率计算工具</template>
           </el-menu-item>
         </el-sub-menu>
 
@@ -477,27 +480,37 @@ const handleChangePassword = async () => {
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  width: 100%;
+  min-width: 0;
 
   .tabs-container {
     background-color: #fff;
     padding: 6px 10px;
-    // border-bottom: 1px solid #d8dce5;
+    min-width: 0;
+    overflow: hidden;
+    flex: 1 1 0;
     display: flex;
     align-items: center;
-    // box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
     .tabs-wrapper {
       flex: 1;
       display: flex;
+      flex-wrap: nowrap;
       overflow-x: auto;
 
       &::-webkit-scrollbar {
-        height: 0;
+        height: 6px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: #d8dce5;
+        border-radius: 3px;
       }
     }
 
     .tab-item {
       display: inline-flex;
+      flex-shrink: 0;
       align-items: center;
       padding: 6px 14px;
       margin-right: 5px;

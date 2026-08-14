@@ -7,8 +7,9 @@
           <el-icon>
             <Switch />
           </el-icon>
-          数字大小写转换工具
+          数字转换工具
         </h1>
+        <span class="header-sub">数字 · 中文大写 一站式转换</span>
       </div>
     </header>
 
@@ -18,15 +19,16 @@
       <el-card class="card" shadow="hover">
         <template #header>
           <div class="card-header">
-            <el-icon>
+            <el-icon class="card-icon">
               <RefreshRight />
             </el-icon>
             <h3>数字 → 中文大写</h3>
+            <span class="card-badge">to Chinese</span>
           </div>
         </template>
 
         <div class="input-group">
-          <label for="inputNumber">输入数字</label>
+          <label class="form-label" for="inputNumber">输入数字</label>
           <textarea id="inputNumber" v-model="numInput" placeholder="例如：12345.67" rows="2"
             @keydown.ctrl.enter="convertToChinese"></textarea>
         </div>
@@ -81,15 +83,16 @@
       <el-card class="card" shadow="hover">
         <template #header>
           <div class="card-header">
-            <el-icon>
+            <el-icon class="card-icon">
               <RefreshLeft />
             </el-icon>
             <h3>中文大写 → 数字</h3>
+            <span class="card-badge">to Number</span>
           </div>
         </template>
 
         <div class="input-group">
-          <label for="inputChinese">输入中文大写</label>
+          <label class="form-label" for="inputChinese">输入中文大写</label>
           <textarea id="inputChinese" v-model="chineseInput" placeholder="例如：壹万贰仟叁佰肆拾伍元陆角柒分" rows="2"
             @keydown.ctrl.enter="convertToNumber"></textarea>
         </div>
@@ -137,9 +140,7 @@
         <div class="example-row">
           <span class="label">示例：</span>
           <button class="example-btn" @click="setChineseExample('伍拾万元整')">伍拾万元整</button>
-          <button class="example-btn" @click="setChineseExample('肆拾柒万壹仟陆佰玖拾捌元壹角壹分')">肆拾柒万壹仟陆佰玖拾捌元壹角壹分</button>
           <button class="example-btn" @click="setChineseExample('叁拾万元整')">叁拾万元整</button>
-          <button class="example-btn" @click="setChineseExample('贰拾捌万叁仟零壹拾捌元捌角柒分')">贰拾捌万叁仟零壹拾捌元捌角柒分</button>
         </div>
       </el-card>
     </div>
@@ -635,7 +636,8 @@ watch(chineseInput, (val) => {
   color: #fff;
   padding: 24px 28px;
   border-radius: 16px;
-  margin-bottom: 24px;
+  margin-top: 5px;
+  margin-bottom: 20px;
   box-shadow: 0 8px 24px rgba(26, 58, 92, 0.25);
 }
 
@@ -662,6 +664,15 @@ watch(chineseInput, (val) => {
   margin-left: 12px;
 }
 
+.header-sub {
+  font-size: 15px;
+  font-weight: 400;
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
 /* ========== 双栏布局 ========== */
 .converter-grid {
   display: grid;
@@ -670,24 +681,10 @@ watch(chineseInput, (val) => {
   margin-top: 6px;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 900px) {
   .converter-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .app-container {
-    padding: 24px 18px 30px;
-  }
-
-  .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-
-    .badge {
-      align-self: flex-start;
-    }
+    gap: 20px;
   }
 }
 
@@ -711,8 +708,8 @@ watch(chineseInput, (val) => {
     gap: 10px;
     margin-bottom: 4px;
 
-    .arrow-icon {
-      font-size: 20px;
+    .card-icon {
+      font-size: 22px;
       color: #2a5c8a;
     }
 
@@ -722,6 +719,17 @@ watch(chineseInput, (val) => {
       color: #0a1a2b;
       letter-spacing: -0.2px;
       margin: 0;
+    }
+
+    .card-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #2a5c8a;
+      background: #e8f0fe;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-left: auto;
+      letter-spacing: 0.5px;
     }
   }
 }
@@ -735,7 +743,7 @@ watch(chineseInput, (val) => {
     font-size: 13px;
     font-weight: 500;
     color: #3d4f66;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
 
   textarea,
@@ -770,6 +778,14 @@ watch(chineseInput, (val) => {
     min-height: 64px;
     font-family: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   }
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #3d4f66;
+    margin-bottom: 6px;
 }
 
 /* ========== 按钮组 ========== */
@@ -1002,6 +1018,39 @@ watch(chineseInput, (val) => {
     &.error {
       background: #c73b3b;
     }
+  }
+}
+
+/* ========== 响应式微调 ========== */
+@media (max-width: 600px) {
+  .app-header h1 {
+    font-size: 20px;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    padding: 2px 12px;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .card :deep(.el-card__body) {
+    padding: 12px 16px 16px;
+  }
+
+  .rate-btn {
+    font-size: 12px;
+    padding: 4px 12px;
+  }
+
+  .result-item .result-value {
+    font-size: 20px;
   }
 }
 </style>

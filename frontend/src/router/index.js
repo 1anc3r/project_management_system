@@ -80,6 +80,12 @@ const routes = [
             name: 'Converter',
             component: () => import('@/views/tools/components/Converter.vue'),
             meta: { title: '数字转换工具' }
+          },
+          {
+            path: 'tax-calculator',   // 相对路径，实际访问 /tools/tax-calculator
+            name: 'TaxCalculator',
+            component: () => import('@/views/tools/components/TaxCalculator.vue'),
+            meta: { title: '税率计算工具' }
           }
         ]
       },
