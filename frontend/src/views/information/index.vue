@@ -107,11 +107,11 @@
     </template>
 
     <!-- 时间线视图 -->
-    <template v-else class="timeline-card" shadow="never">
+    <template v-else class="timeline-card">
       <!-- 资讯列表（可折叠/展开） -->
       <el-row :gutter="20" class="info-row">
         <el-col :span="24">
-          <el-card class="info-card" shadow="hover">
+          <el-card class="info-card" shadow="never">
             <el-collapse v-model="activeCollapse">
               <el-collapse-item name="information">
                 <template #title>
