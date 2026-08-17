@@ -1,7 +1,7 @@
 <template>
   <div class="logs-container">
     <!-- 筛选面板 -->
-    <el-card class="filter-card" shadow="never">
+    <el-card class="filter-card">
       <div class="filter-bar">
         <el-input v-model="searchForm.username" placeholder="操作人" clearable style="width: 150px"
           @keyup.enter="handleSearch" />
@@ -173,6 +173,11 @@ onMounted(() => {
 .logs-container {
   .filter-card {
     margin-bottom: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    transition: box-shadow 0.2s;
 
     .filter-bar {
       display: flex;

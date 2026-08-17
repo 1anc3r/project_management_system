@@ -1,7 +1,7 @@
 <template>
   <div class="partners-container">
     <!-- 操作面板 -->
-    <el-card class="operation-card" shadow="never">
+    <el-card class="operation-card">
       <div class="operation-bar">
         <div class="left-btns">
           <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
@@ -438,6 +438,11 @@ onMounted(() => {
 .partners-container {
   .operation-card {
     margin-bottom: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    transition: box-shadow 0.2s;
 
     .operation-bar {
       display: flex;

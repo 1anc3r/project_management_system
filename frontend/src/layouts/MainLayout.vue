@@ -582,7 +582,8 @@ const handleChangePassword = async () => {
 }
 
 .main-content {
-  padding: 15px;
+  margin: 15px;
+  padding: 0px;
   overflow-y: auto;
 }
 

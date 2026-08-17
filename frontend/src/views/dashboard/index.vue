@@ -124,7 +124,7 @@
     <el-row :gutter="20" class="info-stats-row">
       <!-- 资讯类型分布 -->
       <el-col :xs="24" :lg="8">
-        <el-card class="chart-card" shadow="never">
+        <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>资讯类型分布</span>
@@ -137,7 +137,7 @@
 
       <!-- 资讯时间线热力图 -->
       <el-col :xs="24" :lg="8">
-        <el-card class="chart-card" shadow="never">
+        <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>资讯时间线热力图</span>
@@ -153,7 +153,7 @@
 
       <!-- 活跃度排名 -->
       <el-col :xs="24" :lg="8">
-        <el-card class="chart-card" shadow="never">
+        <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>资讯活跃度排名</span>
@@ -171,7 +171,7 @@
     <!-- 资讯列表（可折叠/展开） -->
     <el-row :gutter="20" class="info-row">
       <el-col :span="24">
-        <el-card class="info-card" shadow="hover">
+        <el-card class="info-card" shadow="never">
           <el-collapse v-model="activeCollapse">
             <el-collapse-item name="information">
               <template #title>
